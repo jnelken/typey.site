@@ -1,0 +1,21 @@
+{
+  "name": "typey-site",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "homepage": "https://typey.site",
+  "description": "Fun typing app for kids with sound effects and text-to-speech",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --port 5000"
+  },
+  "dependencies": {
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}
