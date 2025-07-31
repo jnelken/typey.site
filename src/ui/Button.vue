@@ -3,41 +3,45 @@
     :type="type"
     :disabled="disabled"
     :class="buttonClasses"
-    @click="handleClick"
-  >
-    <slot />
+    @click="handleClick">
+    <slot>{{ label }}</slot>
   </button>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps({
   type: {
     type: String,
-    default: 'button'
+    default: 'button',
   },
   variant: {
     type: String,
     default: 'primary',
-    validator: (value) => ['primary', 'secondary', 'tertiary', 'ghost'].includes(value)
+    validator: value =>
+      ['primary', 'secondary', 'tertiary', 'ghost'].includes(value),
   },
   size: {
     type: String,
     default: 'md',
-    validator: (value) => ['sm', 'md', 'lg', 'xl'].includes(value)
+    validator: value => ['sm', 'md', 'lg', 'xl'].includes(value),
   },
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
   },
   fullWidth: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+  label: {
+    type: String,
+    default: '',
+  },
+});
 
-const emit = defineEmits(['click'])
+const emit = defineEmits(['click']);
 
 const buttonClasses = computed(() => [
   'button-base',
@@ -45,15 +49,15 @@ const buttonClasses = computed(() => [
   `button-${props.size}`,
   {
     'button-disabled': props.disabled,
-    'button-full-width': props.fullWidth
-  }
-])
+    'button-full-width': props.fullWidth,
+  },
+]);
 
-const handleClick = (event) => {
+const handleClick = event => {
   if (!props.disabled) {
-    emit('click', event)
+    emit('click', event);
   }
-}
+};
 </script>
 
 <style scoped>

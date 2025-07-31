@@ -1,0 +1,158 @@
+import { ref, provide, inject } from 'vue';
+import { useSound } from './useSound';
+import { useSpeech } from './useSpeech';
+
+const TYPING_APP_KEY = Symbol('typing-app');
+
+export function createTypingApp() {
+  // State
+  const currentText = ref('');
+  const completedLines = ref([]);
+  const isInputFocused = ref(false);
+  const isCapsLockEnabled = ref(false);
+  const isAutoSpeakEnabled = ref(true);
+
+  // Composables
+  const {
+    isAudioEnabled: isSoundEnabled,
+    playKeySound,
+    playEnterSound,
+    toggleAudio: toggleSound,
+    initAudio,
+  } = useSound();
+
+  const {
+    isSpeechEnabled,
+    speakLetter,
+    speakLine,
+    toggleSpeech,
+    stopSpeaking,
+  } = useSpeech();
+
+  // Methods
+  const onKeyDown = async event => {
+    const key = event.key;
+
+    if (key === 'Enter') {
+      event.preventDefault();
+      await handleEnterKey();
+    } else if (key.length === 1) {
+      // Stop any currently speaking letter
+      stopSpeaking();
+
+      if (isCapsLockEnabled.value && key.match(/[a-z]/)) {
+        event.preventDefault();
+        const upperKey = key.toUpperCase();
+        const cursorPos = event.target.selectionStart;
+        const textBefore = currentText.value.substring(0, cursorPos);
+        const textAfter = currentText.value.substring(cursorPos);
+        currentText.value = textBefore + upperKey + textAfter;
+
+        // Update cursor position
+        setTimeout(() => {
+          if (event.target) {
+            event.target.setSelectionRange(cursorPos + 1, cursorPos + 1);
+          }
+        }, 0);
+
+        playKeySound(upperKey);
+
+        if (isSpeechEnabled.value) {
+          speakLetter(upperKey);
+        }
+      } else {
+        playKeySound(key);
+
+        if (isSpeechEnabled.value && key !== ' ') {
+          speakLetter(key);
+        }
+      }
+    }
+  };
+
+  const handleEnterKey = async () => {
+    if (currentText.value.trim()) {
+      playEnterSound();
+
+      const lineToSpeak = currentText.value;
+      completedLines.value.push(currentText.value);
+      currentText.value = '';
+
+      if (isAutoSpeakEnabled.value && isSpeechEnabled.value) {
+        speakLine(lineToSpeak);
+      }
+    }
+  };
+
+  const onInputFocus = () => {
+    isInputFocused.value = true;
+  };
+
+  const onInputBlur = () => {
+    isInputFocused.value = false;
+  };
+
+  const toggleAutoSpeak = () => {
+    isAutoSpeakEnabled.value = !isAutoSpeakEnabled.value;
+  };
+
+  const toggleCapsLock = () => {
+    isCapsLockEnabled.value = !isCapsLockEnabled.value;
+  };
+
+  const speakHistoryLine = line => {
+    if (isSpeechEnabled.value && line.trim()) {
+      speakLine(line);
+    }
+  };
+
+  const onCharacterTyped = data => {
+    // Additional handling for character typing if needed
+  };
+
+  const initApp = () => {
+    initAudio();
+  };
+
+  // Create the context object
+  const typingApp = {
+    // State
+    currentText,
+    completedLines,
+    isInputFocused,
+    isCapsLockEnabled,
+    isAutoSpeakEnabled,
+    isSoundEnabled,
+    isSpeechEnabled,
+
+    // Methods
+    onKeyDown,
+    onInputFocus,
+    onInputBlur,
+    onCharacterTyped,
+    toggleSound,
+    toggleSpeech,
+    toggleAutoSpeak,
+    toggleCapsLock,
+    speakHistoryLine,
+    initApp,
+  };
+
+  return typingApp;
+}
+
+export function provideTypingApp(typingApp) {
+  provide(TYPING_APP_KEY, typingApp);
+}
+
+export function useTypingApp() {
+  const typingApp = inject(TYPING_APP_KEY);
+
+  if (!typingApp) {
+    throw new Error(
+      'useTypingApp must be used within a component that provides typing app context',
+    );
+  }
+
+  return typingApp;
+}
