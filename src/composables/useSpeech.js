@@ -5,6 +5,10 @@ export function useSpeech() {
   const isSpeaking = ref(false);
   const speechRate = ref(0.8);
   const speechPitch = ref(1.2);
+  const currentlySpeaking = ref(null); // Track what's currently being spoken
+  const speakingLine = ref(null); // Track which line is being spoken
+  const speakingPosition = ref(0); // Track position within the line being spoken
+  const speakingQueue = ref([]); // Track characters in the speaking queue
 
   // Initialize speech synthesis for macOS compatibility
   const initSpeech = () => {
@@ -81,16 +85,52 @@ export function useSpeech() {
 
         utterance.onstart = () => {
           isSpeaking.value = true;
+          currentlySpeaking.value = text;
+
+          // Add to speaking queue for letter-by-letter highlighting
+          if (text.length === 1) {
+            speakingQueue.value.push(text);
+          }
+
+          // For line speech, track the line and start position
+          if (text.length > 1) {
+            speakingLine.value = text;
+            speakingPosition.value = 0;
+          }
         };
 
         utterance.onend = () => {
           isSpeaking.value = false;
+          currentlySpeaking.value = null;
+
+          // Remove from speaking queue when done
+          if (text.length === 1) {
+            const index = speakingQueue.value.indexOf(text);
+            if (index > -1) {
+              speakingQueue.value.splice(index, 1);
+            }
+          }
+
+          speakingLine.value = null;
+          speakingPosition.value = 0;
           resolve();
         };
 
         utterance.onerror = event => {
           console.warn('Speech synthesis error:', event.error);
           isSpeaking.value = false;
+          currentlySpeaking.value = null;
+
+          // Remove from speaking queue on error
+          if (text.length === 1) {
+            const index = speakingQueue.value.indexOf(text);
+            if (index > -1) {
+              speakingQueue.value.splice(index, 1);
+            }
+          }
+
+          speakingLine.value = null;
+          speakingPosition.value = 0;
           resolve();
         };
 
@@ -118,9 +158,50 @@ export function useSpeech() {
     return Promise.resolve();
   };
 
-  const speakLine = line => {
+  const speakLine = async line => {
     if (typeof line === 'string' && line.trim().length > 0) {
-      return speak(line.trim());
+      const trimmedLine = line.trim();
+
+      // Set the line being spoken
+      speakingLine.value = trimmedLine;
+      speakingPosition.value = 0;
+
+      // Split into words and speak them sequentially
+      const words = trimmedLine.split(/\s+/);
+      let currentWordIndex = 0;
+
+      const speakNextWord = async () => {
+        if (currentWordIndex >= words.length) {
+          // Finished speaking all words
+          speakingLine.value = null;
+          speakingPosition.value = 0;
+          return;
+        }
+
+        const word = words[currentWordIndex];
+        const wordStartIndex = trimmedLine.indexOf(
+          word,
+          speakingPosition.value,
+        );
+
+        // Update position to start of current word
+        speakingPosition.value = wordStartIndex;
+
+        // Speak the current word
+        await speak(word);
+
+        // Move to next word
+        currentWordIndex++;
+        speakingPosition.value = wordStartIndex + word.length;
+
+        // Continue with next word
+        speakNextWord();
+      };
+
+      // Start speaking words
+      speakNextWord();
+
+      return Promise.resolve();
     }
     return Promise.resolve();
   };
@@ -152,6 +233,10 @@ export function useSpeech() {
     isSpeaking,
     speechRate,
     speechPitch,
+    currentlySpeaking,
+    speakingLine,
+    speakingPosition,
+    speakingQueue,
     initSpeech,
     speak,
     speakLetter,

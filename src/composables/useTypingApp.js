@@ -9,7 +9,7 @@ export function createTypingApp() {
   const currentText = ref('');
   const completedLines = ref([]);
   const isInputFocused = ref(false);
-  const isCapsLockEnabled = ref(false);
+  const isCapsLockEnabled = ref(true);
   const isAutoSpeakEnabled = ref(true);
 
   // Composables
@@ -21,8 +21,17 @@ export function createTypingApp() {
     initAudio,
   } = useSound();
 
-  const { isSpeechEnabled, speakLetter, speakLine, toggleSpeech, initSpeech } =
-    useSpeech();
+  const {
+    isSpeechEnabled,
+    speakLetter,
+    speakLine,
+    toggleSpeech,
+    initSpeech,
+    currentlySpeaking,
+    speakingLine,
+    speakingPosition,
+    speakingQueue,
+  } = useSpeech();
 
   // Methods
   const onKeyDown = async event => {
@@ -117,6 +126,10 @@ export function createTypingApp() {
     isAutoSpeakEnabled,
     isSoundEnabled,
     isSpeechEnabled,
+    currentlySpeaking,
+    speakingLine,
+    speakingPosition,
+    speakingQueue,
 
     // Methods
     onKeyDown,

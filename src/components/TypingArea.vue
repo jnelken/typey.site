@@ -12,9 +12,17 @@
         class="completed-line"
         :class="{ 'line-enter': index === completedLines.length - 1 }"
         @click="speakHistoryLine(line)">
-        <Text size="typing" font="mono" color="secondary">
-          {{ line }}
-        </Text>
+        <AnimatedText
+          :text="line"
+          size="typing"
+          font="mono"
+          color="secondary"
+          :animate-on-change="false"
+          :show-cursor="false"
+          :currently-speaking="currentlySpeaking"
+          :speaking-line="speakingLine"
+          :speaking-position="speakingPosition"
+          :speaking-queue="speakingQueue" />
       </div>
     </div>
   </div>
@@ -23,10 +31,18 @@
 <script setup>
 import { ref, nextTick, watch } from 'vue';
 import Text from '../ui/Text.vue';
+import AnimatedText from '../ui/AnimatedText.vue';
 import { useTypingApp } from '../composables/useTypingApp';
 import { LAYOUT_CONSTANTS } from '../constants/layout';
 
-const { completedLines, speakHistoryLine } = useTypingApp();
+const {
+  completedLines,
+  speakHistoryLine,
+  currentlySpeaking,
+  speakingLine,
+  speakingPosition,
+  speakingQueue,
+} = useTypingApp();
 
 const historyContainer = ref(null);
 

@@ -8,6 +8,10 @@
         color="primary"
         :animate-on-change="false"
         :show-cursor="!isInputFocused"
+        :currently-speaking="currentlySpeaking"
+        :speaking-line="speakingLine"
+        :speaking-position="speakingPosition"
+        :speaking-queue="speakingQueue"
         @character-typed="onCharacterTyped" />
     </div>
 
@@ -39,6 +43,10 @@ const {
   onInputFocus,
   onInputBlur,
   onCharacterTyped,
+  currentlySpeaking,
+  speakingLine,
+  speakingPosition,
+  speakingQueue,
 } = useTypingApp();
 
 const typingInput = ref(null);
