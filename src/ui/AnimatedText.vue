@@ -113,18 +113,18 @@ const getCharacterClass = index => {
 
   const isHistoricalHighlight = isInCurrentWord && index < wordEndIndex;
 
-  // Debug logging for troubleshooting
-  if (isInSpeakingLine) {
-    console.log('Character highlighting check:', {
-      index,
-      char,
-      currentlySpeaking: props.currentlySpeaking,
-      isBeingSpoken,
-      isHistoricalHighlight,
-      speakingPosition: props.speakingPosition,
-      wordEndIndex,
-    });
-  }
+  // Debug logging for troubleshooting (uncomment if needed)
+  // if (isInSpeakingLine) {
+  //   console.log('Character highlighting check:', {
+  //     index,
+  //     char,
+  //     currentlySpeaking: props.currentlySpeaking,
+  //     isBeingSpoken,
+  //     isHistoricalHighlight,
+  //     speakingPosition: props.speakingPosition,
+  //     wordEndIndex,
+  //   });
+  // }
 
   return [
     'character',

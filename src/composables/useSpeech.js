@@ -238,15 +238,15 @@ export function useSpeech() {
           value: actualWord.toLowerCase()
         };
 
-        // Debug logging
-        console.log('Speaking word:', {
-          actualWord,
-          wordStartIndex,
-          wordEndIndex,
-          originalText: trimmedLine.substring(wordStartIndex, wordEndIndex),
-          speechData,
-          speakingLine: speakingLine.value,
-        });
+        // Debug logging (uncomment if needed)
+        // console.log('Speaking word:', {
+        //   actualWord,
+        //   wordStartIndex,
+        //   wordEndIndex,
+        //   originalText: trimmedLine.substring(wordStartIndex, wordEndIndex),
+        //   speechData,
+        //   speakingLine: speakingLine.value,
+        // });
         await speak(speechData.value, { speechData: speechData });
 
         // Move to next word
