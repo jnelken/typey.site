@@ -98,17 +98,31 @@ const getCharacterClass = index => {
 
   // For historical lines, check if this character should be highlighted
   const isInSpeakingLine = props.speakingLine === displayedText.value;
-  const isAtSpeakingPosition = index === props.speakingPosition;
 
   // Check if this character is within the current word being spoken
   const isInCurrentWord = isInSpeakingLine && index >= props.speakingPosition;
-  const nextSpaceIndex = displayedText.value.indexOf(
-    ' ',
-    props.speakingPosition,
-  );
-  const wordEndIndex =
-    nextSpaceIndex > -1 ? nextSpaceIndex : displayedText.value.length;
+
+  // Find the end of the current word by looking for the next space or end of text
+  let wordEndIndex = displayedText.value.length;
+  for (let i = props.speakingPosition; i < displayedText.value.length; i++) {
+    if (/\s/.test(displayedText.value[i])) {
+      wordEndIndex = i;
+      break;
+    }
+  }
+
   const isHistoricalHighlight = isInCurrentWord && index < wordEndIndex;
+
+  // Debug logging for troubleshooting
+  if (isInSpeakingLine && index === props.speakingPosition) {
+    console.log('Highlighting word:', {
+      text: displayedText.value,
+      speakingPosition: props.speakingPosition,
+      wordEndIndex,
+      char: displayedText.value[index],
+      isHistoricalHighlight,
+    });
+  }
 
   return [
     'character',
@@ -128,16 +142,19 @@ const getCharacterStyle = index => {
 
   // For historical lines, check if this character should be highlighted
   const isInSpeakingLine = props.speakingLine === displayedText.value;
-  const isAtSpeakingPosition = index === props.speakingPosition;
 
   // Check if this character is within the current word being spoken
   const isInCurrentWord = isInSpeakingLine && index >= props.speakingPosition;
-  const nextSpaceIndex = displayedText.value.indexOf(
-    ' ',
-    props.speakingPosition,
-  );
-  const wordEndIndex =
-    nextSpaceIndex > -1 ? nextSpaceIndex : displayedText.value.length;
+
+  // Find the end of the current word by looking for the next space or end of text
+  let wordEndIndex = displayedText.value.length;
+  for (let i = props.speakingPosition; i < displayedText.value.length; i++) {
+    if (/\s/.test(displayedText.value[i])) {
+      wordEndIndex = i;
+      break;
+    }
+  }
+
   const isHistoricalHighlight = isInCurrentWord && index < wordEndIndex;
 
   if (

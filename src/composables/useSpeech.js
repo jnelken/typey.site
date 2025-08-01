@@ -85,11 +85,20 @@ export function useSpeech() {
 
         utterance.onstart = () => {
           isSpeaking.value = true;
-          currentlySpeaking.value = text;
-
-          // Add to speaking queue for letter-by-letter highlighting
-          if (text.length === 1) {
-            speakingQueue.value.push(text);
+          
+          // Use speechData if available for proper highlighting
+          if (options.speechData) {
+            currentlySpeaking.value = options.speechData.label;
+            // Add to speaking queue for letter-by-letter highlighting
+            if (options.speechData.label.length === 1) {
+              speakingQueue.value.push(options.speechData.label);
+            }
+          } else {
+            currentlySpeaking.value = text;
+            // Add to speaking queue for letter-by-letter highlighting
+            if (text.length === 1) {
+              speakingQueue.value.push(text);
+            }
           }
 
           // For line speech, track the line and start position
@@ -104,7 +113,12 @@ export function useSpeech() {
           currentlySpeaking.value = null;
 
           // Remove from speaking queue when done
-          if (text.length === 1) {
+          if (options.speechData && options.speechData.label.length === 1) {
+            const index = speakingQueue.value.indexOf(options.speechData.label);
+            if (index > -1) {
+              speakingQueue.value.splice(index, 1);
+            }
+          } else if (text.length === 1) {
             const index = speakingQueue.value.indexOf(text);
             if (index > -1) {
               speakingQueue.value.splice(index, 1);
@@ -122,7 +136,12 @@ export function useSpeech() {
           currentlySpeaking.value = null;
 
           // Remove from speaking queue on error
-          if (text.length === 1) {
+          if (options.speechData && options.speechData.label.length === 1) {
+            const index = speakingQueue.value.indexOf(options.speechData.label);
+            if (index > -1) {
+              speakingQueue.value.splice(index, 1);
+            }
+          } else if (text.length === 1) {
             const index = speakingQueue.value.indexOf(text);
             if (index > -1) {
               speakingQueue.value.splice(index, 1);
@@ -146,9 +165,16 @@ export function useSpeech() {
 
   const speakLetter = letter => {
     if (typeof letter === 'string' && letter.length === 1 && letter !== ' ') {
-      // Convert to lowercase to avoid "Capital" prefix in speech
-      const lowercaseLetter = letter.toLowerCase();
-      return speak(lowercaseLetter, { rate: 1.0, pitch: 1.4 });
+      // Create speech object with original letter for highlighting and lowercase for speech
+      const speechData = {
+        label: letter,
+        value: letter.toLowerCase()
+      };
+      return speak(speechData.value, { 
+        rate: 1.0, 
+        pitch: 1.4, 
+        speechData: speechData 
+      });
     }
     return Promise.resolve();
   };
@@ -168,33 +194,60 @@ export function useSpeech() {
       speakingLine.value = trimmedLine;
       speakingPosition.value = 0;
 
-      // Split into words and speak them sequentially
-      const words = trimmedLine.split(/\s+/);
-      let currentWordIndex = 0;
+      // Track word boundaries directly in the original text
+      let currentPosition = 0;
 
       const speakNextWord = async () => {
-        if (currentWordIndex >= words.length) {
+        // Skip leading whitespace
+        while (
+          currentPosition < trimmedLine.length &&
+          /\s/.test(trimmedLine[currentPosition])
+        ) {
+          currentPosition++;
+        }
+
+        // Check if we've reached the end
+        if (currentPosition >= trimmedLine.length) {
           // Finished speaking all words
           speakingLine.value = null;
           speakingPosition.value = 0;
           return;
         }
 
-        const word = words[currentWordIndex];
-        const wordStartIndex = trimmedLine.indexOf(
-          word,
-          speakingPosition.value,
-        );
+        const wordStartIndex = currentPosition;
+
+        // Find the end of the current word
+        let wordEndIndex = wordStartIndex;
+        while (
+          wordEndIndex < trimmedLine.length &&
+          !/\s/.test(trimmedLine[wordEndIndex])
+        ) {
+          wordEndIndex++;
+        }
+
+        // Extract the actual word from the original text
+        const actualWord = trimmedLine.substring(wordStartIndex, wordEndIndex);
 
         // Update position to start of current word
         speakingPosition.value = wordStartIndex;
 
-        // Speak the current word (convert to lowercase to avoid "Capital" prefix)
-        await speak(word.toLowerCase());
+        // Debug logging
+        console.log('Speaking word:', {
+          actualWord,
+          wordStartIndex,
+          wordEndIndex,
+          originalText: trimmedLine.substring(wordStartIndex, wordEndIndex),
+        });
+
+        // Create speech object with original word for highlighting and lowercase for speech
+        const speechData = {
+          label: actualWord,
+          value: actualWord.toLowerCase()
+        };
+        await speak(speechData.value, { speechData: speechData });
 
         // Move to next word
-        currentWordIndex++;
-        speakingPosition.value = wordStartIndex + word.length;
+        currentPosition = wordEndIndex;
 
         // Continue with next word
         speakNextWord();
