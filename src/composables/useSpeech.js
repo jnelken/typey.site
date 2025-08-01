@@ -102,7 +102,8 @@ export function useSpeech() {
           }
 
           // For line speech, track the line and start position
-          if (text.length > 1) {
+          // Only set speakingLine if we don't have speechData (to avoid overwriting original case)
+          if (text.length > 1 && !options.speechData) {
             speakingLine.value = text;
             speakingPosition.value = 0;
           }
@@ -231,19 +232,21 @@ export function useSpeech() {
         // Update position to start of current word
         speakingPosition.value = wordStartIndex;
 
+        // Create speech object with original word for highlighting and lowercase for speech
+        const speechData = {
+          label: actualWord,
+          value: actualWord.toLowerCase()
+        };
+
         // Debug logging
         console.log('Speaking word:', {
           actualWord,
           wordStartIndex,
           wordEndIndex,
           originalText: trimmedLine.substring(wordStartIndex, wordEndIndex),
+          speechData,
+          speakingLine: speakingLine.value,
         });
-
-        // Create speech object with original word for highlighting and lowercase for speech
-        const speechData = {
-          label: actualWord,
-          value: actualWord.toLowerCase()
-        };
         await speak(speechData.value, { speechData: speechData });
 
         // Move to next word
