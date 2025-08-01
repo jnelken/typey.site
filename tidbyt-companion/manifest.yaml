@@ -1,0 +1,6 @@
+name: Typey Site Companion
+summary: Display latest typing entries from Typey Site
+desc: Shows the most recent typing entries from your Typey Site deployment on your Tidbyt device
+author: Typey Site
+version: "1.0.0"
+id: typey-site-companion

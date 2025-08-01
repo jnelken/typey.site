@@ -71,12 +71,34 @@ export function createTypingApp() {
     }
   };
 
+  const submitEntry = async (text) => {
+    try {
+      const response = await fetch('/.netlify/functions/submit-entry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+      
+      if (!response.ok) {
+        console.warn('Failed to submit entry:', response.status);
+      }
+    } catch (error) {
+      console.warn('Error submitting entry:', error);
+    }
+  };
+
   const handleEnterKey = async () => {
     if (currentText.value.trim()) {
       playEnterSound();
 
       const lineToSpeak = currentText.value;
       completedLines.value.push(currentText.value);
+      
+      // Submit to API for Tidbyt companion app
+      await submitEntry(currentText.value);
+      
       currentText.value = '';
 
       if (isAutoSpeakEnabled.value && isSpeechEnabled.value) {
@@ -107,7 +129,7 @@ export function createTypingApp() {
     }
   };
 
-  const onCharacterTyped = data => {
+  const onCharacterTyped = () => {
     // Additional handling for character typing if needed
   };
 
