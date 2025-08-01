@@ -59,17 +59,21 @@ export function useSpeech() {
       };
 
       getVoices().then(voices => {
-        // macOS-specific voice selection
-        const preferredVoice = voices.find(
-          voice =>
-            voice.name.includes('Google') ||
-            voice.name.includes('Alex') ||
-            voice.name.includes('Samantha') ||
-            voice.name.includes('Victoria') || // macOS default
-            voice.name.includes('Daniel') || // macOS default
-            voice.name.includes('Karen') || // macOS default
-            voice.default,
-        );
+        // Voice selection with English priority
+        const preferredVoice =
+          voices.find(
+            voice =>
+              voice.lang.startsWith('en') &&
+              (voice.name.includes('Google') ||
+                voice.name.includes('Alex') ||
+                voice.name.includes('Samantha') ||
+                voice.name.includes('Victoria') || // macOS default
+                voice.name.includes('Daniel') || // macOS default
+                voice.name.includes('Karen') || // macOS default
+                voice.default),
+          ) ||
+          voices.find(voice => voice.lang.startsWith('en')) ||
+          voices.find(voice => voice.default);
 
         if (preferredVoice) {
           utterance.voice = preferredVoice;
