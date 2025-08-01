@@ -21,13 +21,8 @@ export function createTypingApp() {
     initAudio,
   } = useSound();
 
-  const {
-    isSpeechEnabled,
-    speakLetter,
-    speakLine,
-    toggleSpeech,
-    stopSpeaking,
-  } = useSpeech();
+  const { isSpeechEnabled, speakLetter, speakLine, toggleSpeech, initSpeech } =
+    useSpeech();
 
   // Methods
   const onKeyDown = async event => {
@@ -37,9 +32,6 @@ export function createTypingApp() {
       event.preventDefault();
       await handleEnterKey();
     } else if (key.length === 1) {
-      // Stop any currently speaking letter
-      stopSpeaking();
-
       if (isCapsLockEnabled.value && key.match(/[a-z]/)) {
         event.preventDefault();
         const upperKey = key.toUpperCase();
@@ -112,6 +104,7 @@ export function createTypingApp() {
 
   const initApp = () => {
     initAudio();
+    initSpeech();
   };
 
   // Create the context object
