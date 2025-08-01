@@ -81,7 +81,7 @@ defineExpose({
   pointer-events: none;
   position: relative;
   z-index: 5;
-  min-height: 4rem;
+  height: 4rem;
   display: flex;
   align-items: flex-start;
   user-select: none;
@@ -91,6 +91,7 @@ defineExpose({
   max-width: 100%;
   flex-wrap: wrap;
   margin-bottom: var(--spacing-sm);
+  overflow: hidden;
 }
 
 .input-container {

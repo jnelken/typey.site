@@ -146,7 +146,9 @@ export function useSpeech() {
 
   const speakLetter = letter => {
     if (typeof letter === 'string' && letter.length === 1 && letter !== ' ') {
-      return speak(letter, { rate: 1.0, pitch: 1.4 });
+      // Convert to lowercase to avoid "Capital" prefix in speech
+      const lowercaseLetter = letter.toLowerCase();
+      return speak(lowercaseLetter, { rate: 1.0, pitch: 1.4 });
     }
     return Promise.resolve();
   };
@@ -187,8 +189,8 @@ export function useSpeech() {
         // Update position to start of current word
         speakingPosition.value = wordStartIndex;
 
-        // Speak the current word
-        await speak(word);
+        // Speak the current word (convert to lowercase to avoid "Capital" prefix)
+        await speak(word.toLowerCase());
 
         // Move to next word
         currentWordIndex++;
