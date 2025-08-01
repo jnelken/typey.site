@@ -1,5 +1,10 @@
 <template>
-  <Container height="screen" center max-width="default" padding="lg">
+  <Container
+    height="screen"
+    center
+    max-width="default"
+    padding="lg"
+    @click="handleGlobalClick">
     <div class="typing-app">
       <div class="header">
         <Text tag="h1" size="3xl" align="center" color="primary" weight="bold">
@@ -44,6 +49,18 @@ const focusInput = () => {
   if (inputSection.value) {
     inputSection.value.focus();
   }
+};
+
+const handleGlobalClick = event => {
+  // Don't refocus if clicking on the input itself
+  if (event.target.closest('.input-section')) {
+    return;
+  }
+
+  // Small delay to allow click actions to complete
+  setTimeout(() => {
+    focusInput();
+  }, 50);
 };
 
 onMounted(() => {

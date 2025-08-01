@@ -7,7 +7,7 @@
         font="mono"
         color="primary"
         :animate-on-change="false"
-        :show-cursor="!isInputFocused"
+        :show-cursor="false"
         :currently-speaking="currentlySpeaking"
         :speaking-line="speakingLine"
         :speaking-position="speakingPosition"
