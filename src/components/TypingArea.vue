@@ -1,5 +1,10 @@
 <template>
-  <div class="typing-area">
+  <div
+    class="typing-area"
+    :style="{
+      '--typing-area-bottom-margin': `${LAYOUT_CONSTANTS.TYPING_AREA_BOTTOM_MARGIN}px`,
+      '--lines-history-max-height': LAYOUT_CONSTANTS.LINES_HISTORY_MAX_HEIGHT,
+    }">
     <div class="lines-history" ref="historyContainer">
       <div
         v-for="(line, index) in completedLines"
@@ -19,6 +24,7 @@
 import { ref, nextTick, watch } from 'vue';
 import Text from '../ui/Text.vue';
 import { useTypingApp } from '../composables/useTypingApp';
+import { LAYOUT_CONSTANTS } from '../constants/layout';
 
 const { completedLines, speakHistoryLine } = useTypingApp();
 
@@ -29,11 +35,9 @@ watch(
   async () => {
     await nextTick();
 
-    // Scroll to bottom of history after DOM update
+    // Scroll to bottom to show most recent content (messaging app UX)
     if (historyContainer.value) {
-      setTimeout(() => {
-        historyContainer.value.scrollTop = historyContainer.value.scrollHeight;
-      }, 50);
+      historyContainer.value.scrollTop = historyContainer.value.scrollHeight;
     }
   },
 );
@@ -46,7 +50,7 @@ watch(
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  padding-bottom: 160px;
+  margin-bottom: var(--typing-area-bottom-margin);
 }
 
 .lines-history {
@@ -56,8 +60,10 @@ watch(
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: var(--spacing-md);
   scroll-behavior: smooth;
+  max-height: var(--lines-history-max-height);
 }
 
 .completed-line {
