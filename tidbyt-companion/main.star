@@ -44,7 +44,7 @@ def get_latest_entry(api_url, filter_by_ip, update_interval):
         return json.decode(cached_entry)
     
     # Make API request
-    url = api_url + "/.netlify/functions/latest-entry"
+    url = api_url + "/api/latest-entry"
     if filter_by_ip:
         url += "?ip=current"
     

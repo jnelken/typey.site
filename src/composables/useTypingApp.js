@@ -73,7 +73,7 @@ export function createTypingApp() {
 
   const submitEntry = async (text) => {
     try {
-      const response = await fetch('/.netlify/functions/submit-entry', {
+      const response = await fetch('/api/submit-entry', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
