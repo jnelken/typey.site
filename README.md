@@ -2,6 +2,8 @@
 
 A fun, interactive typing application designed for kids with sound effects, text-to-speech, and visual feedback. Built with Vue 3 and modern web technologies.
 
+<img width="1180" height="676" alt="Screenshot 2025-08-17 at 2 42 14 AM" src="https://github.com/user-attachments/assets/e3804be8-f637-422f-aff1-dbd3f72d05d2" />
+
 ## 🎯 Usage
 
 ### Basic Typing
