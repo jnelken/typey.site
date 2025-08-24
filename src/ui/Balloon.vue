@@ -3,7 +3,8 @@
     v-if="balloon && balloon.id"
     class="balloon-container"
     :style="containerStyle"
-    :class="{ 'balloon-popping': balloon.isPopping }">
+    :class="{ 'balloon-popping': balloon.isPopping }"
+    @click="handleBalloonClick">
     <div class="balloon" :style="balloonStyle">
       <div class="balloon-highlight"></div>
     </div>
@@ -13,6 +14,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useTypingApp } from '../composables/useTypingApp';
 
 const props = defineProps({
   balloon: {
@@ -21,6 +23,8 @@ const props = defineProps({
   },
 });
 
+const typingApp = useTypingApp();
+
 const containerStyle = computed(() => ({
   left: `${props.balloon?.left || 50}%`,
 }));
@@ -28,6 +32,12 @@ const containerStyle = computed(() => ({
 const balloonStyle = computed(() => ({
   backgroundColor: props.balloon?.color || '#ff6b6b',
 }));
+
+const handleBalloonClick = () => {
+  if (!props.balloon.isPopping) {
+    typingApp.popBalloon(props.balloon.id);
+  }
+};
 </script>
 
 <style scoped>
@@ -36,8 +46,14 @@ const balloonStyle = computed(() => ({
   bottom: -80px;
   transform: translateX(-50%);
   z-index: 1000;
-  pointer-events: none;
+  pointer-events: auto;
   animation: balloon-float 4s ease-out forwards;
+  cursor: pointer;
+  transition: transform 0.2s ease-out;
+}
+
+.balloon-container:hover {
+  transform: translateX(-50%) scale(1.1);
 }
 
 .balloon {
@@ -107,12 +123,12 @@ const balloonStyle = computed(() => ({
     transform: scale(1) rotate(0deg);
     opacity: 1;
   }
-  50% {
-    transform: scale(1.2) rotate(10deg);
-    opacity: 0.8;
+  30% {
+    transform: scale(1.4) rotate(5deg);
+    opacity: 0.9;
   }
   100% {
-    transform: scale(0) rotate(20deg);
+    transform: scale(2.5) rotate(15deg);
     opacity: 0;
   }
 }

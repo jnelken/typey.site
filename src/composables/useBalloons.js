@@ -1,14 +1,144 @@
 import { ref } from 'vue';
+import { useSound } from './useSound';
 
 const MAX_BALLOONS = 100;
-const SPAWN_DELAY = 100; // ms between balloon spawns
-const POP_BASE_DELAY = 5000; // base time before balloon pops
-const POP_RANDOM_VARIATION = 2000; // random variation (0-2000ms added)
+const SPAWN_DELAY = 200;
+const POP_BASE_DELAY = 200;
+const POP_RANDOM_VARIATION = 10000;
+const BALLOON_POP_DURATION = 500;
+
+const INFLATE_SOUND_DURATION = 0.4;
+const POP_SOUND_DURATION = 0.08;
 
 let balloonIdCounter = 0;
 
 export function useBalloons() {
   const balloons = ref([]);
+  const { isAudioEnabled, initAudio } = useSound();
+
+  // Reuse single AudioContext to avoid browser limits
+  let sharedAudioContext = null;
+
+  const createInflateSound = () => {
+    if (typeof AudioContext === 'undefined' || !isAudioEnabled.value) return;
+
+    try {
+      // Initialize or reuse existing AudioContext
+      if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+        initAudio();
+        sharedAudioContext = new AudioContext();
+      }
+
+      const audioContext = sharedAudioContext;
+
+      // Create white noise buffer for air-like inflation sound
+      const bufferSize = audioContext.sampleRate * INFLATE_SOUND_DURATION;
+      const buffer = audioContext.createBuffer(
+        1,
+        bufferSize,
+        audioContext.sampleRate,
+      );
+      const data = buffer.getChannelData(0);
+
+      // Generate white noise
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1; // Random values between -1 and 1
+      }
+
+      // Create buffer source and audio nodes
+      const source = audioContext.createBufferSource();
+      const gainNode = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+
+      source.buffer = buffer;
+      source.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Band-pass filter to simulate air rushing sound (mid frequencies)
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(800, audioContext.currentTime);
+      filter.Q.setValueAtTime(1.5, audioContext.currentTime);
+
+      // Volume envelope - gradual fade in and out like air filling balloon
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(
+        0.08,
+        audioContext.currentTime + INFLATE_SOUND_DURATION / 4,
+      );
+      gainNode.gain.linearRampToValueAtTime(
+        0.06,
+        audioContext.currentTime + INFLATE_SOUND_DURATION / 2,
+      );
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + INFLATE_SOUND_DURATION,
+      );
+
+      source.start(audioContext.currentTime);
+      source.stop(audioContext.currentTime + INFLATE_SOUND_DURATION);
+    } catch (error) {
+      console.warn('Audio playback error:', error);
+    }
+  };
+
+  const createPopSound = () => {
+    if (typeof AudioContext === 'undefined' || !isAudioEnabled.value) return;
+
+    try {
+      // Initialize or reuse existing AudioContext
+      if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+        initAudio();
+        sharedAudioContext = new AudioContext();
+      }
+
+      const audioContext = sharedAudioContext;
+
+      // Create white noise buffer for realistic pop sound
+      const bufferSize = audioContext.sampleRate * POP_SOUND_DURATION;
+      const buffer = audioContext.createBuffer(
+        1,
+        bufferSize,
+        audioContext.sampleRate,
+      );
+      const data = buffer.getChannelData(0);
+
+      // Generate white noise
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1; // Random values between -1 and 1
+      }
+
+      // Create buffer source and gain node
+      const source = audioContext.createBufferSource();
+      const gainNode = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+
+      source.buffer = buffer;
+      source.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // High-pass filter to make it more "poppy"
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(800, audioContext.currentTime);
+
+      // Quick burst envelope - sharp attack, quick decay
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(
+        0.2,
+        audioContext.currentTime + 0.001,
+      ); // Very quick attack
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + POP_SOUND_DURATION,
+      );
+
+      source.start(audioContext.currentTime);
+      source.stop(audioContext.currentTime + POP_SOUND_DURATION);
+    } catch (error) {
+      console.warn('Audio playback error:', error);
+    }
+  };
 
   const colors = [
     '#ff6b6b', // primary red
@@ -53,10 +183,11 @@ export function useBalloons() {
     if (balloon && !balloon.isPopping) {
       balloon.isPopping = true;
 
-      // Remove after pop animation completes
+      createPopSound();
+
       setTimeout(() => {
         removeBalloon(balloonId);
-      }, 500); // matches pop animation duration
+      }, BALLOON_POP_DURATION);
     }
   };
 
@@ -77,7 +208,8 @@ export function useBalloons() {
       const balloon = createBalloon();
       balloons.value.push(balloon);
 
-      // Schedule balloon to pop after delay + random variation
+      createInflateSound();
+
       const popDelay = POP_BASE_DELAY + Math.random() * POP_RANDOM_VARIATION;
       setTimeout(() => {
         popBalloon(balloon.id);

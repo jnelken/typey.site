@@ -31,3 +31,7 @@ Thumbs.db
 
 # Netlify
 .netlify
+
+# Test coverage
+coverage
+*.lcov
