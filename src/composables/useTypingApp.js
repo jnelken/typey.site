@@ -1,6 +1,7 @@
 import { ref, provide, inject } from 'vue';
 import { useSound } from './useSound';
 import { useSpeech } from './useSpeech';
+import { useBalloons } from './useBalloons';
 
 const TYPING_APP_KEY = Symbol('typing-app');
 
@@ -32,6 +33,9 @@ export function createTypingApp() {
     speakingPosition,
     speakingQueue,
   } = useSpeech();
+
+  const { balloons, spawnBalloons, popBalloon, clearAllBalloons } =
+    useBalloons();
 
   // Methods
   const onKeyDown = async event => {
@@ -71,7 +75,7 @@ export function createTypingApp() {
     }
   };
 
-  const submitEntry = async (text) => {
+  const submitEntry = async text => {
     try {
       const response = await fetch('/.netlify/functions/submit-entry', {
         method: 'POST',
@@ -80,7 +84,7 @@ export function createTypingApp() {
         },
         body: JSON.stringify({ text }),
       });
-      
+
       if (!response.ok) {
         console.warn('Failed to submit entry:', response.status);
       }
@@ -95,10 +99,20 @@ export function createTypingApp() {
 
       const lineToSpeak = currentText.value;
       completedLines.value.push(currentText.value);
-      
+
+      // Check if the entered text is a number and spawn balloons
+      const trimmedText = currentText.value.trim();
+      const numberMatch = trimmedText.match(/^\d+$/);
+      if (numberMatch) {
+        const number = parseInt(numberMatch[0], 10);
+        if (number >= 1) {
+          spawnBalloons(Math.min(number, 100));
+        }
+      }
+
       // Submit to API for Tidbyt companion app
       await submitEntry(currentText.value);
-      
+
       currentText.value = '';
 
       if (isAutoSpeakEnabled.value && isSpeechEnabled.value) {
@@ -152,6 +166,7 @@ export function createTypingApp() {
     speakingLine,
     speakingPosition,
     speakingQueue,
+    balloons,
 
     // Methods
     onKeyDown,
@@ -163,6 +178,9 @@ export function createTypingApp() {
     toggleAutoSpeak,
     toggleCapsLock,
     speakHistoryLine,
+    spawnBalloons,
+    popBalloon,
+    clearAllBalloons,
     initApp,
   };
 

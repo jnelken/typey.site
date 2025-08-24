@@ -27,6 +27,14 @@
         </Text>
       </div>
     </div>
+
+    <!-- Balloon container -->
+    <div class="balloons-container">
+      <Balloon
+        v-for="balloon in typingApp.balloons.value"
+        :key="balloon.id"
+        :balloon="balloon" />
+    </div>
   </Container>
 </template>
 
@@ -37,6 +45,7 @@ import Text from './ui/Text.vue';
 import Controls from './components/Controls.vue';
 import TypingArea from './components/TypingArea.vue';
 import InputSection from './components/InputSection.vue';
+import Balloon from './ui/Balloon.vue';
 import { createTypingApp, provideTypingApp } from './composables/useTypingApp';
 
 const inputSection = ref(null);
@@ -96,5 +105,15 @@ onMounted(() => {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
   z-index: 50;
+}
+
+.balloons-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1000;
 }
 </style>
