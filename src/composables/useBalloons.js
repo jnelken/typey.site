@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 
 const MAX_BALLOONS = 100;
-const SPAWN_DELAY = 50; // ms between balloon spawns
+const SPAWN_DELAY = 100; // ms between balloon spawns
 const POP_BASE_DELAY = 5000; // base time before balloon pops
 const POP_RANDOM_VARIATION = 2000; // random variation (0-2000ms added)
 
@@ -41,18 +41,18 @@ export function useBalloons() {
     };
   };
 
-  const removeBalloon = (balloonId) => {
+  const removeBalloon = balloonId => {
     const index = balloons.value.findIndex(b => b.id === balloonId);
     if (index !== -1) {
       balloons.value.splice(index, 1);
     }
   };
 
-  const popBalloon = (balloonId) => {
+  const popBalloon = balloonId => {
     const balloon = balloons.value.find(b => b.id === balloonId);
     if (balloon && !balloon.isPopping) {
       balloon.isPopping = true;
-      
+
       // Remove after pop animation completes
       setTimeout(() => {
         removeBalloon(balloonId);
@@ -60,20 +60,23 @@ export function useBalloons() {
     }
   };
 
-  const spawnBalloons = async (count) => {
+  const spawnBalloons = async count => {
     if (count <= 0 || count > 100) return;
-    
+
     // Limit total balloons on screen
-    const balloonsToSpawn = Math.min(count, MAX_BALLOONS - balloons.value.length);
-    
+    const balloonsToSpawn = Math.min(
+      count,
+      MAX_BALLOONS - balloons.value.length,
+    );
+
     for (let i = 0; i < balloonsToSpawn; i++) {
       if (i > 0) {
         await new Promise(resolve => setTimeout(resolve, SPAWN_DELAY));
       }
-      
+
       const balloon = createBalloon();
       balloons.value.push(balloon);
-      
+
       // Schedule balloon to pop after delay + random variation
       const popDelay = POP_BASE_DELAY + Math.random() * POP_RANDOM_VARIATION;
       setTimeout(() => {
