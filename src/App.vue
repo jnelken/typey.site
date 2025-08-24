@@ -28,8 +28,7 @@
       </div>
     </div>
 
-    <!-- Balloon container -->
-    <BalloonContainer :balloons="typingApp.balloons.value" />
+    <Balloons :balloons="typingApp.balloons.value" />
   </Container>
 </template>
 
@@ -40,7 +39,7 @@ import Text from './ui/Text.vue';
 import Controls from './components/Controls.vue';
 import TypingArea from './components/TypingArea.vue';
 import InputSection from './components/InputSection.vue';
-import BalloonContainer from './components/BalloonContainer.vue';
+import Balloons from './components/Balloons.vue';
 import { createTypingApp, provideTypingApp } from './composables/useTypingApp';
 
 const inputSection = ref(null);

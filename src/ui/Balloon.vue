@@ -135,20 +135,20 @@ const handleBalloonClick = () => {
 
 /* Add subtle sway animation */
 .balloon-container {
-  animation: balloon-float 4s ease-out forwards,
+  animation: balloon-float 6s ease-out forwards,
     balloon-sway 6s ease-in-out infinite;
 }
 
 @keyframes balloon-sway {
   0%,
   100% {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-100%) translateY(0);
   }
   25% {
     transform: translateX(-50%) translateY(-5px);
   }
   50% {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(100%) translateY(0);
   }
   75% {
     transform: translateX(-50%) translateY(-3px);
