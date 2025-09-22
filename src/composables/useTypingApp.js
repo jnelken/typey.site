@@ -2,6 +2,8 @@ import { ref, provide, inject } from 'vue';
 import { useSound } from './useSound';
 import { useSpeech } from './useSpeech';
 import { useBalloons } from './useBalloons';
+import { useEmojis } from './useEmojis';
+import { evaluateEasterEggs } from './useEmojiEngine';
 import { BALLOON_MAX } from '@/constants/balloons';
 
 const TYPING_APP_KEY = Symbol('typing-app');
@@ -37,6 +39,7 @@ export function createTypingApp() {
 
   const { balloons, spawnBalloons, popBalloon, clearAllBalloons } =
     useBalloons();
+  const { effects: emojiEffects, spawnEmojis, clearEmojis } = useEmojis();
 
   // Methods
   const onKeyDown = async event => {
@@ -101,17 +104,21 @@ export function createTypingApp() {
       const lineToSpeak = currentText.value;
       completedLines.value.push(currentText.value);
 
-      // Check if any part of the entered text contains a number and spawn balloons
+      // Easter eggs: emoji effects based on input (declarative rules)
       const trimmedText = currentText.value.trim();
-      const parts = trimmedText.split(/\s+/); // Split by whitespace
+      const hadEggs = evaluateEasterEggs(trimmedText, spawnEmojis);
 
-      for (const part of parts) {
-        const numberMatch = part.match(/^\d+$/);
-        if (numberMatch) {
-          const number = parseInt(numberMatch[0], 10);
-          if (number >= 1) {
-            spawnBalloons(Math.min(number, BALLOON_MAX));
-            break; // Only spawn balloons for the first number found
+      // If no easter egg triggered, consider spawning balloons from a bare number
+      if (!hadEggs) {
+        const parts = trimmedText.split(/\s+/); // Split by whitespace
+        for (const part of parts) {
+          const numberMatch = part.match(/^\d+$/);
+          if (numberMatch) {
+            const number = parseInt(numberMatch[0], 10);
+            if (number >= 1) {
+              spawnBalloons(Math.min(number, BALLOON_MAX));
+              break; // Only spawn balloons for the first number found
+            }
           }
         }
       }
@@ -126,6 +133,7 @@ export function createTypingApp() {
       }
     }
   };
+
 
   const onInputFocus = () => {
     isInputFocused.value = true;
@@ -173,6 +181,7 @@ export function createTypingApp() {
     speakingPosition,
     speakingQueue,
     balloons,
+    emojiEffects,
 
     // Methods
     onKeyDown,
@@ -187,6 +196,8 @@ export function createTypingApp() {
     spawnBalloons,
     popBalloon,
     clearAllBalloons,
+    spawnEmojis,
+    clearEmojis,
     initApp,
   };
 
