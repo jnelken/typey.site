@@ -5,10 +5,12 @@
     :style="containerStyle"
     :class="{ 'balloon-popping': balloon.isPopping }"
     @click="handleBalloonClick">
-    <div class="balloon" :style="balloonStyle">
-      <div class="balloon-highlight"></div>
+    <div class="balloon-sway-wrapper" :style="swayStyle">
+      <div class="balloon" :style="balloonStyle">
+        <div class="balloon-highlight"></div>
+      </div>
+      <div class="balloon-string"></div>
     </div>
-    <div class="balloon-string"></div>
   </div>
 </template>
 
@@ -33,9 +35,24 @@ const balloonStyle = computed(() => ({
   backgroundColor: props.balloon?.color || '#ff6b6b',
 }));
 
+// Randomized sway parameters per balloon instance
+const swayDuration = `${(8 + Math.random() * 8).toFixed(2)}s`; // 8s–16s
+const swayDelay = `${(Math.random() * 3).toFixed(2)}s`; // 0–3s
+const ampX = `${(1 + Math.random() * 2.5).toFixed(2)}vh`; // 1–3.5vh
+const ampY = `${(0.8 + Math.random() * 2.2).toFixed(2)}vh`; // 0.8–3vh
+const ampYNeg = `-${ampY}`;
+
+const swayStyle = computed(() => ({
+  '--sway-duration': swayDuration,
+  '--sway-delay': swayDelay,
+  '--sway-x': ampX,
+  '--sway-y': ampY,
+  '--sway-y-neg': ampYNeg,
+}));
+
 const handleBalloonClick = () => {
   if (!props.balloon.isPopping) {
-    typingApp.popBalloon(props.balloon.id);
+    typingApp.popBalloon(props.balloon.id, { loud: true });
   }
 };
 </script>
@@ -44,16 +61,22 @@ const handleBalloonClick = () => {
 .balloon-container {
   position: fixed;
   bottom: -80px;
-  transform: translateX(-50%);
   z-index: 1000;
   pointer-events: auto;
-  animation: balloon-float 4s ease-out forwards;
+  /* Use a bezier with non-zero initial slope for small initial velocity */
+  animation: balloon-float 6s cubic-bezier(0.3, 0.1, 0.4, 1) forwards;
   cursor: pointer;
-  transition: transform 0.2s ease-out;
 }
 
-.balloon-container:hover {
-  transform: translateX(-50%) scale(1.1);
+.balloon-sway-wrapper {
+  position: relative;
+  transform: translateX(-50%);
+  animation: balloon-sway-bob var(--sway-duration, 10s) ease-in-out infinite;
+  animation-delay: var(--sway-delay, 0s);
+}
+
+.balloon-sway-wrapper:hover .balloon {
+  transform: scale(1.1);
 }
 
 .balloon {
@@ -88,34 +111,8 @@ const handleBalloonClick = () => {
 }
 
 @keyframes balloon-float {
-  0% {
-    bottom: -80px;
-    transform: translateX(-50%) rotate(-2deg);
-  }
-  25% {
-    bottom: 20vh;
-    transform: translateX(-50%) rotate(2deg);
-  }
-  40% {
-    bottom: calc(100vh - 200px);
-    transform: translateX(-50%) rotate(-1deg);
-  }
-  50% {
-    bottom: calc(100vh - 180px);
-    transform: translateX(-50%) rotate(1deg);
-  }
-  60% {
-    bottom: calc(100vh - 200px);
-    transform: translateX(-50%) rotate(-0.5deg);
-  }
-  75% {
-    bottom: calc(100vh - 190px);
-    transform: translateX(-50%) rotate(0.5deg);
-  }
-  100% {
-    bottom: calc(100vh - 180px);
-    transform: translateX(-50%) rotate(0deg);
-  }
+  0% { bottom: -80px; }
+  100% { bottom: calc(100vh - 180px); }
 }
 
 @keyframes balloon-pop {
@@ -133,25 +130,11 @@ const handleBalloonClick = () => {
   }
 }
 
-/* Add subtle sway animation */
-.balloon-container {
-  animation: balloon-float 6s ease-out forwards,
-    balloon-sway 6s ease-in-out infinite;
-}
-
-@keyframes balloon-sway {
-  0%,
-  100% {
-    transform: translateX(-100%) translateY(0);
-  }
-  25% {
-    transform: translateX(-50%) translateY(-5px);
-  }
-  50% {
-    transform: translateX(100%) translateY(0);
-  }
-  75% {
-    transform: translateX(-50%) translateY(-3px);
-  }
+@keyframes balloon-sway-bob {
+  0%   { transform: translateX(-50%) translateY(0); }
+  25%  { transform: translateX(calc(-50% + var(--sway-x))) translateY(var(--sway-y)); }
+  50%  { transform: translateX(calc(-50% - var(--sway-x))) translateY(var(--sway-y-neg)); }
+  75%  { transform: translateX(calc(-50% + var(--sway-x))) translateY(var(--sway-y)); }
+  100% { transform: translateX(-50%) translateY(0); }
 }
 </style>

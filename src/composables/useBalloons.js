@@ -158,8 +158,8 @@ export function useBalloons() {
   };
 
   const getRandomPosition = () => {
-    // Random horizontal position with some margin from edges
-    return Math.random() * 80 + 10; // 10% to 90% of screen width
+    // Random horizontal position across almost full width with minimal margins
+    return Math.random() * 96 + 2; // 2% to 98% of screen width
   };
 
   const createBalloon = () => {
@@ -178,12 +178,62 @@ export function useBalloons() {
     }
   };
 
-  const popBalloon = balloonId => {
+  const createLoudPopSound = () => {
+    if (typeof AudioContext === 'undefined' || !isAudioEnabled.value) return;
+
+    try {
+      if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+        initAudio();
+        sharedAudioContext = new AudioContext();
+      }
+
+      const audioContext = sharedAudioContext;
+      const bufferSize = audioContext.sampleRate * Math.max(POP_SOUND_DURATION, 0.1);
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const source = audioContext.createBufferSource();
+      const gainNode = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+
+      source.buffer = buffer;
+      source.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Brighter, punchier pop
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(1200, audioContext.currentTime);
+
+      // Louder, sharper envelope
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.001);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + Math.max(POP_SOUND_DURATION, 0.12),
+      );
+
+      source.start(audioContext.currentTime);
+      source.stop(audioContext.currentTime + Math.max(POP_SOUND_DURATION, 0.12));
+    } catch (error) {
+      console.warn('Audio playback error:', error);
+    }
+  };
+
+  const popBalloon = (balloonId, options = {}) => {
     const balloon = balloons.value.find(b => b.id === balloonId);
     if (balloon && !balloon.isPopping) {
       balloon.isPopping = true;
 
-      createPopSound();
+      if (options.loud) {
+        createLoudPopSound();
+      } else {
+        createPopSound();
+      }
 
       setTimeout(() => {
         removeBalloon(balloonId);
