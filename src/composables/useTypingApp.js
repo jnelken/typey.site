@@ -2,6 +2,7 @@ import { ref, provide, inject } from 'vue';
 import { useSound } from './useSound';
 import { useSpeech } from './useSpeech';
 import { useBalloons } from './useBalloons';
+import { BALLOON_MAX } from '@/constants/balloons';
 
 const TYPING_APP_KEY = Symbol('typing-app');
 
@@ -109,7 +110,7 @@ export function createTypingApp() {
         if (numberMatch) {
           const number = parseInt(numberMatch[0], 10);
           if (number >= 1) {
-            spawnBalloons(Math.min(number, 100));
+            spawnBalloons(Math.min(number, BALLOON_MAX));
             break; // Only spawn balloons for the first number found
           }
         }

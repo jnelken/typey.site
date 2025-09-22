@@ -58,13 +58,39 @@ global.AudioContext = jest.fn().mockImplementation(() => ({
     connect: jest.fn(),
     start: jest.fn(),
     stop: jest.fn(),
-    frequency: { setValueAtTime: jest.fn() },
+    frequency: {
+      setValueAtTime: jest.fn(),
+      exponentialRampToValueAtTime: jest.fn(),
+      linearRampToValueAtTime: jest.fn(),
+    },
   })),
   createGain: jest.fn(() => ({
     connect: jest.fn(),
-    gain: { setValueAtTime: jest.fn() },
+    gain: {
+      setValueAtTime: jest.fn(),
+      exponentialRampToValueAtTime: jest.fn(),
+      linearRampToValueAtTime: jest.fn(),
+    },
+  })),
+  createBuffer: jest.fn(() => ({
+    getChannelData: jest.fn(() => new Float32Array(1000)),
+  })),
+  createBufferSource: jest.fn(() => ({
+    connect: jest.fn(),
+    start: jest.fn(),
+    stop: jest.fn(),
+    buffer: null,
+  })),
+  createBiquadFilter: jest.fn(() => ({
+    connect: jest.fn(),
+    type: 'bandpass',
+    frequency: { setValueAtTime: jest.fn() },
+    Q: { setValueAtTime: jest.fn() },
   })),
   destination: {},
+  currentTime: 0,
+  sampleRate: 44100,
+  state: 'running',
 }));
 
 // Mock window.matchMedia

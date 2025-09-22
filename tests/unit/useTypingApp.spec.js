@@ -397,10 +397,10 @@ describe('useTypingApp', () => {
       expect(mockSpawnBalloons).toHaveBeenCalledWith(5);
     });
 
-    it('should limit balloon count to 100', async () => {
+    it('should not cap counts under the limit (10000)', async () => {
       appUnderTest.currentText.value = '500 balloons';
       await appUnderTest.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
-      expect(mockSpawnBalloons).toHaveBeenCalledWith(100);
+      expect(mockSpawnBalloons).toHaveBeenCalledWith(500);
     });
 
     it('should handle single digit numbers', async () => {
@@ -409,10 +409,10 @@ describe('useTypingApp', () => {
       expect(mockSpawnBalloons).toHaveBeenCalledWith(1);
     });
 
-    it('should handle large numbers', async () => {
+    it('should handle large numbers up to 10000', async () => {
       appUnderTest.currentText.value = '999 balloons';
       await appUnderTest.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
-      expect(mockSpawnBalloons).toHaveBeenCalledWith(100); // Should be capped at 100
+      expect(mockSpawnBalloons).toHaveBeenCalledWith(999);
     });
 
     it('should handle empty input', async () => {

@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { useSound } from './useSound';
+import { BALLOON_MAX } from '@/constants/balloons';
 
-const MAX_BALLOONS = 100;
 const SPAWN_DELAY = 200;
 const POP_BASE_DELAY = 200;
 const POP_RANDOM_VARIATION = 10000;
@@ -192,17 +192,24 @@ export function useBalloons() {
   };
 
   const spawnBalloons = async count => {
-    if (count <= 0 || count > 100) return;
+    if (count <= 0 || count > BALLOON_MAX) return;
 
     // Limit total balloons on screen
-    const balloonsToSpawn = Math.min(
-      count,
-      MAX_BALLOONS - balloons.value.length,
-    );
+    const balloonsToSpawn = Math.min(count, BALLOON_MAX - balloons.value.length);
+
+    // Calculate dynamic spawn delay so that total spawn time for >100
+    // balloons does not exceed the time to spawn 100 at base delay.
+    const BASE_COUNT = 100;
+    const effectiveDelay = (() => {
+      if (balloonsToSpawn <= 1) return 0;
+      const ratio = (BASE_COUNT - 1) / Math.max(1, balloonsToSpawn - 1);
+      // For N <= 100, keep SPAWN_DELAY; for N > 100, scale down.
+      return SPAWN_DELAY * Math.min(1, ratio);
+    })();
 
     for (let i = 0; i < balloonsToSpawn; i++) {
-      if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, SPAWN_DELAY));
+      if (i > 0 && effectiveDelay > 0) {
+        await new Promise(resolve => setTimeout(resolve, effectiveDelay));
       }
 
       const balloon = createBalloon();
