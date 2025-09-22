@@ -48,42 +48,46 @@ describe('useSpeech', () => {
     });
 
     it('should call speech synthesis when speaking', async () => {
-      await speech.speak('test');
+      speech.speak('test');
+      await Promise.resolve();
       expect(window.speechSynthesis.speak).toHaveBeenCalled();
     });
   });
 
   describe('speakLetter', () => {
-    it('should call speak function for valid letters', () => {
-      const speakSpy = jest.spyOn(speech, 'speak');
+    it('should call speech synthesis for valid letters', async () => {
       speech.speakLetter('A');
-      expect(speakSpy).toHaveBeenCalled();
+      await Promise.resolve();
+      expect(window.speechSynthesis.speak).toHaveBeenCalled();
     });
 
-    it('should not speak spaces', () => {
-      const speakSpy = jest.spyOn(speech, 'speak');
+    it('should not speak spaces', async () => {
+      window.speechSynthesis.speak.mockClear();
       speech.speakLetter(' ');
-      expect(speakSpy).not.toHaveBeenCalled();
+      await Promise.resolve();
+      expect(window.speechSynthesis.speak).not.toHaveBeenCalled();
     });
 
-    it('should not speak multiple characters', () => {
-      const speakSpy = jest.spyOn(speech, 'speak');
+    it('should not speak multiple characters', async () => {
+      window.speechSynthesis.speak.mockClear();
       speech.speakLetter('AB');
-      expect(speakSpy).not.toHaveBeenCalled();
+      await Promise.resolve();
+      expect(window.speechSynthesis.speak).not.toHaveBeenCalled();
     });
   });
 
   describe('speakWord', () => {
-    it('should call speak function for valid words', () => {
-      const speakSpy = jest.spyOn(speech, 'speak');
+    it('should call speech synthesis for valid words', async () => {
       speech.speakWord('hello');
-      expect(speakSpy).toHaveBeenCalled();
+      await Promise.resolve();
+      expect(window.speechSynthesis.speak).toHaveBeenCalled();
     });
 
-    it('should not speak empty words', () => {
-      const speakSpy = jest.spyOn(speech, 'speak');
+    it('should not speak empty words', async () => {
+      window.speechSynthesis.speak.mockClear();
       speech.speakWord('');
-      expect(speakSpy).not.toHaveBeenCalled();
+      await Promise.resolve();
+      expect(window.speechSynthesis.speak).not.toHaveBeenCalled();
     });
   });
 
