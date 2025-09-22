@@ -134,7 +134,6 @@ export function createTypingApp() {
     }
   };
 
-
   const onInputFocus = () => {
     isInputFocused.value = true;
   };

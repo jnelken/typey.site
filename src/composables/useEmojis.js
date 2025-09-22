@@ -45,7 +45,16 @@ export function useEmojis() {
         ? options.direction
         : Math.random() > 0.5 ? 'left' : 'right';
 
-      addEffect({ type, emoji, left, top, duration, delay, size, direction });
+      // Optional rotation (for snowflakes, etc.)
+      let rotate = !!options.rotate;
+      let rotateDuration;
+      if (rotate) {
+        const rmin = options.rotateMin ?? 5000;
+        const rmax = options.rotateMax ?? 10000;
+        rotateDuration = Math.floor(randomBetween(rmin, rmax));
+      }
+
+      addEffect({ type, emoji, left, top, duration, delay, size, direction, rotate, rotateDuration });
     }
   };
 

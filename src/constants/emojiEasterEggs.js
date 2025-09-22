@@ -41,14 +41,13 @@ export const EASTER_EGGS = [
   // 11) Sun float
   { id: 'sun-float', triggersAny: [/\bsun\b/i, /sunny/i], type: 'float', emojis: ['☀️'], count: { fallback: 6, cap: 20 }, options: { minDuration: 5000, maxDuration: 9000, stagger: 1500, minSize: 28, maxSize: 46 } },
   // 12) Snow fall
-  { id: 'snow-rain', triggersAny: [/snow/i, /snowflakes?/i], type: 'rain', emojis: ['❄️'], count: { fallback: 40, cap: 150, numberPattern: /(\d+)\s*(snowflakes?|snow)/i }, options: { minDuration: 5000, maxDuration: 10000, stagger: 2000, minSize: 16, maxSize: 26 } },
+  { id: 'snow-rain', triggersAny: [/snow/i, /snowflakes?/i], type: 'rain', emojis: ['❄️'], count: { fallback: 40, cap: 150, numberPattern: /(\d+)\s*(snowflakes?|snow)/i }, options: { minDuration: 5000, maxDuration: 10000, stagger: 2000, minSize: 16, maxSize: 26, rotate: true, rotateMin: 4000, rotateMax: 9000 } },
   // 13) Butterflies float
   { id: 'butterflies-float', triggersAny: [/butterflies?/i], type: 'float', emojis: ['🦋'], count: { fallback: 10, cap: 40, numberPattern: /(\d+)\s*butterflies?/i }, options: { minDuration: 5000, maxDuration: 9000, stagger: 2000, minSize: 24, maxSize: 36 } },
   // 14) Cars run
-  { id: 'cars-run', triggersAny: [/cars?/i], type: 'run', emojis: ['🚗'], count: { fallback: 8, cap: 40, numberPattern: /(\d+)\s*cars?/i }, options: { minDuration: 4500, maxDuration: 8000, stagger: 1800, minSize: 26, maxSize: 44, direction: 'random' } },
+  { id: 'cars-run', triggersAny: [/cars?/i], type: 'run', emojis: ['🚗'], count: { fallback: 8, cap: 40, numberPattern: /(\d+)\s*cars?/i }, options: { minDuration: 4500, maxDuration: 8000, stagger: 1800, minSize: 26, maxSize: 44, direction: 'left' } },
   // 15) Ghosts float (friendly)
   { id: 'ghosts-float', triggersAny: [/ghosts?/i], type: 'float', emojis: ['👻'], count: { fallback: 10, cap: 60, numberPattern: /(\d+)\s*ghosts?/i }, options: { minDuration: 4000, maxDuration: 9000, stagger: 2000, minSize: 24, maxSize: 40 } },
   // 16) Flowers float
   { id: 'flowers-float', triggersAny: [/flowers?/i], type: 'float', emojis: ['🌸', '🌼', '🌷'], count: { fallback: 20, cap: 100, numberPattern: /(\d+)\s*flowers?/i }, options: { minDuration: 4500, maxDuration: 9000, stagger: 1800, minSize: 20, maxSize: 34 } },
 ];
-
