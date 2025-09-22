@@ -100,13 +100,18 @@ export function createTypingApp() {
       const lineToSpeak = currentText.value;
       completedLines.value.push(currentText.value);
 
-      // Check if the entered text is a number and spawn balloons
+      // Check if any part of the entered text contains a number and spawn balloons
       const trimmedText = currentText.value.trim();
-      const numberMatch = trimmedText.match(/^\d+$/);
-      if (numberMatch) {
-        const number = parseInt(numberMatch[0], 10);
-        if (number >= 1) {
-          spawnBalloons(Math.min(number, 100));
+      const parts = trimmedText.split(/\s+/); // Split by whitespace
+
+      for (const part of parts) {
+        const numberMatch = part.match(/^\d+$/);
+        if (numberMatch) {
+          const number = parseInt(numberMatch[0], 10);
+          if (number >= 1) {
+            spawnBalloons(Math.min(number, 100));
+            break; // Only spawn balloons for the first number found
+          }
         }
       }
 
