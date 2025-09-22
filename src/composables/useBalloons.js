@@ -188,8 +188,13 @@ export function useBalloons() {
       }
 
       const audioContext = sharedAudioContext;
-      const bufferSize = audioContext.sampleRate * Math.max(POP_SOUND_DURATION, 0.1);
-      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const bufferSize =
+        audioContext.sampleRate * Math.max(POP_SOUND_DURATION, 0.1);
+      const buffer = audioContext.createBuffer(
+        1,
+        bufferSize,
+        audioContext.sampleRate,
+      );
       const data = buffer.getChannelData(0);
 
       for (let i = 0; i < bufferSize; i++) {
@@ -211,14 +216,19 @@ export function useBalloons() {
 
       // Louder, sharper envelope
       gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.001);
+      gainNode.gain.linearRampToValueAtTime(
+        0.5,
+        audioContext.currentTime + 0.001,
+      );
       gainNode.gain.exponentialRampToValueAtTime(
         0.001,
         audioContext.currentTime + Math.max(POP_SOUND_DURATION, 0.12),
       );
 
       source.start(audioContext.currentTime);
-      source.stop(audioContext.currentTime + Math.max(POP_SOUND_DURATION, 0.12));
+      source.stop(
+        audioContext.currentTime + Math.max(POP_SOUND_DURATION, 0.12),
+      );
     } catch (error) {
       console.warn('Audio playback error:', error);
     }
@@ -245,7 +255,10 @@ export function useBalloons() {
     if (count <= 0 || count > BALLOON_MAX) return;
 
     // Limit total balloons on screen
-    const balloonsToSpawn = Math.min(count, BALLOON_MAX - balloons.value.length);
+    const balloonsToSpawn = Math.min(
+      count,
+      BALLOON_MAX - balloons.value.length,
+    );
 
     // Calculate dynamic spawn delay so that total spawn time for >100
     // balloons does not exceed the time to spawn 100 at base delay.

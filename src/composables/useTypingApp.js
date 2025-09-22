@@ -3,8 +3,7 @@ import { useSound } from './useSound';
 import { useSpeech } from './useSpeech';
 import { useBalloons } from './useBalloons';
 import { useEmojis } from './useEmojis';
-import { evaluateEasterEggs } from './useEmojiEngine';
-import { BALLOON_MAX } from '@/constants/balloons';
+import { useEasterEggs } from './useEasterEggs';
 
 const TYPING_APP_KEY = Symbol('typing-app');
 
@@ -40,6 +39,7 @@ export function createTypingApp() {
   const { balloons, spawnBalloons, popBalloon, clearAllBalloons } =
     useBalloons();
   const { effects: emojiEffects, spawnEmojis, clearEmojis } = useEmojis();
+  const { evaluateEasterEggs } = useEasterEggs();
 
   // Methods
   const onKeyDown = async event => {
@@ -106,22 +106,7 @@ export function createTypingApp() {
 
       // Easter eggs: emoji effects based on input (declarative rules)
       const trimmedText = currentText.value.trim();
-      const hadEggs = evaluateEasterEggs(trimmedText, spawnEmojis);
-
-      // If no easter egg triggered, consider spawning balloons from a bare number
-      if (!hadEggs) {
-        const parts = trimmedText.split(/\s+/); // Split by whitespace
-        for (const part of parts) {
-          const numberMatch = part.match(/^\d+$/);
-          if (numberMatch) {
-            const number = parseInt(numberMatch[0], 10);
-            if (number >= 1) {
-              spawnBalloons(Math.min(number, BALLOON_MAX));
-              break; // Only spawn balloons for the first number found
-            }
-          }
-        }
-      }
+      evaluateEasterEggs(trimmedText, spawnEmojis);
 
       // Submit to API for Tidbyt companion app
       await submitEntry(currentText.value);
