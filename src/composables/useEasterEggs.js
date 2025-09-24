@@ -1,11 +1,9 @@
 import { EASTER_EGGS } from '@/constants/emojiEasterEggs';
-import { useBalloons } from './useBalloons';
+// This composable is a factory that takes dependencies from the caller
 import { BALLOON_MAX } from '@/constants/balloons';
 
 // Evaluate text against declarative easter egg config and spawn effects
-export function useEasterEggs() {
-  const { spawnBalloons } = useBalloons();
-
+export function useEasterEggs({ spawnBalloons }) {
   const evaluateEasterEggs = (text, spawnEmojis, onTrigger) => {
     if (!text || typeof text !== 'string') return false;
     const lower = text.toLowerCase();

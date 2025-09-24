@@ -40,7 +40,7 @@ export function createTypingApp() {
   const { balloons, spawnBalloons, popBalloon, clearAllBalloons } =
     useBalloons();
   const { effects: emojiEffects, spawnEmojis, clearEmojis } = useEmojis();
-  const { evaluateEasterEggs } = useEasterEggs();
+  const { evaluateEasterEggs } = useEasterEggs({ spawnBalloons });
   const guide = useEasterEggGuide();
 
   // Methods
@@ -115,7 +115,9 @@ export function createTypingApp() {
         return;
       } else {
         // Easter eggs: emoji effects based on input (declarative rules)
-        evaluateEasterEggs(trimmedText, spawnEmojis, egg => guide.revealForEgg(egg));
+        evaluateEasterEggs(trimmedText, spawnEmojis, egg =>
+          guide.revealForEgg(egg),
+        );
       }
 
       // Submit to API for Tidbyt companion app
