@@ -6,7 +6,7 @@ import { BALLOON_MAX } from '@/constants/balloons';
 export function useEasterEggs() {
   const { spawnBalloons } = useBalloons();
 
-  const evaluateEasterEggs = (text, spawnEmojis) => {
+  const evaluateEasterEggs = (text, spawnEmojis, onTrigger) => {
     if (!text || typeof text !== 'string') return false;
     const lower = text.toLowerCase();
     let triggered = false;
@@ -47,6 +47,7 @@ export function useEasterEggs() {
 
       spawnEmojis(egg.type, count, options);
       triggered = true;
+      if (typeof onTrigger === 'function') onTrigger(egg);
     }
 
     // If no easter egg triggered, consider spawning balloons from a bare number

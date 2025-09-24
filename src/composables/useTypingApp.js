@@ -4,6 +4,7 @@ import { useSpeech } from './useSpeech';
 import { useBalloons } from './useBalloons';
 import { useEmojis } from './useEmojis';
 import { useEasterEggs } from './useEasterEggs';
+import { useEasterEggGuide } from './useEasterEggGuide';
 
 const TYPING_APP_KEY = Symbol('typing-app');
 
@@ -40,6 +41,7 @@ export function createTypingApp() {
     useBalloons();
   const { effects: emojiEffects, spawnEmojis, clearEmojis } = useEmojis();
   const { evaluateEasterEggs } = useEasterEggs();
+  const guide = useEasterEggGuide();
 
   // Methods
   const onKeyDown = async event => {
@@ -104,9 +106,17 @@ export function createTypingApp() {
       const lineToSpeak = currentText.value;
       completedLines.value.push(currentText.value);
 
-      // Easter eggs: emoji effects based on input (declarative rules)
+      // Easter eggs guide: show on special command
       const trimmedText = currentText.value.trim();
-      evaluateEasterEggs(trimmedText, spawnEmojis);
+      if (trimmedText.toLowerCase() === 'qwerty') {
+        guide.toggle(true);
+        // Clear input and skip network/speech/eggs for this command
+        currentText.value = '';
+        return;
+      } else {
+        // Easter eggs: emoji effects based on input (declarative rules)
+        evaluateEasterEggs(trimmedText, spawnEmojis, egg => guide.revealForEgg(egg));
+      }
 
       // Submit to API for Tidbyt companion app
       await submitEntry(currentText.value);
@@ -166,6 +176,13 @@ export function createTypingApp() {
     speakingQueue,
     balloons,
     emojiEffects,
+    // Guide
+    guideVisible: guide.guideVisible,
+    allHints: guide.allHints,
+    discoveredHints: guide.discovered,
+    isHintDiscovered: guide.isDiscovered,
+    maskHint: guide.mask,
+    toggleGuide: guide.toggle,
 
     // Methods
     onKeyDown,

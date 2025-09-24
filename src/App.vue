@@ -30,6 +30,7 @@
 
     <Balloons :balloons="typingApp.balloons.value" />
     <Emojis :effects="typingApp.emojiEffects.value" />
+    <EasterEggGuide />
   </Container>
 </template>
 
@@ -42,6 +43,7 @@ import TypingArea from './components/TypingArea.vue';
 import InputSection from './components/InputSection.vue';
 import Balloons from './components/Balloons.vue';
 import Emojis from './components/Emojis.vue';
+import EasterEggGuide from './components/EasterEggGuide.vue';
 import { createTypingApp, provideTypingApp } from './composables/useTypingApp';
 
 const inputSection = ref(null);
