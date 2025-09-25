@@ -1,4 +1,8 @@
-import { ref, provide, inject } from 'vue';
+import { provide, inject } from 'vue';
+import { useTypingState } from './useTypingState';
+import { useTypingSettings } from './useTypingSettings';
+import { useTypingEvents } from './useTypingEvents';
+import { useTypingAPI } from './useTypingAPI';
 import { useSound } from './useSound';
 import { useSpeech } from './useSpeech';
 import { useBalloons } from './useBalloons';
@@ -9,199 +13,121 @@ import { useEasterEggGuide } from './useEasterEggGuide';
 const TYPING_APP_KEY = Symbol('typing-app');
 
 export function createTypingApp() {
-  // State
-  const currentText = ref('');
-  const completedLines = ref([]);
-  const isInputFocused = ref(false);
-  const isCapsLockEnabled = ref(true);
-  const isAutoSpeakEnabled = ref(true);
+  // Initialize sub-composables
+  const typingState = useTypingState();
+  const typingSettings = useTypingSettings();
+  const typingAPI = useTypingAPI();
+  
+  const soundSystem = useSound();
+  const speechSystem = useSpeech();
+  const balloonsSystem = useBalloons();
+  const emojisSystem = useEmojis();
+  const easterEggsSystem = useEasterEggs({ spawnBalloons: balloonsSystem.spawnBalloons });
+  const guideSystem = useEasterEggGuide();
 
-  // Composables
-  const {
-    isAudioEnabled: isSoundEnabled,
-    playKeySound,
-    playEnterSound,
-    toggleAudio: toggleSound,
-    initAudio,
-  } = useSound();
-
-  const {
-    isSpeechEnabled,
-    speakLetter,
-    speakLine,
-    toggleSpeech,
-    initSpeech,
-    currentlySpeaking,
-    speakingLine,
-    speakingPosition,
-    speakingQueue,
-  } = useSpeech();
-
-  const { balloons, spawnBalloons, popBalloon, clearAllBalloons } =
-    useBalloons();
-  const { effects: emojiEffects, spawnEmojis, clearEmojis } = useEmojis();
-  const { evaluateEasterEggs } = useEasterEggs({ spawnBalloons });
-  const guide = useEasterEggGuide();
-
-  // Methods
-  const onKeyDown = async event => {
-    const key = event.key;
-
-    if (key === 'Enter') {
-      event.preventDefault();
-      await handleEnterKey();
-    } else if (key.length === 1) {
-      if (isCapsLockEnabled.value && key.match(/[a-z]/)) {
-        event.preventDefault();
-        const upperKey = key.toUpperCase();
-        const cursorPos = event.target.selectionStart;
-        const textBefore = currentText.value.substring(0, cursorPos);
-        const textAfter = currentText.value.substring(cursorPos);
-        currentText.value = textBefore + upperKey + textAfter;
-
-        // Update cursor position
-        setTimeout(() => {
-          if (event.target) {
-            event.target.setSelectionRange(cursorPos + 1, cursorPos + 1);
-          }
-        }, 0);
-
-        playKeySound(upperKey);
-
-        if (isSpeechEnabled.value) {
-          speakLetter(upperKey);
-        }
-      } else {
-        playKeySound(key);
-
-        if (isSpeechEnabled.value && key !== ' ') {
-          speakLetter(key);
-        }
-      }
-    }
-  };
-
-  const submitEntry = async text => {
-    try {
-      const response = await fetch('/.netlify/functions/submit-entry', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!response.ok) {
-        console.warn('Failed to submit entry:', response.status);
-      }
-    } catch (error) {
-      console.warn('Error submitting entry:', error);
-    }
-  };
-
+  // Handle Enter key press
   const handleEnterKey = async () => {
-    if (currentText.value.trim()) {
-      playEnterSound();
+    if (typingState.currentText.value.trim()) {
+      soundSystem.playEnterSound();
 
-      const lineToSpeak = currentText.value;
-      completedLines.value.push(currentText.value);
+      const lineToSpeak = typingState.currentText.value;
+      typingState.addCompletedLine(typingState.currentText.value);
 
       // Easter eggs guide: show on special command
-      const trimmedText = currentText.value.trim();
+      const trimmedText = typingState.currentText.value.trim();
       if (trimmedText.toLowerCase() === 'qwerty') {
         console.log('QWERTY command detected, toggling guide');
-        guide.toggle(true);
-        // Clear input and skip network/speech/eggs for this command
-        currentText.value = '';
+        guideSystem.toggle(true);
+        typingState.clearCurrentText();
         return;
       } else {
-        // Easter eggs: emoji effects based on input (declarative rules)
-        evaluateEasterEggs(trimmedText, spawnEmojis, egg =>
-          guide.revealForEgg(egg),
+        // Easter eggs: emoji effects based on input
+        easterEggsSystem.evaluateEasterEggs(
+          trimmedText,
+          emojisSystem.spawnEmojis,
+          egg => guideSystem.revealForEgg(egg)
         );
       }
 
       // Submit to API for Tidbyt companion app
-      await submitEntry(currentText.value);
+      await typingAPI.submitEntry(typingState.currentText.value);
 
-      currentText.value = '';
+      typingState.clearCurrentText();
 
-      if (isAutoSpeakEnabled.value && isSpeechEnabled.value) {
-        speakLine(lineToSpeak);
+      if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
+        speechSystem.speakLine(lineToSpeak);
       }
     }
   };
 
+  // Initialize event handlers
+  const eventHandlers = useTypingEvents({
+    currentText: typingState.currentText,
+    isCapsLockEnabled: typingSettings.isCapsLockEnabled,
+    playKeySound: soundSystem.playKeySound,
+    playEnterSound: soundSystem.playEnterSound,
+    speakLetter: speechSystem.speakLetter,
+    isSpeechEnabled: speechSystem.isSpeechEnabled,
+    onEnterPressed: handleEnterKey,
+  });
+
+  // Wrapper functions for event handlers to include state updates
   const onInputFocus = () => {
-    isInputFocused.value = true;
+    eventHandlers.onInputFocus(typingState.setInputFocus);
   };
 
   const onInputBlur = () => {
-    isInputFocused.value = false;
+    eventHandlers.onInputBlur(typingState.setInputFocus);
   };
 
-  const toggleAutoSpeak = () => {
-    isAutoSpeakEnabled.value = !isAutoSpeakEnabled.value;
-  };
-
-  const toggleCapsLock = () => {
-    isCapsLockEnabled.value = !isCapsLockEnabled.value;
-  };
-
-  const speakHistoryLine = line => {
-    if (isSpeechEnabled.value && line.trim()) {
-      speakLine(line);
+  const speakHistoryLine = (line) => {
+    if (speechSystem.isSpeechEnabled.value && line.trim()) {
+      speechSystem.speakLine(line);
     }
   };
 
-  const onCharacterTyped = () => {
-    // Additional handling for character typing if needed
-  };
-
   const initApp = () => {
-    initAudio();
-    initSpeech();
+    soundSystem.initAudio();
+    speechSystem.initSpeech();
   };
 
-  // Create the context object
+  // Create the unified context object
   const typingApp = {
-    // State
-    currentText,
-    completedLines,
-    isInputFocused,
-    isCapsLockEnabled,
-    isAutoSpeakEnabled,
-    isSoundEnabled,
-    isSpeechEnabled,
-    currentlySpeaking,
-    speakingLine,
-    speakingPosition,
-    speakingQueue,
-    balloons,
-    emojiEffects,
-    // Guide
-    guideVisible: guide.guideVisible,
-    allHints: guide.allHints,
-    discoveredHints: guide.discovered,
-    isHintDiscovered: guide.isDiscovered,
-    maskHint: guide.mask,
-    toggleGuide: guide.toggle,
+    // State from sub-composables
+    ...typingState,
+    ...typingSettings,
+    isSoundEnabled: soundSystem.isAudioEnabled,
+    isSpeechEnabled: speechSystem.isSpeechEnabled,
+    currentlySpeaking: speechSystem.currentlySpeaking,
+    speakingLine: speechSystem.speakingLine,
+    speakingPosition: speechSystem.speakingPosition,
+    speakingQueue: speechSystem.speakingQueue,
+    balloons: balloonsSystem.balloons,
+    emojiEffects: emojisSystem.effects,
+    
+    // Guide system
+    guideVisible: guideSystem.guideVisible,
+    allHints: guideSystem.allHints,
+    discoveredHints: guideSystem.discovered,
+    isHintDiscovered: guideSystem.isDiscovered,
+    maskHint: guideSystem.mask,
+    toggleGuide: guideSystem.toggle,
 
     // Methods
-    onKeyDown,
+    onKeyDown: eventHandlers.onKeyDown,
     onInputFocus,
     onInputBlur,
-    onCharacterTyped,
-    toggleSound,
-    toggleSpeech,
-    toggleAutoSpeak,
-    toggleCapsLock,
+    onCharacterTyped: eventHandlers.onCharacterTyped,
+    toggleSound: soundSystem.toggleAudio,
+    toggleSpeech: speechSystem.toggleSpeech,
+    toggleAutoSpeak: typingSettings.toggleAutoSpeak,
+    toggleCapsLock: typingSettings.toggleCapsLock,
     speakHistoryLine,
-    spawnBalloons,
-    popBalloon,
-    clearAllBalloons,
-    spawnEmojis,
-    clearEmojis,
+    spawnBalloons: balloonsSystem.spawnBalloons,
+    popBalloon: balloonsSystem.popBalloon,
+    clearAllBalloons: balloonsSystem.clearAllBalloons,
+    spawnEmojis: emojisSystem.spawnEmojis,
+    clearEmojis: emojisSystem.clearEmojis,
     initApp,
   };
 
@@ -217,7 +143,7 @@ export function useTypingApp() {
 
   if (!typingApp) {
     throw new Error(
-      'useTypingApp must be used within a component that provides typing app context',
+      'useTypingApp must be used within a component that provides typing app context'
     );
   }
 
