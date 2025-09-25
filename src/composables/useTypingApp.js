@@ -109,6 +109,7 @@ export function createTypingApp() {
       // Easter eggs guide: show on special command
       const trimmedText = currentText.value.trim();
       if (trimmedText.toLowerCase() === 'qwerty') {
+        console.log('QWERTY command detected, toggling guide');
         guide.toggle(true);
         // Clear input and skip network/speech/eggs for this command
         currentText.value = '';
