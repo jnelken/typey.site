@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { useSpeech } from '../../src/composables/useSpeech';
+import { useSpeech } from '@/features/audio/composables/useSpeech';
 
 describe('useSpeech', () => {
   let speech;

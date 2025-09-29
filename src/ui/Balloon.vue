@@ -16,7 +16,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useTypingApp } from '../composables/useTypingApp';
+import { useTypingApp } from '@/composables/useTypingApp';
 
 const props = defineProps({
   balloon: {

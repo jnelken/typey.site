@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import { createApp } from 'vue';
-import TypingArea from '../../src/components/TypingArea.vue';
+import TypingArea from '@/features/typing/components/TypingArea.vue';
 import {
   createTypingApp,
   provideTypingApp,
-} from '../../src/composables/useTypingApp';
+} from '@/composables/useTypingApp';
 
 describe('TypingArea Integration', () => {
   let app;

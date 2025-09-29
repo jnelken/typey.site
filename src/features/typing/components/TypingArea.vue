@@ -30,10 +30,9 @@
 
 <script setup>
 import { ref, nextTick, watch } from 'vue';
-import Text from '../ui/Text.vue';
-import AnimatedText from '../ui/AnimatedText.vue';
-import { useTypingApp } from '../composables/useTypingApp';
-import { LAYOUT_CONSTANTS } from '../constants/layout';
+import AnimatedText from '@/ui/AnimatedText.vue';
+import { useTypingApp } from '@/composables/useTypingApp';
+import { LAYOUT_CONSTANTS } from '@/constants/layout';
 
 const {
   completedLines,

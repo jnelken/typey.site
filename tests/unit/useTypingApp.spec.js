@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { createTypingApp } from '../../src/composables/useTypingApp';
+import { createTypingApp } from '@/composables/useTypingApp';
 
 describe('useTypingApp', () => {
   let typingApp;
@@ -317,7 +317,7 @@ describe('useTypingApp', () => {
       jest.resetModules();
       mockSpawnBalloons = jest.fn();
 
-      jest.doMock('../../src/composables/useBalloons', () => ({
+      jest.doMock('@/features/effects/composables/useBalloons', () => ({
         useBalloons: () => ({
           balloons: { value: [] },
           spawnBalloons: mockSpawnBalloons,
@@ -326,7 +326,7 @@ describe('useTypingApp', () => {
         }),
       }));
 
-      const mod = await import('../../src/composables/useTypingApp.js');
+      const mod = await import('@/composables/useTypingApp.js');
       appUnderTest = mod.createTypingApp();
     });
 

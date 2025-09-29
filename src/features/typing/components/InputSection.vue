@@ -32,9 +32,9 @@
 
 <script setup>
 import { ref, nextTick } from 'vue';
-import Input from '../ui/Input.vue';
-import AnimatedText from '../ui/AnimatedText.vue';
-import { useTypingApp } from '../composables/useTypingApp';
+import Input from '@/ui/Input.vue';
+import AnimatedText from '@/ui/AnimatedText.vue';
+import { useTypingApp } from '@/composables/useTypingApp';
 
 const {
   currentText,

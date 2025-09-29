@@ -28,8 +28,8 @@
 </template>
 
 <script setup>
-import ToggleButton from '../ui/ToggleButton.vue';
-import { useTypingApp } from '../composables/useTypingApp';
+import ToggleButton from '@/ui/ToggleButton.vue';
+import { useTypingApp } from '@/composables/useTypingApp';
 
 const {
   isSoundEnabled,

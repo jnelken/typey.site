@@ -1,14 +1,14 @@
 import { provide, inject } from 'vue';
-import { useTypingState } from './useTypingState';
-import { useTypingSettings } from './useTypingSettings';
-import { useTypingEvents } from './useTypingEvents';
-import { useTypingAPI } from './useTypingAPI';
-import { useSound } from './useSound';
-import { useSpeech } from './useSpeech';
-import { useBalloons } from './useBalloons';
-import { useEmojis } from './useEmojis';
-import { useEasterEggs } from './useEasterEggs';
-import { useEasterEggGuide } from './useEasterEggGuide';
+import { useTypingState } from '@/features/typing/composables/useTypingState';
+import { useTypingSettings } from '@/features/typing/composables/useTypingSettings';
+import { useTypingEvents } from '@/features/typing/composables/useTypingEvents';
+import { useTypingAPI } from '@/features/typing/composables/useTypingAPI';
+import { useSound } from '@/features/audio/composables/useSound';
+import { useSpeech } from '@/features/audio/composables/useSpeech';
+import { useBalloons } from '@/features/effects/composables/useBalloons';
+import { useEmojis } from '@/features/effects/composables/useEmojis';
+import { useEasterEggs } from '@/features/easter-eggs/composables/useEasterEggs';
+import { useEasterEggGuide } from '@/features/easter-eggs/composables/useEasterEggGuide';
 
 const TYPING_APP_KEY = Symbol('typing-app');
 

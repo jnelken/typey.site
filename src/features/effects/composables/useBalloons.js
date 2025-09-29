@@ -1,6 +1,6 @@
-import { ref } from 'vue';
-import { useSound } from './useSound';
-import { BALLOON_MAX } from '@/constants/balloons';
+import { ref } from "vue";
+import { useSound } from "@/features/audio/composables/useSound";
+import { BALLOON_MAX } from "@/constants/balloons";
 
 const SPAWN_DELAY = 200;
 const POP_BASE_DELAY = 200;
@@ -20,11 +20,11 @@ export function useBalloons() {
   let sharedAudioContext = null;
 
   const createInflateSound = () => {
-    if (typeof AudioContext === 'undefined' || !isAudioEnabled.value) return;
+    if (typeof AudioContext === "undefined" || !isAudioEnabled.value) return;
 
     try {
       // Initialize or reuse existing AudioContext
-      if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+      if (!sharedAudioContext || sharedAudioContext.state === "closed") {
         initAudio();
         sharedAudioContext = new AudioContext();
       }
@@ -56,7 +56,7 @@ export function useBalloons() {
       gainNode.connect(audioContext.destination);
 
       // Band-pass filter to simulate air rushing sound (mid frequencies)
-      filter.type = 'bandpass';
+      filter.type = "bandpass";
       filter.frequency.setValueAtTime(800, audioContext.currentTime);
       filter.Q.setValueAtTime(1.5, audioContext.currentTime);
 
@@ -78,16 +78,16 @@ export function useBalloons() {
       source.start(audioContext.currentTime);
       source.stop(audioContext.currentTime + INFLATE_SOUND_DURATION);
     } catch (error) {
-      console.warn('Audio playback error:', error);
+      console.warn("Audio playback error:", error);
     }
   };
 
   const createPopSound = () => {
-    if (typeof AudioContext === 'undefined' || !isAudioEnabled.value) return;
+    if (typeof AudioContext === "undefined" || !isAudioEnabled.value) return;
 
     try {
       // Initialize or reuse existing AudioContext
-      if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+      if (!sharedAudioContext || sharedAudioContext.state === "closed") {
         initAudio();
         sharedAudioContext = new AudioContext();
       }
@@ -119,7 +119,7 @@ export function useBalloons() {
       gainNode.connect(audioContext.destination);
 
       // High-pass filter to make it more "poppy"
-      filter.type = 'bandpass';
+      filter.type = "bandpass";
       filter.frequency.setValueAtTime(800, audioContext.currentTime);
 
       // Quick burst envelope - sharp attack, quick decay
@@ -136,21 +136,21 @@ export function useBalloons() {
       source.start(audioContext.currentTime);
       source.stop(audioContext.currentTime + POP_SOUND_DURATION);
     } catch (error) {
-      console.warn('Audio playback error:', error);
+      console.warn("Audio playback error:", error);
     }
   };
 
   const colors = [
-    '#ff6b6b', // primary red
-    '#4ecdc4', // secondary teal
-    '#feca57', // tertiary yellow
-    '#48e5a3', // success green
-    '#ff9ff3', // pink
-    '#54a0ff', // blue
-    '#5f27cd', // purple
-    '#00d2d3', // cyan
-    '#ff9f43', // orange
-    '#10ac84', // emerald
+    "#ff6b6b", // primary red
+    "#4ecdc4", // secondary teal
+    "#feca57", // tertiary yellow
+    "#48e5a3", // success green
+    "#ff9ff3", // pink
+    "#54a0ff", // blue
+    "#5f27cd", // purple
+    "#00d2d3", // cyan
+    "#ff9f43", // orange
+    "#10ac84", // emerald
   ];
 
   const getRandomColor = () => {
@@ -171,18 +171,18 @@ export function useBalloons() {
     };
   };
 
-  const removeBalloon = balloonId => {
-    const index = balloons.value.findIndex(b => b.id === balloonId);
+  const removeBalloon = (balloonId) => {
+    const index = balloons.value.findIndex((b) => b.id === balloonId);
     if (index !== -1) {
       balloons.value.splice(index, 1);
     }
   };
 
   const createLoudPopSound = () => {
-    if (typeof AudioContext === 'undefined' || !isAudioEnabled.value) return;
+    if (typeof AudioContext === "undefined" || !isAudioEnabled.value) return;
 
     try {
-      if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+      if (!sharedAudioContext || sharedAudioContext.state === "closed") {
         initAudio();
         sharedAudioContext = new AudioContext();
       }
@@ -211,7 +211,7 @@ export function useBalloons() {
       gainNode.connect(audioContext.destination);
 
       // Brighter, punchier pop
-      filter.type = 'highpass';
+      filter.type = "highpass";
       filter.frequency.setValueAtTime(1200, audioContext.currentTime);
 
       // Louder, sharper envelope
@@ -230,12 +230,12 @@ export function useBalloons() {
         audioContext.currentTime + Math.max(POP_SOUND_DURATION, 0.12),
       );
     } catch (error) {
-      console.warn('Audio playback error:', error);
+      console.warn("Audio playback error:", error);
     }
   };
 
   const popBalloon = (balloonId, options = {}) => {
-    const balloon = balloons.value.find(b => b.id === balloonId);
+    const balloon = balloons.value.find((b) => b.id === balloonId);
     if (balloon && !balloon.isPopping) {
       balloon.isPopping = true;
 
@@ -251,7 +251,7 @@ export function useBalloons() {
     }
   };
 
-  const spawnBalloons = async count => {
+  const spawnBalloons = async (count) => {
     if (count <= 0 || count > BALLOON_MAX) return;
 
     // Limit total balloons on screen
@@ -272,7 +272,7 @@ export function useBalloons() {
 
     for (let i = 0; i < balloonsToSpawn; i++) {
       if (i > 0 && effectiveDelay > 0) {
-        await new Promise(resolve => setTimeout(resolve, effectiveDelay));
+        await new Promise((resolve) => setTimeout(resolve, effectiveDelay));
       }
 
       const balloon = createBalloon();

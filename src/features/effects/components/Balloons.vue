@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import Balloon from '../ui/Balloon.vue';
+import Balloon from '@/ui/Balloon.vue';
 
 defineProps({
   balloons: {

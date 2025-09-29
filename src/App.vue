@@ -38,12 +38,12 @@
 import { ref, onMounted, nextTick } from 'vue';
 import Container from './ui/Container.vue';
 import Text from './ui/Text.vue';
-import Controls from './components/Controls.vue';
-import TypingArea from './components/TypingArea.vue';
-import InputSection from './components/InputSection.vue';
-import Balloons from './components/Balloons.vue';
-import Emojis from './components/Emojis.vue';
-import EasterEggGuide from './components/EasterEggGuide.vue';
+import Controls from './features/typing/components/Controls.vue';
+import TypingArea from './features/typing/components/TypingArea.vue';
+import InputSection from './features/typing/components/InputSection.vue';
+import Balloons from './features/effects/components/Balloons.vue';
+import Emojis from './features/effects/components/Emojis.vue';
+import EasterEggGuide from './features/easter-eggs/components/EasterEggGuide.vue';
 import { createTypingApp, provideTypingApp } from './composables/useTypingApp';
 
 const inputSection = ref(null);
