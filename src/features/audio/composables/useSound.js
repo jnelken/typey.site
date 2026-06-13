@@ -1,8 +1,11 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { loadSetting, saveSetting } from '@/utils/storage'
 
 export function useSound() {
   const audioContext = ref(null)
-  const isAudioEnabled = ref(true)
+  const isAudioEnabled = ref(loadSetting('sound', true))
+
+  watch(isAudioEnabled, value => saveSetting('sound', value))
 
   const initAudio = () => {
     if (!audioContext.value && typeof AudioContext !== 'undefined') {

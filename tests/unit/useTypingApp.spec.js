@@ -309,6 +309,28 @@ describe('useTypingApp', () => {
     });
   });
 
+  describe('math equation handling', () => {
+    it('plays the math animation for an a+b equation', async () => {
+      typingApp.currentText.value = '3+1';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.mathEquation.value).toMatchObject({ a: 3, b: 1, sum: 4 });
+    });
+
+    it('speaks the answer for an equation when auto-speak is on', async () => {
+      typingApp.isAutoSpeakEnabled.value = true;
+      typingApp.isSpeechEnabled.value = true;
+      typingApp.currentText.value = '4 + 1';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.speakingLine.value).toBe('4 plus 1 equals 5');
+    });
+
+    it('does not treat a plain sentence as an equation', async () => {
+      typingApp.currentText.value = 'hello world';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.mathEquation.value).toBeNull();
+    });
+  });
+
   describe('number detection and balloon spawning', () => {
     let appUnderTest;
     let mockSpawnBalloons;

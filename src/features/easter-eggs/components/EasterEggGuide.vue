@@ -1,116 +1,74 @@
 <template>
-  <div
-    v-if="typingApp.guideVisible.value"
-    class="guide-overlay"
-    @click.self="typingApp.toggleGuide(false)">
-    <div class="guide-panel">
-      <div class="guide-header">
-        <h2>Easter Eggs</h2>
-        <button class="close-btn" @click="typingApp.toggleGuide(false)">
-          ✕
-        </button>
-      </div>
-      <p class="guide-sub">Type words to reveal the blanks!</p>
-      <p style="font-size: 12px; color: #666">
-        Debug:
-        {{
-          typingApp.allHints ? typingApp.allHints.value.length : 'undefined'
-        }}
-        hints found
-      </p>
-      <p style="font-size: 12px; color: #666">
-        First few hints:
-        {{
-          typingApp.allHints
-            ? typingApp.allHints.value.slice(0, 5).join(', ')
-            : 'none'
-        }}
-      </p>
-      <ul class="guide-list">
-        <li v-for="hint in typingApp.allHints.value" :key="hint">
-          <span
-            class="hint"
-            :class="{ found: typingApp.isHintDiscovered(hint) }">
-            {{
-              typingApp.isHintDiscovered(hint) ? hint : typingApp.maskHint(hint)
-            }}
-          </span>
-        </li>
-      </ul>
-    </div>
-  </div>
+  <Modal
+    :open="typingApp.guideVisible.value"
+    title="✨ Magic Words ✨"
+    @close="typingApp.toggleGuide(false)">
+    <p class="guide-sub">Type one of these words, then tap a card to see it!</p>
+
+    <ul class="guide-list">
+      <li
+        v-for="item in typingApp.guideItems.value"
+        :key="item.label"
+        class="guide-card"
+        :class="{ found: typingApp.isHintDiscovered(item.label) }"
+        @click="typingApp.previewEasterEgg(item.egg)">
+        <span class="card-emojis">{{ item.emojis.join(' ') }}</span>
+        <span class="card-word">{{ item.label }}</span>
+      </li>
+    </ul>
+  </Modal>
 </template>
 
 <script setup>
+import Modal from '@/ui/Modal.vue';
 import { useTypingApp } from '@/composables/useTypingApp';
-import { watch } from 'vue';
 
 const typingApp = useTypingApp();
-
-// Debug: watch for guide visibility changes
-watch(
-  () => typingApp.guideVisible.value,
-  newVal => {
-    console.log('Guide visibility changed:', newVal);
-  },
-);
 </script>
 
 <style scoped>
-.guide-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.guide-panel {
-  background: rgba(255, 255, 255, 0.95);
-  width: min(720px, 92vw);
-  max-height: 80vh;
-  border-radius: 12px;
-  padding: 16px 20px;
-  overflow: auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-.guide-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.guide-header h2 {
-  margin: 0;
-  font-size: 20px;
-}
 .guide-sub {
-  margin: 6px 0 12px 0;
+  margin: 6px 0 16px 0;
   color: #444;
-}
-.close-btn {
-  border: none;
-  background: transparent;
-  font-size: 18px;
-  cursor: pointer;
 }
 .guide-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  columns: 2;
-  column-gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
 }
-.guide-list li {
-  padding: 6px 0;
-  break-inside: avoid;
+.guide-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 12px;
+  background: #f4f7fb;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  user-select: none;
 }
-.hint {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    'Liberation Mono', 'Courier New', monospace;
+.guide-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  border-color: #4f9cf9;
 }
-.hint.found {
-  color: #0a7;
-  font-weight: 600;
+.guide-card.found {
+  background: #eafbf3;
+  border-color: #0a7;
+}
+.card-emojis {
+  font-size: 34px;
+  line-height: 1;
+}
+.card-word {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2b2d42;
+  text-transform: lowercase;
 }
 </style>

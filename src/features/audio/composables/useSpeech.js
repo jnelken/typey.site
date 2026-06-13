@@ -1,7 +1,9 @@
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { loadSetting, saveSetting } from '@/utils/storage';
 
 export function useSpeech() {
-  const isSpeechEnabled = ref(true);
+  const isSpeechEnabled = ref(loadSetting('speech', true));
+  watch(isSpeechEnabled, value => saveSetting('speech', value));
   const isSpeaking = ref(false);
   const speechRate = ref(0.8);
   const speechPitch = ref(1.2);

@@ -27,14 +27,21 @@
         @focus="onInputFocus"
         @blur="onInputBlur" />
     </div>
+
+    <Transition name="typeahead-fade">
+      <span v-if="typeaheadEmoji" class="typeahead-preview" aria-hidden="true">
+        {{ typeaheadEmoji }}
+      </span>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, computed } from 'vue';
 import Input from '@/ui/Input.vue';
 import AnimatedText from '@/ui/AnimatedText.vue';
 import { useTypingApp } from '@/composables/useTypingApp';
+import { matchTypeahead } from '@/features/easter-eggs/utils/typeahead';
 
 const {
   currentText,
@@ -48,6 +55,9 @@ const {
   speakingPosition,
   speakingQueue,
 } = useTypingApp();
+
+// Gentle hint of the emoji that the current word is about to summon.
+const typeaheadEmoji = computed(() => matchTypeahead(currentText.value));
 
 const typingInput = ref(null);
 
@@ -99,6 +109,27 @@ defineExpose({
   left: 0;
   right: 0;
   z-index: 10;
+}
+
+.typeahead-preview {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  font-size: 2.5rem;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 6;
+  filter: grayscale(0.2);
+}
+
+.typeahead-fade-enter-active,
+.typeahead-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.typeahead-fade-enter-from,
+.typeahead-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
 }
 
 @media (max-width: 768px) {

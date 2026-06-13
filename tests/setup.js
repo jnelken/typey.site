@@ -1,5 +1,13 @@
 import '@testing-library/jest-dom';
 
+// Settings persist to localStorage; reset it before each test so persisted
+// state from one test never leaks into the next.
+beforeEach(() => {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.clear();
+  }
+});
+
 // Mock Web Speech API
 global.speechSynthesis = {
   speak: jest.fn(),

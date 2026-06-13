@@ -12,6 +12,7 @@ export const EASTER_EGGS = [
     count: { fallback: 60, cap: 150 },
     options: { minDuration: 3000, maxDuration: 7000, stagger: 1200, minSize: 22, maxSize: 40 },
     hints: ['money', 'dollar'],
+    example: '$5',
   },
   // 2) Lions run: "N lions" or presence of word
   {
@@ -52,4 +53,28 @@ export const EASTER_EGGS = [
   { id: 'ghosts-float', triggersAny: [/ghosts?/i], type: 'float', emojis: ['👻'], count: { fallback: 10, cap: 60, numberPattern: /(\d+)\s*ghosts?/i }, options: { minDuration: 4000, maxDuration: 9000, stagger: 2000, minSize: 24, maxSize: 40 }, hints: ['ghosts'] },
   // 16) Flowers float
   { id: 'flowers-float', triggersAny: [/flowers?/i], type: 'float', emojis: ['🌸', '🌼', '🌷'], count: { fallback: 20, cap: 100, numberPattern: /(\d+)\s*flowers?/i }, options: { minDuration: 4500, maxDuration: 9000, stagger: 1800, minSize: 20, maxSize: 34 }, hints: ['flowers'] },
+  // 17) Dinosaurs run
+  { id: 'dinosaurs-run', triggersAny: [/dinosaurs?/i, /dinos?/i], type: 'run', emojis: ['🦕', '🦖'], count: { fallback: 6, cap: 30, numberPattern: /(\d+)\s*(dinosaurs?|dinos?)/i }, options: { minDuration: 4500, maxDuration: 8000, stagger: 1600, minSize: 30, maxSize: 50, direction: 'random' }, hints: ['dino'] },
+  // 18) Dogs run
+  { id: 'dogs-run', triggersAny: [/dogs?/i, /puppy/i, /puppies/i], type: 'run', emojis: ['🐶', '🐕'], count: { fallback: 6, cap: 30, numberPattern: /(\d+)\s*(dogs?|puppies|puppy)/i }, options: { minDuration: 4000, maxDuration: 7000, stagger: 1400, minSize: 26, maxSize: 44, direction: 'random' }, hints: ['dog'] },
+  // 19) Cats run
+  { id: 'cats-run', triggersAny: [/cats?/i, /kitty/i, /kitties/i], type: 'run', emojis: ['🐱', '🐈'], count: { fallback: 6, cap: 30, numberPattern: /(\d+)\s*(cats?|kitty|kitties)/i }, options: { minDuration: 4000, maxDuration: 7000, stagger: 1400, minSize: 26, maxSize: 44, direction: 'random' }, hints: ['cat'] },
+  // 20) Trains run
+  { id: 'trains-run', triggersAny: [/trains?/i, /choo/i], type: 'run', emojis: ['🚂', '🚃'], count: { fallback: 5, cap: 25, numberPattern: /(\d+)\s*trains?/i }, options: { minDuration: 5000, maxDuration: 8000, stagger: 1600, minSize: 28, maxSize: 46, direction: 'left' }, hints: ['train'] },
+  // 21) Ice cream float
+  { id: 'icecream-float', triggersAny: [/ice ?cream/i], type: 'float', emojis: ['🍦', '🍨'], count: { fallback: 16, cap: 80, numberPattern: /(\d+)\s*ice ?cream/i }, options: { minDuration: 4000, maxDuration: 8000, stagger: 1600, minSize: 24, maxSize: 38 }, hints: ['ice cream'] },
+  // 22) Dragons float
+  { id: 'dragons-float', triggersAny: [/dragons?/i], type: 'float', emojis: ['🐉', '🐲'], count: { fallback: 6, cap: 30, numberPattern: /(\d+)\s*dragons?/i }, options: { minDuration: 4500, maxDuration: 9000, stagger: 1800, minSize: 30, maxSize: 50 }, hints: ['dragon'] },
+  // 23) Frogs burst
+  { id: 'frogs-burst', triggersAny: [/frogs?/i], type: 'burst', emojis: ['🐸'], count: { fallback: 16, cap: 60, numberPattern: /(\d+)\s*frogs?/i }, options: { minDuration: 2000, maxDuration: 4000, stagger: 900, minSize: 24, maxSize: 40 }, hints: ['frog'] },
+  // 24) Fish float
+  { id: 'fish-float', triggersAny: [/fish/i], type: 'float', emojis: ['🐠', '🐟', '🐡'], count: { fallback: 18, cap: 90, numberPattern: /(\d+)\s*fish/i }, options: { minDuration: 4500, maxDuration: 9000, stagger: 1800, minSize: 22, maxSize: 36 }, hints: ['fish'] },
+  // 25) Bees float
+  { id: 'bees-float', triggersAny: [/bees?/i], type: 'float', emojis: ['🐝'], count: { fallback: 16, cap: 70, numberPattern: /(\d+)\s*bees?/i }, options: { minDuration: 4000, maxDuration: 8000, stagger: 1600, minSize: 20, maxSize: 32 }, hints: ['bee'] },
+  // 26) Apples rain
+  { id: 'apples-rain', triggersAny: [/apples?/i], type: 'rain', emojis: ['🍎', '🍏'], count: { fallback: 24, cap: 100, numberPattern: /(\d+)\s*apples?/i }, options: { minDuration: 3500, maxDuration: 7000, stagger: 1400, minSize: 22, maxSize: 36 }, hints: ['apple'] },
+  // 27) Ducks run
+  { id: 'ducks-run', triggersAny: [/ducks?/i], type: 'run', emojis: ['🦆'], count: { fallback: 6, cap: 30, numberPattern: /(\d+)\s*ducks?/i }, options: { minDuration: 4000, maxDuration: 7000, stagger: 1400, minSize: 24, maxSize: 40, direction: 'random' }, hints: ['duck'] },
+  // 28) Robots run
+  { id: 'robots-run', triggersAny: [/robots?/i], type: 'run', emojis: ['🤖'], count: { fallback: 6, cap: 30, numberPattern: /(\d+)\s*robots?/i }, options: { minDuration: 4500, maxDuration: 8000, stagger: 1600, minSize: 28, maxSize: 46, direction: 'random' }, hints: ['robot'] },
 ];

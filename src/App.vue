@@ -15,7 +15,7 @@
         </Text>
       </div>
 
-      <Controls />
+      <Toolbar />
 
       <TypingArea />
 
@@ -30,6 +30,7 @@
 
     <Balloons :balloons="typingApp.balloons.value" />
     <Emojis :effects="typingApp.emojiEffects.value" />
+    <MathAnimation />
     <EasterEggGuide />
   </Container>
 </template>
@@ -38,11 +39,12 @@
 import { ref, onMounted, nextTick } from 'vue';
 import Container from './ui/Container.vue';
 import Text from './ui/Text.vue';
-import Controls from './features/typing/components/Controls.vue';
+import Toolbar from './features/typing/components/Toolbar.vue';
 import TypingArea from './features/typing/components/TypingArea.vue';
 import InputSection from './features/typing/components/InputSection.vue';
 import Balloons from './features/effects/components/Balloons.vue';
 import Emojis from './features/effects/components/Emojis.vue';
+import MathAnimation from './features/math/components/MathAnimation.vue';
 import EasterEggGuide from './features/easter-eggs/components/EasterEggGuide.vue';
 import { createTypingApp, provideTypingApp } from './composables/useTypingApp';
 

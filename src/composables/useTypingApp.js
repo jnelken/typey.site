@@ -7,8 +7,10 @@ import { useSound } from '@/features/audio/composables/useSound';
 import { useSpeech } from '@/features/audio/composables/useSpeech';
 import { useBalloons } from '@/features/effects/composables/useBalloons';
 import { useEmojis } from '@/features/effects/composables/useEmojis';
-import { useEasterEggs } from '@/features/easter-eggs/composables/useEasterEggs';
+import { useEasterEggs, spawnForEgg } from '@/features/easter-eggs/composables/useEasterEggs';
 import { useEasterEggGuide } from '@/features/easter-eggs/composables/useEasterEggGuide';
+import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
+import { parseEquation } from '@/features/math/utils/parseEquation';
 
 const TYPING_APP_KEY = Symbol('typing-app');
 
@@ -24,6 +26,7 @@ export function createTypingApp() {
   const emojisSystem = useEmojis();
   const easterEggsSystem = useEasterEggs({ spawnBalloons: balloonsSystem.spawnBalloons });
   const guideSystem = useEasterEggGuide();
+  const mathSystem = useMathAnimation();
 
   // Handle Enter key press
   const handleEnterKey = async () => {
@@ -33,21 +36,34 @@ export function createTypingApp() {
       const lineToSpeak = typingState.currentText.value;
       typingState.addCompletedLine(typingState.currentText.value);
 
-      // Easter eggs guide: show on special command
       const trimmedText = typingState.currentText.value.trim();
+
+      // Easter eggs guide: show on special command
       if (trimmedText.toLowerCase() === 'qwerty') {
-        console.log('QWERTY command detected, toggling guide');
         guideSystem.toggle(true);
         typingState.clearCurrentText();
         return;
-      } else {
-        // Easter eggs: emoji effects based on input
-        easterEggsSystem.evaluateEasterEggs(
-          trimmedText,
-          emojisSystem.spawnEmojis,
-          egg => guideSystem.revealForEgg(egg)
-        );
       }
+
+      // Math: an "a + b" equation plays the count-up animation and speaks the
+      // answer instead of running the usual emoji/balloon effects.
+      const equation = parseEquation(trimmedText);
+      if (equation) {
+        mathSystem.play(equation);
+        await typingAPI.submitEntry(typingState.currentText.value);
+        typingState.clearCurrentText();
+        if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
+          speechSystem.speakLine(`${equation.a} plus ${equation.b} equals ${equation.sum}`);
+        }
+        return;
+      }
+
+      // Easter eggs: emoji effects based on input
+      easterEggsSystem.evaluateEasterEggs(
+        trimmedText,
+        emojisSystem.spawnEmojis,
+        egg => guideSystem.revealForEgg(egg)
+      );
 
       // Submit to API for Tidbyt companion app
       await typingAPI.submitEntry(typingState.currentText.value);
@@ -86,6 +102,14 @@ export function createTypingApp() {
     }
   };
 
+  // Play an effect on demand (used by the guide's tap-to-preview rows).
+  // Closes the guide so the animation is visible full-screen.
+  const previewEasterEgg = egg => {
+    guideSystem.revealForEgg(egg);
+    guideSystem.toggle(false);
+    spawnForEgg(egg, emojisSystem.spawnEmojis);
+  };
+
   const initApp = () => {
     soundSystem.initAudio();
     speechSystem.initSpeech();
@@ -104,14 +128,15 @@ export function createTypingApp() {
     speakingQueue: speechSystem.speakingQueue,
     balloons: balloonsSystem.balloons,
     emojiEffects: emojisSystem.effects,
-    
+    mathEquation: mathSystem.current,
+
     // Guide system
     guideVisible: guideSystem.guideVisible,
-    allHints: guideSystem.allHints,
+    guideItems: guideSystem.menuItems,
     discoveredHints: guideSystem.discovered,
     isHintDiscovered: guideSystem.isDiscovered,
-    maskHint: guideSystem.mask,
     toggleGuide: guideSystem.toggle,
+    previewEasterEgg,
 
     // Methods
     onKeyDown: eventHandlers.onKeyDown,

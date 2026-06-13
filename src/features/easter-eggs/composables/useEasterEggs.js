@@ -2,6 +2,45 @@ import { EASTER_EGGS } from '@/constants/emojiEasterEggs';
 // This composable is a factory that takes dependencies from the caller
 import { BALLOON_MAX } from '@/constants/balloons';
 
+// Build the spawn arguments (type, count, options) for an egg. When `text` is
+// provided, an embedded number (e.g. "5 lions") overrides the fallback count.
+// Shared by live evaluation and the guide's tap-to-preview.
+export function resolveSpawn(egg, text = '') {
+  const lower = typeof text === 'string' ? text.toLowerCase() : '';
+
+  let count = egg.count?.fallback ?? 10;
+  const cap = egg.count?.cap ?? 150;
+  if (egg.count?.numberPattern) {
+    const m = lower.match(egg.count.numberPattern);
+    if (m && m[1]) {
+      const n = parseInt(m[1], 10);
+      if (!Number.isNaN(n)) count = Math.max(1, Math.min(n, cap));
+    }
+  }
+
+  const emojis = egg.emojis || ['✨'];
+  const options = { ...egg.options };
+  if (Array.isArray(emojis) && emojis.length > 1) options.emojiSet = emojis;
+  else if (Array.isArray(emojis) && emojis.length === 1) options.emoji = emojis[0];
+  else if (typeof emojis === 'string') options.emoji = emojis;
+
+  // Direction handling for run animation
+  if (egg.type === 'run') {
+    const dir = egg.options?.direction;
+    if (dir === 'left' || dir === 'right') options.direction = dir;
+    else options.direction = Math.random() > 0.5 ? 'left' : 'right';
+  }
+
+  return { type: egg.type, count, options };
+}
+
+// Spawn a single egg's effect immediately (used by the guide preview).
+export function spawnForEgg(egg, spawnEmojis, text = '') {
+  if (!egg || typeof spawnEmojis !== 'function') return;
+  const { type, count, options } = resolveSpawn(egg, text);
+  spawnEmojis(type, count, options);
+}
+
 // Evaluate text against declarative easter egg config and spawn effects
 export function useEasterEggs({ spawnBalloons }) {
   const evaluateEasterEggs = (text, spawnEmojis, onTrigger) => {
@@ -17,33 +56,8 @@ export function useEasterEggs({ spawnBalloons }) {
       const allMatch = all.length === 0 || all.every(re => re.test(lower));
       if (!anyMatch || !allMatch) continue;
 
-      // Determine count
-      let count = egg.count?.fallback ?? 10;
-      let cap = egg.count?.cap ?? 150;
-      if (egg.count?.numberPattern) {
-        const m = lower.match(egg.count.numberPattern);
-        if (m && m[1]) {
-          const n = parseInt(m[1], 10);
-          if (!Number.isNaN(n)) count = Math.max(1, Math.min(n, cap));
-        }
-      }
-
-      // Build options
-      const emojis = egg.emojis || ['✨'];
-      const options = { ...egg.options };
-      if (Array.isArray(emojis) && emojis.length > 1) options.emojiSet = emojis;
-      else if (Array.isArray(emojis) && emojis.length === 1)
-        options.emoji = emojis[0];
-      else if (typeof emojis === 'string') options.emoji = emojis;
-
-      // Direction handling for run animation
-      if (egg.type === 'run') {
-        const dir = egg.options?.direction;
-        if (dir === 'left' || dir === 'right') options.direction = dir;
-        else options.direction = Math.random() > 0.5 ? 'left' : 'right';
-      }
-
-      spawnEmojis(egg.type, count, options);
+      const { type, count, options } = resolveSpawn(egg, text);
+      spawnEmojis(type, count, options);
       triggered = true;
       if (typeof onTrigger === 'function') onTrigger(egg);
     }
