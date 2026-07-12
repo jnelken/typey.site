@@ -53,7 +53,8 @@ export function createTypingApp() {
         await typingAPI.submitEntry(typingState.currentText.value);
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
-          speechSystem.speakLine(`${equation.a} plus ${equation.b} equals ${equation.sum}`);
+          const word = equation.op === '+' ? 'plus' : 'minus';
+          speechSystem.speakLine(`${equation.a} ${word} ${equation.b} equals ${equation.result}`);
         }
         return;
       }
@@ -85,6 +86,8 @@ export function createTypingApp() {
     speakLetter: speechSystem.speakLetter,
     isSpeechEnabled: speechSystem.isSpeechEnabled,
     onEnterPressed: handleEnterKey,
+    // The math animation stays up (replayable) until the next character is typed.
+    onPrintableKey: () => mathSystem.clear(),
   });
 
   // Wrapper functions for event handlers to include state updates

@@ -9,45 +9,74 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { useTypingApp } from '@/composables/useTypingApp';
-import { MATH_ANIM_DURATION } from '@/features/math/composables/useMathAnimation';
+import { layoutDots, gridDimensions, colorForGroup } from '@/features/math/utils/dotLayout';
 
-// Bright, kid-friendly colors. Group A is blue; the "added" group B is orange
-// so the new amount (often "+1") visually pops as it joins the pile.
-const COLOR_A = '#4f9cf9';
-const COLOR_B = '#ff9f1c';
 const COLOR_TEXT = '#2b2d42';
+// One loop = play the operation, then hold the answer, then replay.
+const PLAY_MS = 2200;
+const HOLD_MS = 2000;
+const CYCLE_MS = PLAY_MS + HOLD_MS;
 
 const typingApp = useTypingApp();
 const canvasEl = ref(null);
 let rafId = null;
 let startTime = 0;
 
-const smoothstep = t => t * t * (3 - 2 * t);
+const clamp01 = t => Math.max(0, Math.min(1, t));
+const smoothstep = t => { const x = clamp01(t); return x * x * (3 - 2 * x); };
 const lerp = (a, b, t) => a + (b - a) * t;
 
-// Lay out n dots in a centered grid; returns array of {x, y} in CSS pixels.
-const gridPositions = (n, cx, cy, spacing, cols) => {
-  const positions = [];
-  const columns = Math.max(1, Math.min(cols, n));
-  const rows = Math.ceil(n / columns);
-  const width = (columns - 1) * spacing;
-  const height = (rows - 1) * spacing;
-  for (let i = 0; i < n; i++) {
-    const col = i % columns;
-    const row = Math.floor(i / columns);
-    positions.push({
-      x: cx - width / 2 + col * spacing,
-      y: cy - height / 2 + row * spacing,
-    });
-  }
-  return positions;
+// Pixel geometry for the dot grid, sized to fit the largest count on screen
+// (a+b for addition, a for subtraction) with constant dot size/spacing so the
+// answer never looks "smaller" than the inputs.
+const geometry = (eq, w, h) => {
+  const maxN = eq.op === '+' ? eq.result : eq.a;
+  const { cols, rows } = gridDimensions(maxN);
+  const availH = h * 0.42;
+  const availW = w * 0.8;
+  const s = Math.max(40, Math.min(110,
+    Math.min(availH / Math.max(rows, 1), availW / (Math.max(cols, 1) * 1.6))));
+  const colPitch = s * 1.6;
+  const radius = s * 0.34;
+  const totalW = (cols - 1) * colPitch;
+  const totalH = (rows - 1) * s;
+  const cy = h * 0.6;
+  const originX = w / 2 - totalW / 2;
+  const originY = cy - totalH / 2;
+  const posFor = dot => ({ x: originX + dot.col * colPitch, y: originY + dot.row * s });
+  return { s, radius, posFor };
+};
+
+const drawDot = (ctx, x, y, radius, color, alpha) => {
+  if (alpha <= 0) return;
+  ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  ctx.fillStyle = color;
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = Math.max(1, radius * 0.08);
+  ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+  ctx.stroke();
+};
+
+const drawEquation = (ctx, eq, w, h, showResult, ga, base) => {
+  ctx.globalAlpha = ga;
+  ctx.fillStyle = COLOR_TEXT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const fontSize = Math.max(40, Math.min(110, base / 9));
+  ctx.font = `bold ${fontSize}px "Comic Sans MS", "Baloo 2", system-ui, sans-serif`;
+  const sign = eq.op === '+' ? '+' : '−';
+  const text = showResult
+    ? `${eq.a} ${sign} ${eq.b} = ${eq.result}`
+    : `${eq.a} ${sign} ${eq.b}`;
+  ctx.fillText(text, w / 2, h * 0.28);
 };
 
 const draw = () => {
   const eq = typingApp.mathEquation.value;
   const canvas = canvasEl.value;
   if (!eq || !canvas) return;
-
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
@@ -61,61 +90,63 @@ const draw = () => {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
 
-  const progress = Math.min(1, (performance.now() - startTime) / MATH_ANIM_DURATION);
-
-  // Timeline: fade in -> merge to center -> hold reveal -> fade out
-  const fadeIn = smoothstep(Math.min(1, progress / 0.2));
-  const merge = smoothstep(Math.min(1, Math.max(0, (progress - 0.2) / 0.4)));
-  const revealed = progress > 0.6;
-  const fadeOut = progress > 0.85 ? smoothstep((progress - 0.85) / 0.15) : 0;
-  const alpha = fadeIn * (1 - fadeOut);
-
-  const cx = w / 2;
-  const cy = h / 2;
+  // Loop: animate during PLAY, hold the answer during HOLD, then repeat.
+  const t = (performance.now() - startTime) % CYCLE_MS;
+  const p = t < PLAY_MS ? t / PLAY_MS : 1;
+  const ga = smoothstep(Math.min(1, t / (PLAY_MS * 0.15))); // soft re-entry each loop
   const base = Math.min(w, h);
-  const radius = Math.max(8, Math.min(34, base / (8 + eq.sum)));
-  const spacing = radius * 2.6;
 
-  // Start clusters (left = a, right = b) and the merged target row/grid.
-  const cols = Math.min(10, eq.sum);
-  const clusterCols = Math.max(1, Math.ceil(Math.sqrt(Math.max(eq.a, eq.b))));
-  const offset = base * 0.18 + spacing;
-  const startA = gridPositions(eq.a, cx - offset, cy + radius * 2, spacing, clusterCols);
-  const startB = gridPositions(eq.b, cx + offset, cy + radius * 2, spacing, clusterCols);
-  const merged = gridPositions(eq.sum, cx, cy + radius * 2, spacing, cols);
+  const { radius, posFor } = geometry(eq, w, h);
+  // A gentle "pop" as the answer settles.
+  const pop = p > 0.82 ? 1 + 0.1 * Math.sin(((p - 0.82) / 0.18) * Math.PI) : 1;
 
-  ctx.globalAlpha = alpha;
-
-  // Draw each dot, interpolating from its start cluster to its merged slot.
-  for (let i = 0; i < eq.sum; i++) {
-    const from = i < eq.a ? startA[i] : startB[i - eq.a];
-    const to = merged[i];
-    const x = lerp(from.x, to.x, merge);
-    const y = lerp(from.y, to.y, merge);
-    ctx.beginPath();
-    ctx.fillStyle = i < eq.a ? COLOR_A : COLOR_B;
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Equation text above the dots. The "= sum" appears at the reveal.
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = COLOR_TEXT;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const fontSize = Math.max(40, Math.min(120, base / 8));
-  // Canvas ctx.font does not resolve CSS variables, so use a concrete stack.
-  ctx.font = `bold ${fontSize}px "Comic Sans MS", "Baloo 2", system-ui, sans-serif`;
-  const equationText = revealed
-    ? `${eq.a} + ${eq.b} = ${eq.sum}`
-    : `${eq.a} + ${eq.b}`;
-  ctx.fillText(equationText, cx, cy - base * 0.18);
-
-  if (progress < 1) {
-    rafId = requestAnimationFrame(draw);
+  if (eq.op === '+') {
+    drawAddition(ctx, eq, p, ga, radius * pop, posFor);
   } else {
-    rafId = null;
+    drawSubtraction(ctx, eq, p, ga, radius * pop, posFor);
   }
+  drawEquation(ctx, eq, w, h, p > 0.7, ga, base);
+
+  rafId = requestAnimationFrame(draw);
+};
+
+// Addition: group A appears, then group B slides in from the right to extend
+// it into the combined, color-grouped layout.
+const drawAddition = (ctx, eq, p, ga, radius, posFor) => {
+  const dots = layoutDots(eq.result);
+  dots.forEach((dot, i) => {
+    const final = posFor(dot);
+    const color = colorForGroup(dot.groupIndex);
+    if (i < eq.a) {
+      const alpha = smoothstep(Math.min(1, p / 0.3));
+      drawDot(ctx, final.x, final.y, radius, color, alpha * ga);
+    } else {
+      const stagger = ((i - eq.a) / Math.max(1, eq.b)) * 0.2;
+      const local = smoothstep(clamp01((p - 0.3 - stagger) / 0.45));
+      const startX = final.x + radius * 8;
+      const x = lerp(startX, final.x, local);
+      drawDot(ctx, x, final.y, radius, color, local * ga);
+    }
+  });
+};
+
+// Subtraction: all of A appears, then the trailing b dots slide down and fade
+// away ("take away"), leaving the answer already in place.
+const drawSubtraction = (ctx, eq, p, ga, radius, posFor) => {
+  const dots = layoutDots(eq.a);
+  dots.forEach((dot, i) => {
+    const final = posFor(dot);
+    const color = colorForGroup(dot.groupIndex);
+    const appear = smoothstep(Math.min(1, p / 0.3));
+    if (i < eq.result) {
+      drawDot(ctx, final.x, final.y, radius, color, appear * ga);
+    } else {
+      const stagger = ((i - eq.result) / Math.max(1, eq.b)) * 0.2;
+      const local = smoothstep(clamp01((p - 0.35 - stagger) / 0.45));
+      const y = final.y + local * radius * 9;
+      drawDot(ctx, final.x, y, radius, color, appear * (1 - local) * ga);
+    }
+  });
 };
 
 const stop = () => {
@@ -125,7 +156,7 @@ const stop = () => {
   }
 };
 
-// Restart the canvas loop whenever a new equation is played.
+// Restart the loop whenever a new equation is played.
 watch(
   () => typingApp.mathEquation.value?.id,
   id => {

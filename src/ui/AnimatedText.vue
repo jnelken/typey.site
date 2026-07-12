@@ -12,7 +12,12 @@
       :class="getCharacterClass(index)"
       :style="getCharacterStyle(index)">
       {{ char === ' ' ? '\u00A0' : char }}
-    </span>
+    </span><span
+      v-for="(char, index) in ghostCharacters"
+      :key="`ghost-${index}`"
+      class="ghost-char"
+      >{{ char === ' ' ? '\u00A0' : char }}</span
+    >
     <span
       v-if="showCursor"
       class="cursor"
@@ -79,6 +84,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  ghostText: {
+    type: String,
+    default: '',
+  },
 });
 
 const emit = defineEmits(['typing-complete', 'character-typed']);
@@ -90,6 +99,9 @@ const typingTimeout = ref(null);
 const characters = computed(() => {
   return displayedText.value.split('');
 });
+
+// Faint completion shown right after the typed characters.
+const ghostCharacters = computed(() => props.ghostText.split(''));
 
 const getCharacterClass = index => {
   const char = displayedText.value[index];
@@ -282,6 +294,11 @@ defineExpose({
   color: var(--color-primary);
   font-weight: bold;
   margin-left: 2px;
+}
+
+.ghost-char {
+  opacity: 0.3;
+  color: var(--color-text-light, #9aa0a6);
 }
 
 .cursor-blink {

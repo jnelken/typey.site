@@ -313,7 +313,13 @@ describe('useTypingApp', () => {
     it('plays the math animation for an a+b equation', async () => {
       typingApp.currentText.value = '3+1';
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
-      expect(typingApp.mathEquation.value).toMatchObject({ a: 3, b: 1, sum: 4 });
+      expect(typingApp.mathEquation.value).toMatchObject({ a: 3, b: 1, op: '+', result: 4 });
+    });
+
+    it('plays the math animation for a subtraction', async () => {
+      typingApp.currentText.value = '5-2';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.mathEquation.value).toMatchObject({ a: 5, b: 2, op: '-', result: 3 });
     });
 
     it('speaks the answer for an equation when auto-speak is on', async () => {
@@ -324,9 +330,35 @@ describe('useTypingApp', () => {
       expect(typingApp.speakingLine.value).toBe('4 plus 1 equals 5');
     });
 
+    it('speaks subtraction with the word "minus"', async () => {
+      typingApp.isAutoSpeakEnabled.value = true;
+      typingApp.isSpeechEnabled.value = true;
+      typingApp.currentText.value = '9 - 4';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.speakingLine.value).toBe('9 minus 4 equals 5');
+    });
+
     it('does not treat a plain sentence as an equation', async () => {
       typingApp.currentText.value = 'hello world';
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.mathEquation.value).toBeNull();
+    });
+
+    it('dismisses the animation when the child types the next character', async () => {
+      typingApp.currentText.value = '3+1';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.mathEquation.value).not.toBeNull();
+      // Typing the next printable character clears the animation.
+      await typingApp.onKeyDown({
+        key: 'a',
+        preventDefault: jest.fn(),
+        target: {
+          get selectionStart() {
+            return typingApp.currentText.value.length;
+          },
+          setSelectionRange: jest.fn(),
+        },
+      });
       expect(typingApp.mathEquation.value).toBeNull();
     });
   });

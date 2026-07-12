@@ -1,14 +1,15 @@
 /**
  * Keyboard event handling for typing interface
  */
-export function useTypingEvents({ 
-  currentText, 
-  isCapsLockEnabled, 
-  playKeySound, 
+export function useTypingEvents({
+  currentText,
+  isCapsLockEnabled,
+  playKeySound,
   playEnterSound,
   speakLetter,
   isSpeechEnabled,
-  onEnterPressed 
+  onEnterPressed,
+  onPrintableKey,
 }) {
   const onKeyDown = async (event) => {
     const key = event.key;
@@ -17,6 +18,10 @@ export function useTypingEvents({
       event.preventDefault();
       await onEnterPressed();
     } else if (key.length === 1) {
+      // A printable keystroke means the child has moved on — let listeners
+      // (e.g. the math animation) dismiss themselves.
+      if (onPrintableKey) onPrintableKey();
+
       if (isCapsLockEnabled.value && key.match(/[a-z]/)) {
         event.preventDefault();
         const upperKey = key.toUpperCase();

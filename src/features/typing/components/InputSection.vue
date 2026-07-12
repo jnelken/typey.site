@@ -12,6 +12,7 @@
         :speaking-line="speakingLine"
         :speaking-position="speakingPosition"
         :speaking-queue="speakingQueue"
+        :ghost-text="ghostSuffix"
         @character-typed="onCharacterTyped" />
     </div>
 
@@ -42,6 +43,7 @@ import Input from '@/ui/Input.vue';
 import AnimatedText from '@/ui/AnimatedText.vue';
 import { useTypingApp } from '@/composables/useTypingApp';
 import { matchTypeahead } from '@/features/easter-eggs/utils/typeahead';
+import { suggestCompletion } from '@/features/typing/utils/wordSuggest';
 
 const {
   currentText,
@@ -58,6 +60,17 @@ const {
 
 // Gentle hint of the emoji that the current word is about to summon.
 const typeaheadEmoji = computed(() => matchTypeahead(currentText.value));
+
+// Ghost text that finishes the word being spelled. Matches the typed case so
+// it blends in (caps lock is on by default for this app).
+const ghostSuffix = computed(() => {
+  const suggestion = suggestCompletion(currentText.value);
+  if (!suggestion) return '';
+  const lastWord = currentText.value.split(/\s+/).pop();
+  const suffix = suggestion.slice(lastWord.length);
+  const isUpper = /[A-Z]/.test(lastWord) && lastWord === lastWord.toUpperCase();
+  return isUpper ? suffix.toUpperCase() : suffix;
+});
 
 const typingInput = ref(null);
 
