@@ -36,3 +36,6 @@ Thumbs.db
 coverage
 *.lcov
 .vercel
+
+# wrapup-repos scratch file (regenerated each automation run)
+NEXT-STEPS.md
