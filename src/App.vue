@@ -17,6 +17,8 @@
 
       <Toolbar />
 
+      <WordPrompt />
+
       <TypingArea />
 
       <InputSection ref="inputSection" />
@@ -42,6 +44,7 @@ import { ref, onMounted, nextTick } from 'vue';
 import Container from './ui/Container.vue';
 import Text from './ui/Text.vue';
 import Toolbar from './features/typing/components/Toolbar.vue';
+import WordPrompt from './features/typing/components/WordPrompt.vue';
 import TypingArea from './features/typing/components/TypingArea.vue';
 import InputSection from './features/typing/components/InputSection.vue';
 import Balloons from './features/effects/components/Balloons.vue';

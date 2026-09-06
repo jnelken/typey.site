@@ -3,6 +3,7 @@ import { useTypingState } from '@/features/typing/composables/useTypingState';
 import { useTypingSettings } from '@/features/typing/composables/useTypingSettings';
 import { useTypingEvents } from '@/features/typing/composables/useTypingEvents';
 import { useTypingAPI } from '@/features/typing/composables/useTypingAPI';
+import { useWordPrompt } from '@/features/typing/composables/useWordPrompt';
 import { useSound } from '@/features/audio/composables/useSound';
 import { useSpeech } from '@/features/audio/composables/useSpeech';
 import { useBalloons } from '@/features/effects/composables/useBalloons';
@@ -19,7 +20,8 @@ export function createTypingApp() {
   const typingState = useTypingState();
   const typingSettings = useTypingSettings();
   const typingAPI = useTypingAPI();
-  
+  const wordPromptSystem = useWordPrompt();
+
   const soundSystem = useSound();
   const speechSystem = useSpeech();
   const balloonsSystem = useBalloons();
@@ -35,6 +37,10 @@ export function createTypingApp() {
 
       const lineToSpeak = typingState.currentText.value;
       typingState.addCompletedLine(typingState.currentText.value);
+
+      if (typingSettings.isWordPromptEnabled.value) {
+        wordPromptSystem.nextPromptWord();
+      }
 
       const trimmedText = typingState.currentText.value.trim();
 
@@ -134,6 +140,7 @@ export function createTypingApp() {
     balloons: balloonsSystem.balloons,
     emojiEffects: emojisSystem.effects,
     mathEquation: mathSystem.current,
+    promptWord: wordPromptSystem.promptWord,
 
     // Guide system
     guideVisible: guideSystem.guideVisible,
@@ -153,6 +160,8 @@ export function createTypingApp() {
     toggleAutoSpeak: typingSettings.toggleAutoSpeak,
     toggleCapsLock: typingSettings.toggleCapsLock,
     toggleEmojiMode: typingSettings.toggleEmojiMode,
+    toggleWordPrompt: typingSettings.toggleWordPrompt,
+    nextPromptWord: wordPromptSystem.nextPromptWord,
     speakHistoryLine,
     spawnBalloons: balloonsSystem.spawnBalloons,
     popBalloon: balloonsSystem.popBalloon,

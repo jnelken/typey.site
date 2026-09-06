@@ -36,3 +36,25 @@ describe('useTypingSettings — emoji mode', () => {
     expect(isAutoSpeakEnabled.value).toBe(true);
   });
 });
+
+describe('useTypingSettings — word prompt', () => {
+  it('is on by default so kids see a word to type right away', () => {
+    const { isWordPromptEnabled } = useTypingSettings();
+    expect(isWordPromptEnabled.value).toBe(true);
+  });
+
+  it('toggles off and back on', () => {
+    const { isWordPromptEnabled, toggleWordPrompt } = useTypingSettings();
+    toggleWordPrompt();
+    expect(isWordPromptEnabled.value).toBe(false);
+    toggleWordPrompt();
+    expect(isWordPromptEnabled.value).toBe(true);
+  });
+
+  it('persists the toggle so it survives a refresh', async () => {
+    const { toggleWordPrompt } = useTypingSettings();
+    toggleWordPrompt();
+    await nextTick();
+    expect(loadSetting('wordPrompt', true)).toBe(false);
+  });
+});
