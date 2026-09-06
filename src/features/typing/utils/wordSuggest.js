@@ -1,31 +1,21 @@
-// A kid-friendly word list used to offer gentle spelling help: as the child
-// types the start of a word, we suggest a full word that starts with those
-// letters. This both helps when they forget how to finish a word and teaches
-// new words when they type a few random letters.
+import { EMOJI_WORDS } from '@/features/typing/utils/wordEmoji';
+
+// Gentle spelling help: as the child types the start of a word, we suggest a
+// full word that starts with those letters. This both helps when they forget
+// how to finish a word and teaches new words when they type a few letters.
 //
-// Ordered roughly by familiarity so common favourites win ties. Includes all
-// the "magic words" so ghost text and the emoji preview agree.
+// The list is the emoji word library plus a few sight words that have no
+// picture but are still worth completing. Drawing from the library means ghost
+// text, the emoji preview and the practice prompts all agree on one vocabulary.
+
+// Words worth completing even though there's no picture for them.
+const SIGHT_WORDS = ['the', 'and', 'you', 'big', 'little'];
+
+// Two-word entries ("traffic light") are left out: ghost text completes the
+// word under the cursor, and a phrase can't finish a single word.
 export const SUGGESTION_WORDS = [
-  // family + everyday favourites
-  'mom', 'dad', 'mommy', 'daddy', 'baby', 'love', 'hug', 'kiss',
-  'hello', 'happy', 'smile', 'yes', 'play', 'fun',
-  // short sight words
-  'the', 'and', 'you', 'big', 'red', 'run', 'jump', 'go',
-  // animals
-  'cat', 'dog', 'puppy', 'kitty', 'fish', 'frog', 'bird', 'bee', 'duck',
-  'bear', 'lion', 'tiger', 'zebra', 'panda', 'horse', 'sheep', 'mouse',
-  'snake', 'shark', 'whale', 'monkey', 'rabbit', 'turtle', 'spider',
-  'dino', 'dinosaur', 'dragon', 'unicorn', 'butterfly', 'elephant', 'giraffe',
-  // food
-  'apple', 'banana', 'orange', 'cookie', 'candy', 'cake', 'milk', 'water',
-  'pizza', 'icecream',
-  // things + nature
-  'ball', 'book', 'tree', 'star', 'moon', 'sun', 'house', 'car', 'truck',
-  'train', 'plane', 'boat', 'rocket', 'robot', 'heart', 'flower', 'rainbow',
-  'snow', 'rain', 'music', 'party', 'money', 'cars', 'stars', 'hearts',
-  'lions', 'rockets', 'unicorns', 'butterflies', 'flowers', 'ghosts',
-  // colors
-  'blue', 'green', 'yellow', 'purple', 'pink', 'black', 'white', 'brown',
+  ...SIGHT_WORDS,
+  ...EMOJI_WORDS.filter(word => !word.includes(' ')),
 ];
 
 // Suggest a full word that completes the last word the child is typing.

@@ -1,10 +1,9 @@
 import { ref, computed } from 'vue';
-import { SUGGESTION_WORDS } from '@/features/typing/utils/wordSuggest';
-import { emojiForWord } from '@/features/typing/utils/wordEmoji';
+import { EMOJI_WORDS, emojiForWord } from '@/features/typing/utils/wordEmoji';
 
-// Only words with a matching emoji are usable prompts — the picture is what
-// lets a pre-reader confirm the word without sounding it out.
-const PROMPT_WORDS = SUGGESTION_WORDS.filter(word => emojiForWord(word));
+// Every word in the emoji library is fair game as a prompt — each one comes
+// with the picture that lets a pre-reader confirm it without sounding it out.
+const PROMPT_WORDS = EMOJI_WORDS;
 
 /**
  * Picks a random word from the emoji word library, avoiding an immediate
