@@ -12,11 +12,31 @@ export function useSpeech() {
   const speakingPosition = ref(0); // Track position within the line being spoken
   const speakingQueue = ref([]); // Track characters in the speaking queue
 
+  // Surfaces what's actually happening with the Web Speech API, for
+  // debugging on devices (iPad) where there's no console access.
+  const speechDebug = ref({
+    supported: typeof window !== 'undefined' && 'speechSynthesis' in window,
+    voiceCount: 0,
+    lastEvent: null,
+    lastError: null,
+    lastText: null,
+  });
+
+  const logDebug = (event, extra = {}) => {
+    speechDebug.value = {
+      ...speechDebug.value,
+      lastEvent: event,
+      lastEventAt: new Date().toLocaleTimeString(),
+      ...extra,
+    };
+  };
+
   // Initialize speech synthesis for macOS compatibility
   const initSpeech = () => {
     if (typeof window.speechSynthesis !== 'undefined') {
       // Force voices to load on macOS
-      window.speechSynthesis.getVoices();
+      const voices = window.speechSynthesis.getVoices();
+      logDebug('init', { voiceCount: voices.length });
 
       // Resume speech synthesis if it's paused (macOS requirement)
       if (window.speechSynthesis.paused) {
@@ -31,8 +51,18 @@ export function useSpeech() {
       !text ||
       typeof SpeechSynthesisUtterance === 'undefined'
     ) {
+      logDebug('speak-skipped', {
+        lastText: text,
+        reason: !isSpeechEnabled.value
+          ? 'speech-disabled'
+          : !text
+            ? 'empty-text'
+            : 'no-utterance-api',
+      });
       return Promise.resolve();
     }
+
+    logDebug('speak-called', { lastText: text });
 
     return new Promise(resolve => {
       let settled = false;
@@ -92,6 +122,7 @@ export function useSpeech() {
 
       const speakWithUtterance = utterance => {
         getVoices().then(voices => {
+          logDebug('voices-ready', { voiceCount: voices.length });
           if (settled) return;
 
           // Voice selection with English priority
@@ -118,6 +149,7 @@ export function useSpeech() {
           // (goes silent after backgrounding, especially in fullscreen/PWA mode).
           // Don't let that hang the whole typing queue.
           const watchdog = setTimeout(() => {
+            logDebug('watchdog-timeout');
             isSpeaking.value = false;
             currentlySpeaking.value = null;
             cleanupQueue();
@@ -125,6 +157,7 @@ export function useSpeech() {
           }, 15000);
 
           utterance.onstart = () => {
+            logDebug('onstart');
             isSpeaking.value = true;
 
             // Use speechData if available for proper highlighting
@@ -151,6 +184,7 @@ export function useSpeech() {
           };
 
           utterance.onend = () => {
+            logDebug('onend');
             clearTimeout(watchdog);
             isSpeaking.value = false;
             currentlySpeaking.value = null;
@@ -159,8 +193,9 @@ export function useSpeech() {
           };
 
           utterance.onerror = event => {
-            clearTimeout(watchdog);
             console.warn('Speech synthesis error:', event.error);
+            logDebug('onerror', { lastError: event.error });
+            clearTimeout(watchdog);
             isSpeaking.value = false;
             currentlySpeaking.value = null;
             cleanupQueue();
@@ -172,6 +207,7 @@ export function useSpeech() {
             window.speechSynthesis.resume();
           }
 
+          logDebug('calling-speak');
           window.speechSynthesis.speak(utterance);
         });
       };
@@ -318,6 +354,7 @@ export function useSpeech() {
     speakingLine,
     speakingPosition,
     speakingQueue,
+    speechDebug,
     initSpeech,
     speak,
     speakLetter,

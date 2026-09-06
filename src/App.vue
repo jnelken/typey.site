@@ -32,6 +32,8 @@
     <Emojis :effects="typingApp.emojiEffects.value" />
     <MathAnimation />
     <EasterEggGuide />
+
+    <pre v-if="showSpeechDebug" class="speech-debug">{{ typingApp.speechDebug.value }}</pre>
   </Container>
 </template>
 
@@ -49,6 +51,7 @@ import EasterEggGuide from './features/easter-eggs/components/EasterEggGuide.vue
 import { createTypingApp, provideTypingApp } from './composables/useTypingApp';
 
 const inputSection = ref(null);
+const showSpeechDebug = new URLSearchParams(window.location.search).has('debug');
 
 // Create and provide the typing app context
 const typingApp = createTypingApp();
@@ -105,5 +108,21 @@ onMounted(() => {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
   z-index: 50;
+}
+
+.speech-debug {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(0, 0, 0, 0.85);
+  color: #0f0;
 }
 </style>

@@ -130,6 +130,7 @@ export function createTypingApp() {
     speakingLine: speechSystem.speakingLine,
     speakingPosition: speechSystem.speakingPosition,
     speakingQueue: speechSystem.speakingQueue,
+    speechDebug: speechSystem.speechDebug,
     balloons: balloonsSystem.balloons,
     emojiEffects: emojisSystem.effects,
     mathEquation: mathSystem.current,
