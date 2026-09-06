@@ -2,7 +2,7 @@
   <div class="input-section" @click="focusInput">
     <div class="current-line-display">
       <AnimatedText
-        :text="currentText"
+        :text="displayText"
         size="typing"
         font="mono"
         color="primary"
@@ -12,7 +12,7 @@
         :speaking-line="speakingLine"
         :speaking-position="speakingPosition"
         :speaking-queue="speakingQueue"
-        :ghost-text="ghostSuffix"
+        :ghost-text="displayGhostSuffix"
         @character-typed="onCharacterTyped" />
     </div>
 
@@ -44,6 +44,7 @@ import AnimatedText from '@/ui/AnimatedText.vue';
 import { useTypingApp } from '@/composables/useTypingApp';
 import { matchTypeahead } from '@/features/easter-eggs/utils/typeahead';
 import { suggestCompletion } from '@/features/typing/utils/wordSuggest';
+import { toEmojiText } from '@/features/typing/utils/emojiMode';
 
 const {
   currentText,
@@ -56,6 +57,7 @@ const {
   speakingLine,
   speakingPosition,
   speakingQueue,
+  isEmojiModeEnabled,
 } = useTypingApp();
 
 // Gentle hint of the emoji that the current word is about to summon.
@@ -71,6 +73,16 @@ const ghostSuffix = computed(() => {
   const isUpper = /[A-Z]/.test(lastWord) && lastWord === lastWord.toUpperCase();
   return isUpper ? suffix.toUpperCase() : suffix;
 });
+
+// Emoji mode only changes what is drawn. `currentText` stays the real letters,
+// so speech, easter eggs and the API submission are unaffected.
+const displayText = computed(() =>
+  isEmojiModeEnabled.value ? toEmojiText(currentText.value) : currentText.value
+);
+
+const displayGhostSuffix = computed(() =>
+  isEmojiModeEnabled.value ? toEmojiText(ghostSuffix.value) : ghostSuffix.value
+);
 
 const typingInput = ref(null);
 

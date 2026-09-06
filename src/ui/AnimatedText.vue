@@ -96,15 +96,27 @@ const displayedText = ref('');
 const isTyping = ref(false);
 const typingTimeout = ref(null);
 
-const characters = computed(() => {
-  return displayedText.value.split('');
-});
+// Split on grapheme clusters rather than code units so an emoji stays a single
+// character. Plain `.split('')` tears surrogate pairs and keycaps (1️⃣) apart,
+// which emoji mode would otherwise render as mojibake.
+const segmenter =
+  typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+    ? new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+    : null;
+
+const splitGraphemes = value => {
+  if (!value) return [];
+  if (!segmenter) return Array.from(value);
+  return Array.from(segmenter.segment(value), part => part.segment);
+};
+
+const characters = computed(() => splitGraphemes(displayedText.value));
 
 // Faint completion shown right after the typed characters.
-const ghostCharacters = computed(() => props.ghostText.split(''));
+const ghostCharacters = computed(() => splitGraphemes(props.ghostText));
 
 const getCharacterClass = index => {
-  const char = displayedText.value[index];
+  const char = characters.value[index];
   const isBeingSpoken = props.currentlySpeaking === char;
   const isInSpeakingQueue = props.speakingQueue.includes(char);
 
@@ -141,8 +153,7 @@ const getCharacterClass = index => {
   return [
     'character',
     {
-      'character-new':
-        index === displayedText.value.length - 1 && isTyping.value,
+      'character-new': index === characters.value.length - 1 && isTyping.value,
       'character-speaking':
         isBeingSpoken || isInSpeakingQueue || isHistoricalHighlight,
     },
@@ -150,7 +161,7 @@ const getCharacterClass = index => {
 };
 
 const getCharacterStyle = index => {
-  const char = displayedText.value[index];
+  const char = characters.value[index];
   const isBeingSpoken = props.currentlySpeaking === char;
   const isInSpeakingQueue = props.speakingQueue.includes(char);
 
@@ -173,7 +184,7 @@ const getCharacterStyle = index => {
 
   if (
     props.animateOnChange &&
-    index === displayedText.value.length - 1 &&
+    index === characters.value.length - 1 &&
     isTyping.value
   ) {
     return {

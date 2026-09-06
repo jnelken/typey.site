@@ -150,6 +150,7 @@ export function createTypingApp() {
     toggleSpeech: speechSystem.toggleSpeech,
     toggleAutoSpeak: typingSettings.toggleAutoSpeak,
     toggleCapsLock: typingSettings.toggleCapsLock,
+    toggleEmojiMode: typingSettings.toggleEmojiMode,
     speakHistoryLine,
     spawnBalloons: balloonsSystem.spawnBalloons,
     popBalloon: balloonsSystem.popBalloon,

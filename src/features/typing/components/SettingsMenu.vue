@@ -20,6 +20,12 @@
         :is-enabled="isAutoSpeakEnabled"
         @toggle="toggleAutoSpeak" />
       <ToggleButton
+        label="Emoji Mode"
+        enabled-icon="🐱"
+        disabled-icon="🔤"
+        :is-enabled="isEmojiModeEnabled"
+        @toggle="toggleEmojiMode" />
+      <ToggleButton
         :label="isCapsLockEnabled ? 'CAPS' : 'caps'"
         enabled-icon="🔠"
         disabled-icon="🔡"
@@ -48,10 +54,12 @@ const {
   isSpeechEnabled,
   isAutoSpeakEnabled,
   isCapsLockEnabled,
+  isEmojiModeEnabled,
   toggleSound,
   toggleSpeech,
   toggleAutoSpeak,
   toggleCapsLock,
+  toggleEmojiMode,
 } = useTypingApp();
 </script>
 

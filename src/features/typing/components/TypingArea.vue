@@ -13,7 +13,7 @@
         :class="{ 'line-enter': index === completedLines.length - 1 }"
         @click="speakHistoryLine(line)">
         <AnimatedText
-          :text="line"
+          :text="displayLine(line)"
           size="typing"
           font="mono"
           color="secondary"
@@ -33,6 +33,7 @@ import { ref, nextTick, watch } from 'vue';
 import AnimatedText from '@/ui/AnimatedText.vue';
 import { useTypingApp } from '@/composables/useTypingApp';
 import { LAYOUT_CONSTANTS } from '@/constants/layout';
+import { toEmojiText } from '@/features/typing/utils/emojiMode';
 
 const {
   completedLines,
@@ -41,7 +42,13 @@ const {
   speakingLine,
   speakingPosition,
   speakingQueue,
+  isEmojiModeEnabled,
 } = useTypingApp();
+
+// History renders in emoji mode too, but clicking a line still speaks the real
+// words — `completedLines` is never rewritten.
+const displayLine = line =>
+  isEmojiModeEnabled.value ? toEmojiText(line) : line;
 
 const historyContainer = ref(null);
 
