@@ -1,13 +1,17 @@
 # 🚀 Typey Site Roadmap
 
-## Upcoming Features
+## ✅ Shipped
 
 ### 🎨 Emoji Mode
 
-- **Description**: Maps each alphanumeric and symbol character to a corresponding emoji for a fun typing experience
-- **Status**: Planning
-- **Note**: VoiceOver reads emoji names well, making this mode fully accessible
-- **Implementation**: Character-to-emoji mapping system, toggle in settings/controls
+Shipped 2026-09-06. Every letter, digit and common symbol renders as a matching
+emoji — letters map to an object whose spoken name starts with that letter (A → 🍎,
+B → 🐻), digits use keycap emoji, so VoiceOver reads the line naturally. Off by
+default, toggled from the settings menu, persisted across refreshes. The mapping
+is display-only, so speech, easter eggs and word suggestions still work on the
+real text. See `src/features/typing/utils/emojiMode.js`.
+
+## Upcoming Features
 
 ### 🌐 Unicode Mode
 

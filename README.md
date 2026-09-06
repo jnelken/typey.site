@@ -39,6 +39,7 @@ A fun, interactive typing application designed for kids with sound effects, text
 - **Real-time typing** with visual feedback
 - **Sound effects** for each keystroke
 - **Caps Lock mode** for uppercase typing
+- **Emoji Mode** - every letter, digit and symbol draws as a matching emoji (A → 🍎, B → 🐻); speech still reads the real words
 - **Auto-scroll** to keep content in view
 
 ### 🔊 **Speech Synthesis**
