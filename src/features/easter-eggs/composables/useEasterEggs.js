@@ -28,8 +28,8 @@ export function resolveSpawn(egg, text = '') {
   else if (Array.isArray(emojis) && emojis.length === 1) options.emoji = emojis[0];
   else if (typeof emojis === 'string') options.emoji = emojis;
 
-  // Direction handling for run animation
-  if (egg.type === 'run') {
+  // Direction handling for the animations that travel sideways
+  if (egg.type === 'run' || egg.type === 'arc') {
     const dir = egg.options?.direction;
     if (dir === 'left' || dir === 'right') options.direction = dir;
     else options.direction = Math.random() > 0.5 ? 'left' : 'right';

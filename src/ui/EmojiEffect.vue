@@ -14,17 +14,13 @@ const props = defineProps({
   },
 });
 
+// Effects that travel sideways need to know which way they're headed.
+const TRAVELLING = ['run', 'arc'];
+
 const effectClass = computed(() => {
-  const t = props.effect.type || 'float';
-  const dir = props.effect.direction || 'right';
-  return {
-    'effect-rain': t === 'rain',
-    'effect-float': t === 'float',
-    'effect-run': t === 'run',
-    'run-right': t === 'run' && dir === 'right',
-    'run-left': t === 'run' && dir === 'left',
-    'effect-burst': t === 'burst',
-  };
+  const type = props.effect.type || 'float';
+  const dir = props.effect.direction === 'left' ? 'left' : 'right';
+  return [`effect-${type}`, TRAVELLING.includes(type) ? `go-${dir}` : null].filter(Boolean);
 });
 
 const rootStyle = computed(() => {
@@ -41,7 +37,7 @@ const rootStyle = computed(() => {
     '--delay': delay,
     '--dir': dir,
   };
-  // Only set top for burst effects; rain/float/run use top/bottom in CSS
+  // Only set top for burst effects; the rest are anchored top/bottom in CSS
   const type = props.effect.type || 'float';
   if (type === 'burst' && e.top) {
     style.top = e.top;
@@ -110,8 +106,8 @@ const innerStyle = computed(() => {
   animation-timing-function: linear;
 }
 
-.effect-run.run-right { animation-name: emoji-run-right; }
-.effect-run.run-left { animation-name: emoji-run-left; }
+.effect-run.go-right { animation-name: emoji-run-right; }
+.effect-run.go-left { animation-name: emoji-run-left; }
 
 @keyframes emoji-run-right {
   0% { transform: translateX(-120vw); opacity: 0; }
@@ -137,5 +133,77 @@ const innerStyle = computed(() => {
   0% { transform: scale(0.6); opacity: 0; }
   30% { transform: scale(1); opacity: 1; }
   100% { transform: scale(1.1); opacity: 0; }
+}
+
+/* --- Effects that obey gravity ---------------------------------------
+ * A thrown thing shouldn't drift off the top of the screen. These three
+ * split the motion in two: the outer element carries it sideways at a
+ * steady speed while the inner one handles height, easing out on the way
+ * up and in on the way down so the weight reads right.
+ */
+
+/* Arc: kicked across the screen, rising and falling on the way */
+.effect-arc {
+  top: auto;
+  bottom: 8vh;
+  animation-timing-function: linear;
+}
+
+.effect-arc.go-right { animation-name: emoji-run-right; }
+.effect-arc.go-left { animation-name: emoji-run-left; }
+
+.effect-arc .emoji-inner {
+  animation: emoji-arc-height var(--dur, 4000ms) var(--delay, 0ms) both;
+}
+
+@keyframes emoji-arc-height {
+  0% { transform: translateY(0); animation-timing-function: ease-out; }
+  50% { transform: translateY(-42vh); animation-timing-function: ease-in; }
+  100% { transform: translateY(0); }
+}
+
+/* Lob: launched straight up, falling back to the ground */
+.effect-lob {
+  top: auto;
+  bottom: 8vh;
+  animation-name: emoji-ground-fade;
+  animation-timing-function: linear;
+}
+
+.effect-lob .emoji-inner {
+  animation: emoji-lob-height var(--dur, 4000ms) var(--delay, 0ms) both;
+}
+
+@keyframes emoji-lob-height {
+  0% { transform: translateY(0); animation-timing-function: ease-out; }
+  55% { transform: translateY(-66vh); animation-timing-function: ease-in; }
+  100% { transform: translateY(0); }
+}
+
+@keyframes emoji-ground-fade {
+  0% { opacity: 0; }
+  6% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Bounce: dropped from above, settling in smaller and smaller hops */
+.effect-bounce {
+  top: auto;
+  bottom: 8vh;
+  animation-name: emoji-bounce;
+}
+
+@keyframes emoji-bounce {
+  0% { transform: translateY(-105vh); opacity: 0; animation-timing-function: ease-in; }
+  4% { opacity: 1; }
+  40% { transform: translateY(0); animation-timing-function: ease-out; }
+  54% { transform: translateY(-24vh); animation-timing-function: ease-in; }
+  68% { transform: translateY(0); animation-timing-function: ease-out; }
+  78% { transform: translateY(-11vh); animation-timing-function: ease-in; }
+  86% { transform: translateY(0); animation-timing-function: ease-out; }
+  92% { transform: translateY(-4vh); animation-timing-function: ease-in; }
+  97% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0; }
 }
 </style>
