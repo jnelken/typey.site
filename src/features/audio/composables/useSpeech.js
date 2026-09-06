@@ -35,15 +35,12 @@ export function useSpeech() {
     }
 
     return new Promise(resolve => {
-      if (isSpeaking.value) {
-        window.speechSynthesis.cancel();
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text);
-
-      utterance.rate = options.rate || speechRate.value;
-      utterance.pitch = options.pitch || speechPitch.value;
-      utterance.volume = options.volume || 0.8;
+      let settled = false;
+      const settle = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
 
       // Get voices and handle macOS-specific voice selection
       const getVoices = () => {
@@ -52,117 +49,141 @@ export function useSpeech() {
         // If voices aren't loaded yet, wait for them
         if (voices.length === 0) {
           return new Promise(resolveVoices => {
+            let resolved = false;
+            const finish = v => {
+              if (resolved) return;
+              resolved = true;
+              resolveVoices(v);
+            };
             window.speechSynthesis.onvoiceschanged = () => {
-              voices = window.speechSynthesis.getVoices();
-              resolveVoices(voices);
+              finish(window.speechSynthesis.getVoices());
             };
             // Trigger voices to load
             window.speechSynthesis.getVoices();
+            // iOS sometimes never fires onvoiceschanged - don't hang forever
+            setTimeout(() => finish(window.speechSynthesis.getVoices()), 300);
           });
         }
 
         return Promise.resolve(voices);
       };
 
-      getVoices().then(voices => {
-        // Voice selection with English priority
-        const preferredVoice =
-          voices.find(
-            voice =>
-              voice.lang.startsWith('en') &&
-              (voice.name.includes('Google') ||
-                voice.name.includes('Alex') ||
-                voice.name.includes('Samantha') ||
-                voice.name.includes('Victoria') || // macOS default
-                voice.name.includes('Daniel') || // macOS default
-                voice.name.includes('Karen') || // macOS default
-                voice.default),
-          ) ||
-          voices.find(voice => voice.lang.startsWith('en')) ||
-          voices.find(voice => voice.default);
+      const startSpeaking = () => {
+        const utterance = new SpeechSynthesisUtterance(text);
 
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
+        utterance.rate = options.rate || speechRate.value;
+        utterance.pitch = options.pitch || speechPitch.value;
+        utterance.volume = options.volume || 0.8;
+
+        speakWithUtterance(utterance);
+      };
+
+      const cleanupQueue = () => {
+        const label = options.speechData ? options.speechData.label : text;
+        if (label.length === 1) {
+          const index = speakingQueue.value.indexOf(label);
+          if (index > -1) {
+            speakingQueue.value.splice(index, 1);
+          }
         }
+        speakingLine.value = null;
+        speakingPosition.value = 0;
+      };
 
-        utterance.onstart = () => {
-          isSpeaking.value = true;
-          
-          // Use speechData if available for proper highlighting
-          if (options.speechData) {
-            currentlySpeaking.value = options.speechData.label;
-            // Add to speaking queue for letter-by-letter highlighting
-            if (options.speechData.label.length === 1) {
-              speakingQueue.value.push(options.speechData.label);
-            }
-          } else {
-            currentlySpeaking.value = text;
-            // Add to speaking queue for letter-by-letter highlighting
-            if (text.length === 1) {
-              speakingQueue.value.push(text);
-            }
+      const speakWithUtterance = utterance => {
+        getVoices().then(voices => {
+          if (settled) return;
+
+          // Voice selection with English priority
+          const preferredVoice =
+            voices.find(
+              voice =>
+                voice.lang.startsWith('en') &&
+                (voice.name.includes('Google') ||
+                  voice.name.includes('Alex') ||
+                  voice.name.includes('Samantha') ||
+                  voice.name.includes('Victoria') || // macOS default
+                  voice.name.includes('Daniel') || // macOS default
+                  voice.name.includes('Karen') || // macOS default
+                  voice.default),
+            ) ||
+            voices.find(voice => voice.lang.startsWith('en')) ||
+            voices.find(voice => voice.default);
+
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
           }
 
-          // For line speech, track the line and start position
-          // Only set speakingLine if we don't have speechData (to avoid overwriting original case)
-          if (text.length > 1 && !options.speechData) {
-            speakingLine.value = text;
-            speakingPosition.value = 0;
+          // Safety net: iOS occasionally never fires onend/onerror
+          // (goes silent after backgrounding, especially in fullscreen/PWA mode).
+          // Don't let that hang the whole typing queue.
+          const watchdog = setTimeout(() => {
+            isSpeaking.value = false;
+            currentlySpeaking.value = null;
+            cleanupQueue();
+            settle();
+          }, 15000);
+
+          utterance.onstart = () => {
+            isSpeaking.value = true;
+
+            // Use speechData if available for proper highlighting
+            if (options.speechData) {
+              currentlySpeaking.value = options.speechData.label;
+              // Add to speaking queue for letter-by-letter highlighting
+              if (options.speechData.label.length === 1) {
+                speakingQueue.value.push(options.speechData.label);
+              }
+            } else {
+              currentlySpeaking.value = text;
+              // Add to speaking queue for letter-by-letter highlighting
+              if (text.length === 1) {
+                speakingQueue.value.push(text);
+              }
+            }
+
+            // For line speech, track the line and start position
+            // Only set speakingLine if we don't have speechData (to avoid overwriting original case)
+            if (text.length > 1 && !options.speechData) {
+              speakingLine.value = text;
+              speakingPosition.value = 0;
+            }
+          };
+
+          utterance.onend = () => {
+            clearTimeout(watchdog);
+            isSpeaking.value = false;
+            currentlySpeaking.value = null;
+            cleanupQueue();
+            settle();
+          };
+
+          utterance.onerror = event => {
+            clearTimeout(watchdog);
+            console.warn('Speech synthesis error:', event.error);
+            isSpeaking.value = false;
+            currentlySpeaking.value = null;
+            cleanupQueue();
+            settle();
+          };
+
+          // Ensure speech synthesis is resumed (macOS requirement)
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
           }
-        };
 
-        utterance.onend = () => {
-          isSpeaking.value = false;
-          currentlySpeaking.value = null;
+          window.speechSynthesis.speak(utterance);
+        });
+      };
 
-          // Remove from speaking queue when done
-          if (options.speechData && options.speechData.label.length === 1) {
-            const index = speakingQueue.value.indexOf(options.speechData.label);
-            if (index > -1) {
-              speakingQueue.value.splice(index, 1);
-            }
-          } else if (text.length === 1) {
-            const index = speakingQueue.value.indexOf(text);
-            if (index > -1) {
-              speakingQueue.value.splice(index, 1);
-            }
-          }
-
-          speakingLine.value = null;
-          speakingPosition.value = 0;
-          resolve();
-        };
-
-        utterance.onerror = event => {
-          console.warn('Speech synthesis error:', event.error);
-          isSpeaking.value = false;
-          currentlySpeaking.value = null;
-
-          // Remove from speaking queue on error
-          if (options.speechData && options.speechData.label.length === 1) {
-            const index = speakingQueue.value.indexOf(options.speechData.label);
-            if (index > -1) {
-              speakingQueue.value.splice(index, 1);
-            }
-          } else if (text.length === 1) {
-            const index = speakingQueue.value.indexOf(text);
-            if (index > -1) {
-              speakingQueue.value.splice(index, 1);
-            }
-          }
-
-          speakingLine.value = null;
-          speakingPosition.value = 0;
-          resolve();
-        };
-
-        // Ensure speech synthesis is resumed (macOS requirement)
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        }
-
-        window.speechSynthesis.speak(utterance);
-      });
+      if (isSpeaking.value || window.speechSynthesis.speaking) {
+        // iOS/WebKit can silently drop an utterance if speak() is called
+        // in the same tick as cancel() - give it a beat to actually clear.
+        window.speechSynthesis.cancel();
+        setTimeout(startSpeaking, 50);
+      } else {
+        startSpeaking();
+      }
     });
   };
 
