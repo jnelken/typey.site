@@ -39,3 +39,7 @@ coverage
 
 # wrapup-repos scratch file (regenerated each automation run)
 NEXT-STEPS.md
+
+# Claude Code local state
+.claude/settings.local.json
+.claude/IN_PROGRESS.md
