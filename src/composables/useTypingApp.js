@@ -157,6 +157,7 @@ export function createTypingApp() {
     mathEquation: mathSystem.current,
     promptWord: wordPromptSystem.promptWord,
     promptEmoji: wordPromptSystem.promptEmoji,
+    promptType: wordPromptSystem.promptType,
     hasPreviousWord: wordPromptSystem.hasPreviousWord,
 
     // Guide system

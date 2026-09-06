@@ -1,33 +1,21 @@
 import { ref, computed } from 'vue';
-import { EMOJI_WORDS, emojiForWord } from '@/features/typing/utils/wordEmoji';
-
-// Every word in the emoji library is fair game as a prompt — each one comes
-// with the picture that lets a pre-reader confirm it without sounding it out.
-const PROMPT_WORDS = EMOJI_WORDS;
-
-/**
- * Picks a random word from the emoji word library, avoiding an immediate
- * repeat of the previous word when there's more than one word to choose from.
- */
-export function randomPromptWord(exclude) {
-  let word = PROMPT_WORDS[Math.floor(Math.random() * PROMPT_WORDS.length)];
-  while (word === exclude && PROMPT_WORDS.length > 1) {
-    word = PROMPT_WORDS[Math.floor(Math.random() * PROMPT_WORDS.length)];
-  }
-  return word;
-}
+import {
+  randomPrompt,
+  emojiForPrompt,
+  promptKind,
+} from '@/features/typing/utils/promptWords';
 
 /**
- * A word (and its matching emoji) for the child to copy-type, shown above the
- * input. Draws from the same word list used for spelling suggestions, so
- * every prompt is one the app already knows how to speak and animate.
+ * A prompt (and its matching picture) for the child to copy-type, shown above
+ * the input: a word from the emoji library, a number, or a dollar amount.
+ * Every one is something the app answers with an animation.
  *
- * Words are kept in a history rather than replaced outright, so a child can
- * step back to a word they want another go at and then forward again through
- * the same words instead of a fresh random one.
+ * Prompts are kept in a history rather than replaced outright, so a child can
+ * step back to one they want another go at and then forward again through the
+ * same ones instead of a fresh random pick.
  */
 export function useWordPrompt() {
-  const history = ref([randomPromptWord()]);
+  const history = ref([randomPrompt()]);
   const cursor = ref(0);
 
   const promptWord = computed({
@@ -36,28 +24,29 @@ export function useWordPrompt() {
       history.value[cursor.value] = word;
     },
   });
-  const promptEmoji = computed(() => emojiForWord(promptWord.value));
+  const promptEmoji = computed(() => emojiForPrompt(promptWord.value));
+  const promptType = computed(() => promptKind(promptWord.value));
 
-  // True when there's an earlier word to go back to.
+  // True when there's an earlier prompt to go back to.
   const hasPreviousWord = computed(() => cursor.value > 0);
 
-  // Whether a finished line is the prompt word, typed correctly. Case is
-  // ignored because caps lock changes what the same keystrokes produce.
+  // Whether a finished line is the prompt, typed correctly. Case is ignored
+  // because caps lock changes what the same keystrokes produce.
   const matchesPromptWord = text =>
     typeof text === 'string' &&
     text.trim().toLowerCase() === promptWord.value.toLowerCase();
 
-  // Forward: replay the next word already in history, or draw a fresh one.
+  // Forward: replay the next prompt already in history, or draw a fresh one.
   const nextPromptWord = () => {
     if (cursor.value < history.value.length - 1) {
       cursor.value++;
       return;
     }
-    history.value.push(randomPromptWord(promptWord.value));
+    history.value.push(randomPrompt(promptWord.value));
     cursor.value++;
   };
 
-  // Back: return to the previous word for another go. Returns whether it moved.
+  // Back: return to the previous prompt for another go. Returns whether it moved.
   const previousPromptWord = () => {
     if (!hasPreviousWord.value) return false;
     cursor.value--;
@@ -67,6 +56,7 @@ export function useWordPrompt() {
   return {
     promptWord,
     promptEmoji,
+    promptType,
     hasPreviousWord,
     matchesPromptWord,
     nextPromptWord,

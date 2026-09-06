@@ -1,6 +1,6 @@
 <template>
   <div v-if="isWordPromptEnabled" class="word-prompt">
-    <Text size="sm" align="center" color="light">Type this word:</Text>
+    <Text size="sm" align="center" color="light">{{ label }}</Text>
     <div class="word-prompt-row">
       <Text tag="span" size="3xl" color="primary" weight="bold" font="mono">
         {{ displayWord }}
@@ -15,7 +15,13 @@ import { computed } from 'vue';
 import Text from '@/ui/Text.vue';
 import { useTypingApp } from '@/composables/useTypingApp';
 
-const { promptWord, promptEmoji, isWordPromptEnabled, isCapsLockEnabled } = useTypingApp();
+const {
+  promptWord,
+  promptEmoji,
+  promptType,
+  isWordPromptEnabled,
+  isCapsLockEnabled,
+} = useTypingApp();
 
 // The prompt is what the child copies, so it has to be spelled the way their
 // keystrokes will land: caps lock on means the letters they see are the
@@ -23,6 +29,14 @@ const { promptWord, promptEmoji, isWordPromptEnabled, isCapsLockEnabled } = useT
 const displayWord = computed(() =>
   isCapsLockEnabled.value ? promptWord.value.toUpperCase() : promptWord.value
 );
+
+// "Type this word: 5" reads wrong, so the label follows what's being asked for.
+const LABELS = {
+  number: 'Type this number:',
+  dollars: 'Type this amount:',
+  word: 'Type this word:',
+};
+const label = computed(() => LABELS[promptType.value] ?? LABELS.word);
 </script>
 
 <style scoped>
