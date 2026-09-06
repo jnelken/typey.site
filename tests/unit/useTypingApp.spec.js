@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTypingApp } from '@/composables/useTypingApp';
 
 describe('useTypingApp', () => {
@@ -485,6 +485,70 @@ describe('useTypingApp', () => {
         },
       });
       expect(typingApp.mathEquation.value).toBeNull();
+    });
+  });
+
+  describe('silly mode', () => {
+    const pressEnter = () =>
+      typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('starts on the word "silly" and clears the line it was typed on', async () => {
+      typingApp.currentText.value = 'silly';
+      await pressEnter();
+
+      expect(typingApp.isSillyModeActive.value).toBe(true);
+      expect(typingApp.currentText.value).toBe('');
+
+      jest.advanceTimersByTime(1000);
+      expect(typingApp.currentText.value.length).toBeGreaterThan(0);
+    });
+
+    it('is off until the word is typed', () => {
+      expect(typingApp.isSillyModeActive.value).toBe(false);
+      jest.advanceTimersByTime(3000);
+      expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('ignores the word inside a longer line', async () => {
+      typingApp.currentText.value = 'you are silly';
+      await pressEnter();
+
+      expect(typingApp.isSillyModeActive.value).toBe(false);
+    });
+
+    it('stops when the word is typed again', async () => {
+      typingApp.currentText.value = 'silly';
+      await pressEnter();
+      jest.advanceTimersByTime(1000);
+
+      typingApp.currentText.value = 'silly';
+      await pressEnter();
+      const settled = typingApp.currentText.value;
+      jest.advanceTimersByTime(5000);
+
+      expect(typingApp.isSillyModeActive.value).toBe(false);
+      expect(typingApp.currentText.value).toBe(settled);
+    });
+
+    it('stops on Escape', async () => {
+      typingApp.currentText.value = 'silly';
+      await pressEnter();
+      jest.advanceTimersByTime(1000);
+
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+      const settled = typingApp.currentText.value;
+      jest.advanceTimersByTime(5000);
+
+      expect(typingApp.isSillyModeActive.value).toBe(false);
+      expect(typingApp.currentText.value).toBe(settled);
     });
   });
 

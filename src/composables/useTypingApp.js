@@ -10,6 +10,8 @@ import { useBalloons } from '@/features/effects/composables/useBalloons';
 import { useEmojis } from '@/features/effects/composables/useEmojis';
 import { useEasterEggs, spawnForEgg } from '@/features/easter-eggs/composables/useEasterEggs';
 import { useEasterEggGuide } from '@/features/easter-eggs/composables/useEasterEggGuide';
+import { useSillyMode } from '@/features/easter-eggs/composables/useSillyMode';
+import { isSillyTrigger } from '@/features/easter-eggs/utils/sillyMode';
 import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
 import { parseEquation } from '@/features/math/utils/parseEquation';
 
@@ -28,6 +30,10 @@ export function createTypingApp() {
   const emojisSystem = useEmojis();
   const easterEggsSystem = useEasterEggs({ spawnBalloons: balloonsSystem.spawnBalloons });
   const guideSystem = useEasterEggGuide();
+  const sillySystem = useSillyMode({
+    currentText: typingState.currentText,
+    isCapsLockEnabled: typingSettings.isCapsLockEnabled,
+  });
   const mathSystem = useMathAnimation();
 
   // Handle Enter key press
@@ -52,6 +58,14 @@ export function createTypingApp() {
       // Easter eggs guide: show on special command
       if (trimmedText.toLowerCase() === 'qwerty') {
         guideSystem.toggle(true);
+        typingState.clearCurrentText();
+        return;
+      }
+
+      // Silly mode: "silly" starts random words landing in the input once a
+      // second, and typing it again stops them.
+      if (isSillyTrigger(trimmedText)) {
+        sillySystem.toggle();
         typingState.clearCurrentText();
         return;
       }
@@ -99,7 +113,10 @@ export function createTypingApp() {
     onEnterPressed: handleEnterKey,
     // The math animation stays up (replayable) until the next character is typed.
     onPrintableKey: () => mathSystem.clear(),
-    onEscapePressed: () => balloonsSystem.popAllBalloons(),
+    onEscapePressed: () => {
+      sillySystem.stop();
+      balloonsSystem.popAllBalloons();
+    },
     onShuffleWord: () => {
       if (typingSettings.isWordPromptEnabled.value) {
         wordPromptSystem.nextPromptWord();
@@ -159,6 +176,8 @@ export function createTypingApp() {
     promptEmoji: wordPromptSystem.promptEmoji,
     promptType: wordPromptSystem.promptType,
     hasPreviousWord: wordPromptSystem.hasPreviousWord,
+
+    isSillyModeActive: sillySystem.isActive,
 
     // Guide system
     guideVisible: guideSystem.guideVisible,
