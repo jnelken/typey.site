@@ -11,6 +11,7 @@ export function useTypingEvents({
   onEnterPressed,
   onPrintableKey,
   onEscapePressed,
+  onShuffleWord,
 }) {
   const onKeyDown = async (event) => {
     const key = event.key;
@@ -20,6 +21,10 @@ export function useTypingEvents({
       await onEnterPressed();
     } else if (key === 'Escape') {
       if (onEscapePressed) onEscapePressed();
+    } else if (event.metaKey && key === 'ArrowRight') {
+      // Cmd+Right skips to a new practice word instead of jumping the cursor.
+      event.preventDefault();
+      if (onShuffleWord) onShuffleWord();
     } else if (key.length === 1) {
       // A printable keystroke means the child has moved on — let listeners
       // (e.g. the math animation) dismiss themselves.

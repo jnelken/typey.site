@@ -95,6 +95,11 @@ export function createTypingApp() {
     // The math animation stays up (replayable) until the next character is typed.
     onPrintableKey: () => mathSystem.clear(),
     onEscapePressed: () => balloonsSystem.popAllBalloons(),
+    onShuffleWord: () => {
+      if (typingSettings.isWordPromptEnabled.value) {
+        wordPromptSystem.nextPromptWord();
+      }
+    },
   });
 
   // Wrapper functions for event handlers to include state updates
@@ -141,6 +146,7 @@ export function createTypingApp() {
     emojiEffects: emojisSystem.effects,
     mathEquation: mathSystem.current,
     promptWord: wordPromptSystem.promptWord,
+    promptEmoji: wordPromptSystem.promptEmoji,
 
     // Guide system
     guideVisible: guideSystem.guideVisible,

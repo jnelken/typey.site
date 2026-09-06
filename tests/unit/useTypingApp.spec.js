@@ -301,6 +301,51 @@ describe('useTypingApp', () => {
     });
   });
 
+  describe('word prompt', () => {
+    it('starts with a word paired to an emoji', () => {
+      expect(typingApp.promptWord.value).toEqual(expect.any(String));
+      expect(typingApp.promptEmoji.value).toEqual(expect.any(String));
+    });
+
+    it('picks a new word on Cmd+Right', () => {
+      const firstWord = typingApp.promptWord.value;
+
+      typingApp.onKeyDown({
+        key: 'ArrowRight',
+        metaKey: true,
+        preventDefault: jest.fn(),
+      });
+
+      // Guaranteed to differ since the picker excludes an immediate repeat.
+      expect(typingApp.promptWord.value).not.toBe(firstWord);
+    });
+
+    it('does not shuffle the word for a plain Right arrow', () => {
+      const firstWord = typingApp.promptWord.value;
+
+      typingApp.onKeyDown({
+        key: 'ArrowRight',
+        metaKey: false,
+        preventDefault: jest.fn(),
+      });
+
+      expect(typingApp.promptWord.value).toBe(firstWord);
+    });
+
+    it('does not shuffle when word prompt is disabled', () => {
+      typingApp.toggleWordPrompt();
+      const firstWord = typingApp.promptWord.value;
+
+      typingApp.onKeyDown({
+        key: 'ArrowRight',
+        metaKey: true,
+        preventDefault: jest.fn(),
+      });
+
+      expect(typingApp.promptWord.value).toBe(firstWord);
+    });
+  });
+
   describe('app initialization', () => {
     it('should initialize audio and speech', () => {
       typingApp.initApp();
