@@ -38,11 +38,16 @@ export function createTypingApp() {
       const lineToSpeak = typingState.currentText.value;
       typingState.addCompletedLine(typingState.currentText.value);
 
-      if (typingSettings.isWordPromptEnabled.value) {
+      const trimmedText = typingState.currentText.value.trim();
+
+      // The prompt only moves on once the word has actually been spelled
+      // right — a wrong try leaves it up for another go.
+      if (
+        typingSettings.isWordPromptEnabled.value &&
+        wordPromptSystem.matchesPromptWord(trimmedText)
+      ) {
         wordPromptSystem.nextPromptWord();
       }
-
-      const trimmedText = typingState.currentText.value.trim();
 
       // Easter eggs guide: show on special command
       if (trimmedText.toLowerCase() === 'qwerty') {

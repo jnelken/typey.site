@@ -42,6 +42,12 @@ export function useWordPrompt() {
   // True when there's an earlier word to go back to.
   const hasPreviousWord = computed(() => cursor.value > 0);
 
+  // Whether a finished line is the prompt word, typed correctly. Case is
+  // ignored because caps lock changes what the same keystrokes produce.
+  const matchesPromptWord = text =>
+    typeof text === 'string' &&
+    text.trim().toLowerCase() === promptWord.value.toLowerCase();
+
   // Forward: replay the next word already in history, or draw a fresh one.
   const nextPromptWord = () => {
     if (cursor.value < history.value.length - 1) {
@@ -63,6 +69,7 @@ export function useWordPrompt() {
     promptWord,
     promptEmoji,
     hasPreviousWord,
+    matchesPromptWord,
     nextPromptWord,
     previousPromptWord,
   };

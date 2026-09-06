@@ -332,6 +332,59 @@ describe('useTypingApp', () => {
       expect(typingApp.promptWord.value).toBe(firstWord);
     });
 
+    it('moves to a new word once the word is typed correctly', async () => {
+      const word = typingApp.promptWord.value;
+      typingApp.currentText.value = word;
+
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.promptWord.value).not.toBe(word);
+    });
+
+    it('accepts the word in caps, since caps lock is on by default', async () => {
+      const word = typingApp.promptWord.value;
+      typingApp.currentText.value = word.toUpperCase();
+
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.promptWord.value).not.toBe(word);
+    });
+
+    it('ignores surrounding whitespace when checking the word', async () => {
+      const word = typingApp.promptWord.value;
+      typingApp.currentText.value = `  ${word}  `;
+
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.promptWord.value).not.toBe(word);
+    });
+
+    it('keeps the same word up when it is typed wrong', async () => {
+      const word = typingApp.promptWord.value;
+      typingApp.currentText.value = `${word}zzz`;
+
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.promptWord.value).toBe(word);
+    });
+
+    it('keeps the same word up for an unrelated line', async () => {
+      const word = typingApp.promptWord.value;
+      typingApp.currentText.value = 'hello world';
+
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.promptWord.value).toBe(word);
+    });
+
+    it('still records the wrong attempt as a completed line', async () => {
+      typingApp.currentText.value = 'not the word';
+
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.completedLines.value).toContain('not the word');
+    });
+
     it('goes back to the previous word on Cmd+Left', () => {
       const firstWord = typingApp.promptWord.value;
 
