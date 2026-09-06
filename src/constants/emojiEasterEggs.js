@@ -9,8 +9,10 @@ export const EASTER_EGGS = [
     mustAlsoMatch: [/\d+/],
     type: 'rain',
     emojis: ['💵', '💸'],
-    count: { fallback: 60, cap: 150 },
-    options: { minDuration: 3000, maxDuration: 7000, stagger: 1200, minSize: 22, maxSize: 40 },
+    // One bill per dollar typed: "$5" rains five. Written either way round,
+    // since a child may well type the sign after the number.
+    count: { fallback: 60, cap: 1000, numberPattern: /\$\s*(\d+)|(\d+)\s*\$/ },
+    options: { minDuration: 3000, maxDuration: 7000, stagger: 1200, minSize: 22, maxSize: 40, max: 1000 },
     hints: ['money', 'dollar'],
     example: '$5',
   },

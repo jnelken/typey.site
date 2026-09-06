@@ -13,8 +13,11 @@ export function resolveSpawn(egg, text = '') {
   const cap = egg.count?.cap ?? 150;
   if (egg.count?.numberPattern) {
     const m = lower.match(egg.count.numberPattern);
-    if (m && m[1]) {
-      const n = parseInt(m[1], 10);
+    // The first group that matched holds the number, so a pattern can accept
+    // the same count written more than one way ("$5" or "5$").
+    const digits = m && m.slice(1).find(group => group !== undefined);
+    if (digits) {
+      const n = parseInt(digits, 10);
       if (!Number.isNaN(n)) count = Math.max(1, Math.min(n, cap));
     }
   }
