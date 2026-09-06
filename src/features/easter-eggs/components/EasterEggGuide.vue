@@ -13,7 +13,9 @@
         :class="{ found: typingApp.isHintDiscovered(item.label) }"
         @click="typingApp.previewEasterEgg(item.egg)">
         <span class="card-emojis">{{ item.emojis.join(' ') }}</span>
-        <span class="card-word">{{ item.label }}</span>
+        <span class="card-word" :class="{ caps: typingApp.isCapsLockEnabled.value }">
+          {{ item.label }}
+        </span>
       </li>
     </ul>
   </Modal>
@@ -70,5 +72,9 @@ const typingApp = useTypingApp();
   font-weight: 700;
   color: #2b2d42;
   text-transform: lowercase;
+}
+/* Magic words are meant to be typed, so they follow the caps lock setting. */
+.card-word.caps {
+  text-transform: uppercase;
 }
 </style>
