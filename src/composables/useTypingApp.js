@@ -100,6 +100,11 @@ export function createTypingApp() {
         wordPromptSystem.nextPromptWord();
       }
     },
+    onPreviousWord: () => {
+      if (typingSettings.isWordPromptEnabled.value) {
+        wordPromptSystem.previousPromptWord();
+      }
+    },
   });
 
   // Wrapper functions for event handlers to include state updates
@@ -147,6 +152,7 @@ export function createTypingApp() {
     mathEquation: mathSystem.current,
     promptWord: wordPromptSystem.promptWord,
     promptEmoji: wordPromptSystem.promptEmoji,
+    hasPreviousWord: wordPromptSystem.hasPreviousWord,
 
     // Guide system
     guideVisible: guideSystem.guideVisible,
@@ -168,6 +174,7 @@ export function createTypingApp() {
     toggleEmojiMode: typingSettings.toggleEmojiMode,
     toggleWordPrompt: typingSettings.toggleWordPrompt,
     nextPromptWord: wordPromptSystem.nextPromptWord,
+    previousPromptWord: wordPromptSystem.previousPromptWord,
     speakHistoryLine,
     spawnBalloons: balloonsSystem.spawnBalloons,
     popBalloon: balloonsSystem.popBalloon,

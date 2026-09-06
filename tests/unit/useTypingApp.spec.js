@@ -332,6 +332,33 @@ describe('useTypingApp', () => {
       expect(typingApp.promptWord.value).toBe(firstWord);
     });
 
+    it('goes back to the previous word on Cmd+Left', () => {
+      const firstWord = typingApp.promptWord.value;
+
+      typingApp.onKeyDown({ key: 'ArrowRight', metaKey: true, preventDefault: jest.fn() });
+      expect(typingApp.promptWord.value).not.toBe(firstWord);
+
+      typingApp.onKeyDown({ key: 'ArrowLeft', metaKey: true, preventDefault: jest.fn() });
+      expect(typingApp.promptWord.value).toBe(firstWord);
+    });
+
+    it('stays put on Cmd+Left when there is no earlier word', () => {
+      const firstWord = typingApp.promptWord.value;
+
+      typingApp.onKeyDown({ key: 'ArrowLeft', metaKey: true, preventDefault: jest.fn() });
+
+      expect(typingApp.promptWord.value).toBe(firstWord);
+    });
+
+    it('does not go back for a plain Left arrow', () => {
+      typingApp.onKeyDown({ key: 'ArrowRight', metaKey: true, preventDefault: jest.fn() });
+      const secondWord = typingApp.promptWord.value;
+
+      typingApp.onKeyDown({ key: 'ArrowLeft', metaKey: false, preventDefault: jest.fn() });
+
+      expect(typingApp.promptWord.value).toBe(secondWord);
+    });
+
     it('does not shuffle when word prompt is disabled', () => {
       typingApp.toggleWordPrompt();
       const firstWord = typingApp.promptWord.value;

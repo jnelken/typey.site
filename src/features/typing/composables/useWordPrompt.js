@@ -22,18 +22,48 @@ export function randomPromptWord(exclude) {
  * A word (and its matching emoji) for the child to copy-type, shown above the
  * input. Draws from the same word list used for spelling suggestions, so
  * every prompt is one the app already knows how to speak and animate.
+ *
+ * Words are kept in a history rather than replaced outright, so a child can
+ * step back to a word they want another go at and then forward again through
+ * the same words instead of a fresh random one.
  */
 export function useWordPrompt() {
-  const promptWord = ref(randomPromptWord());
+  const history = ref([randomPromptWord()]);
+  const cursor = ref(0);
+
+  const promptWord = computed({
+    get: () => history.value[cursor.value],
+    set: word => {
+      history.value[cursor.value] = word;
+    },
+  });
   const promptEmoji = computed(() => emojiForWord(promptWord.value));
 
+  // True when there's an earlier word to go back to.
+  const hasPreviousWord = computed(() => cursor.value > 0);
+
+  // Forward: replay the next word already in history, or draw a fresh one.
   const nextPromptWord = () => {
-    promptWord.value = randomPromptWord(promptWord.value);
+    if (cursor.value < history.value.length - 1) {
+      cursor.value++;
+      return;
+    }
+    history.value.push(randomPromptWord(promptWord.value));
+    cursor.value++;
+  };
+
+  // Back: return to the previous word for another go. Returns whether it moved.
+  const previousPromptWord = () => {
+    if (!hasPreviousWord.value) return false;
+    cursor.value--;
+    return true;
   };
 
   return {
     promptWord,
     promptEmoji,
+    hasPreviousWord,
     nextPromptWord,
+    previousPromptWord,
   };
 }
