@@ -11,6 +11,15 @@ default, toggled from the settings menu, persisted across refreshes. The mapping
 is display-only, so speech, easter eggs and word suggestions still work on the
 real text. See `src/features/typing/utils/emojiMode.js`.
 
+### 🤪 Silly Mode
+
+Shipped 2026-09-06. Typing "silly" on its own line starts a run of random words
+landing in the input, one a second, so a nonsense line builds itself and can be
+sent with Enter for the usual animation. The words come from the emoji library,
+so each one has a picture behind it, and they match caps lock. The run stops on
+"silly" again, on Escape, or by itself after `SILLY_MAX_WORDS` (20) so a
+forgotten tab stays quiet. See `src/features/easter-eggs/utils/sillyMode.js`.
+
 ## Upcoming Features
 
 ### 🌐 Unicode Mode
@@ -26,12 +35,6 @@ real text. See `src/features/typing/utils/emojiMode.js`.
 - **Trigger**: Typing the word "goodnight"
 - **Effect**: Automatically switches to a dark theme with stars and moon
 - **Implementation**: Word detection in input, theme switching logic
-
-### 🤪 Silly Mode
-
-- **Trigger**: Typing the word "silly"
-- **Effect**: Begins auto-generation of random words into the input every 1 second
-- **Implementation**: Word detection, timer-based word generation, random word selection
 
 ### 🎭 Additional Easter Egg Concepts
 
