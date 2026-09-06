@@ -10,6 +10,7 @@ export function useTypingEvents({
   isSpeechEnabled,
   onEnterPressed,
   onPrintableKey,
+  onEscapePressed,
 }) {
   const onKeyDown = async (event) => {
     const key = event.key;
@@ -17,6 +18,8 @@ export function useTypingEvents({
     if (key === 'Enter') {
       event.preventDefault();
       await onEnterPressed();
+    } else if (key === 'Escape') {
+      if (onEscapePressed) onEscapePressed();
     } else if (key.length === 1) {
       // A printable keystroke means the child has moved on — let listeners
       // (e.g. the math animation) dismiss themselves.

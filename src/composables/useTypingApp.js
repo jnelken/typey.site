@@ -88,6 +88,7 @@ export function createTypingApp() {
     onEnterPressed: handleEnterKey,
     // The math animation stays up (replayable) until the next character is typed.
     onPrintableKey: () => mathSystem.clear(),
+    onEscapePressed: () => balloonsSystem.popAllBalloons(),
   });
 
   // Wrapper functions for event handlers to include state updates
@@ -155,6 +156,7 @@ export function createTypingApp() {
     spawnBalloons: balloonsSystem.spawnBalloons,
     popBalloon: balloonsSystem.popBalloon,
     clearAllBalloons: balloonsSystem.clearAllBalloons,
+    popAllBalloons: balloonsSystem.popAllBalloons,
     spawnEmojis: emojisSystem.spawnEmojis,
     clearEmojis: emojisSystem.clearEmojis,
     initApp,

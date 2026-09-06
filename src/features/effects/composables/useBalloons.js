@@ -12,9 +12,12 @@ const POP_SOUND_DURATION = 0.08;
 
 let balloonIdCounter = 0;
 
+const POP_ALL_STAGGER = 30;
+
 export function useBalloons() {
   const balloons = ref([]);
   const { isAudioEnabled, initAudio } = useSound();
+  let spawnCancelled = false;
 
   // Reuse single AudioContext to avoid browser limits
   let sharedAudioContext = null;
@@ -254,6 +257,8 @@ export function useBalloons() {
   const spawnBalloons = async (count) => {
     if (count <= 0 || count > BALLOON_MAX) return;
 
+    spawnCancelled = false;
+
     // Limit total balloons on screen
     const balloonsToSpawn = Math.min(
       count,
@@ -271,9 +276,13 @@ export function useBalloons() {
     })();
 
     for (let i = 0; i < balloonsToSpawn; i++) {
+      if (spawnCancelled) break;
+
       if (i > 0 && effectiveDelay > 0) {
         await new Promise((resolve) => setTimeout(resolve, effectiveDelay));
       }
+
+      if (spawnCancelled) break;
 
       const balloon = createBalloon();
       balloons.value.push(balloon);
@@ -291,10 +300,26 @@ export function useBalloons() {
     balloons.value = [];
   };
 
+  const popAllBalloons = async () => {
+    spawnCancelled = true;
+
+    const idsToPop = balloons.value
+      .filter((b) => !b.isPopping)
+      .map((b) => b.id);
+
+    for (let i = 0; i < idsToPop.length; i++) {
+      if (i > 0) {
+        await new Promise((resolve) => setTimeout(resolve, POP_ALL_STAGGER));
+      }
+      popBalloon(idsToPop[i]);
+    }
+  };
+
   return {
     balloons,
     spawnBalloons,
     popBalloon,
     clearAllBalloons,
+    popAllBalloons,
   };
 }
