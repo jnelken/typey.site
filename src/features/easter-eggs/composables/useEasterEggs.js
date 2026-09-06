@@ -1,6 +1,7 @@
 import { EASTER_EGGS } from '@/constants/emojiEasterEggs';
 // This composable is a factory that takes dependencies from the caller
 import { BALLOON_MAX } from '@/constants/balloons';
+import { resolveWordEffect } from '@/features/effects/utils/wordEffect';
 
 // Build the spawn arguments (type, count, options) for an egg. When `text` is
 // provided, an embedded number (e.g. "5 lions") overrides the fallback count.
@@ -75,6 +76,16 @@ export function useEasterEggs({ spawnBalloons }) {
             break; // Only spawn balloons for the first number found
           }
         }
+      }
+    }
+
+    // Last resort: any word we have a picture for still animates, so words
+    // without a hand-written easter egg don't land silently.
+    if (!triggered) {
+      const effect = resolveWordEffect(text);
+      if (effect) {
+        spawnEmojis(effect.type, effect.count, effect.options);
+        triggered = true;
       }
     }
 
