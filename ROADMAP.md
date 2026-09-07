@@ -20,6 +20,25 @@ so each one has a picture behind it, and they match caps lock. The run stops on
 "silly" again, on Escape, or by itself after `SILLY_MAX_WORDS` (20) so a
 forgotten tab stays quiet. See `src/features/easter-eggs/utils/sillyMode.js`.
 
+### 🌈 Color Mode
+
+Shipped 2026-09-06. Typing "color" (or "colour") on its own line paints every
+character a different color, cycling a seven-hue rainbow across the line and on
+through the history; typing it again puts the text back. Like emoji mode it is
+display-only, so a screen reader still gets the letters that were typed, and
+the read-aloud highlight keeps its own color on the word being spoken. Every
+hue is contrast-checked against the page background in
+`tests/unit/colorMode.spec.js`, which is why "yellow" lands as a deep gold — a
+bright yellow cannot reach WCAG AA on a near-white page. See
+`src/features/easter-eggs/utils/colorMode.js`.
+
+**Decisions this made that the concept left open**, all cheap to change: the
+palette is seven fixed hues rather than a generated spectrum; the color follows
+the raw character index, so spaces take a turn in the cycle; the mode is
+ephemeral like the other easter eggs rather than persisted like emoji mode; and
+history lines drop their usual 0.7 fade while it is on, so the checked contrast
+actually holds there.
+
 ## Upcoming Features
 
 ### 🌐 Unicode Mode
@@ -40,24 +59,6 @@ forgotten tab stays quiet. See `src/features/easter-eggs/utils/sillyMode.js`.
 
 - **Rainbow Mode**: Typing "rainbow" cycles through color themes
 - **Party Mode**: Typing "party" adds confetti animations
-
-### 🌈 Color Mode (Detailed Concept)
-
-- **Trigger**: Typing "color" or "colour"
-- **Effect**: Each character typed gets a different color from a predefined palette
-- **Implementation**:
-  - Character-by-character color assignment
-  - Smooth color transitions between characters
-  - Accessible color combinations (high contrast)
-  - Optional: Color cycling through the rainbow spectrum
-- **Accessibility**:
-  - Colors are purely decorative and don't affect readability
-  - High contrast ratios maintained
-  - Screen reader users still get full functionality
-- **User Experience**:
-  - Visual feedback for each keystroke
-  - Creates a "typing rainbow" effect
-  - Can be combined with other modes
 
 ## 🔍 Research Needed
 
