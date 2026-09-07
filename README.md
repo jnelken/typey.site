@@ -16,6 +16,7 @@ A fun, interactive typing application designed for kids with sound effects, text
 ### Controls
 
 - **✨ Words** - browse the whole typing dictionary, search it, tap any word to watch what it does
+- **⚙️ Settings → 🤫 Secret Words** - the typed triggers on their own, each with a line saying what it does, so they can be found again without scrolling the dictionary
 - **🎵 Sound Toggle** - Enable/disable keystroke sounds
 - **🗣️ Speech Toggle** - Enable/disable text-to-speech
 - **🔄 Auto-Speak Toggle** - Automatically speak completed lines
@@ -52,7 +53,7 @@ A fun, interactive typing application designed for kids with sound effects, text
 - **Motion that matches meaning** - animals run (and turn to face the way they're going), food is thrown and falls back, weather rains, balloons float
 - **Emoji Mode** - every letter, digit and symbol draws as a matching emoji (A → 🍎, B → 🐻); speech still reads the real words
 - **Silly Mode** - type "silly" to have random words land in the input once a second; Escape (or "silly" again) stops them
-- **Color Mode** - type "color" (or "colour") to paint every character a different rainbow color; type it again to go back to plain text
+- **Color Mode** - type "color" (or "colour", or "rainbow") to paint every character a different rainbow color; type it again to go back to plain text
 - **Auto-scroll** to keep content in view
 
 ### 🔊 **Speech Synthesis**

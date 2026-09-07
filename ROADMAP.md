@@ -106,13 +106,34 @@ and the dimmed prompt letters in `tests/unit/screenColor.spec.js`. That check is
 also why "black" lands as a slate grey — on actual black there is nothing left
 to read. See `src/features/effects/utils/screenColor.js`.
 
+### 🌈 Rainbow, and a List You Can Find Again
+
+Shipped 2026-09-07. "rainbow" was planned as an easter egg of its own, cycling
+whole colour themes; there is one palette by design, so the word now lands on
+Color Mode instead of being a second mode that does nearly the same thing. It
+is a trigger alias in `COLOR_TRIGGERS`, nothing more.
+
+The other half is remembering any of this. Every typed trigger — `$5`, a sum,
+`silly`, `color` / `rainbow`, a colour name, `qwerty` — is listed with a line
+saying what it does, and **Settings → Secret Words** opens that list on its
+own. The words were already in the guide, but underneath six hundred dictionary
+cards, which is not somewhere you find them. Typing "qwerty" still opens the
+full guide. See `SECRET_WORDS` in
+`src/features/typing/composables/useWordGuide.js`.
+
 ## Upcoming Features
 
-### 🌐 Unicode Mode
+### 🤪 Silly Mode Sends Its Own Words
 
-- **Description**: Maps each alphanumeric and symbol character to a random Unicode item
-- **Status**: Planning
-- **Implementation**: Character mapping system, random Unicode selection algorithm
+- **What**: Silly Mode types a word into the input and leaves it there. Instead,
+  each word should be **sent** on its own — so it gets the usual animation —
+  with the run capped at **5 words** and each send **3 seconds** apart.
+- **Why**: the point of the mode is watching something happen; a line that just
+  fills up is the least interesting version of it.
+- **Touchpoints**: `src/features/easter-eggs/utils/sillyMode.js` (`SILLY_MAX_WORDS`,
+  interval), `src/features/easter-eggs/composables/useSillyMode.js`,
+  `src/composables/useTypingApp.js` (the run needs to reach `handleEnterKey`),
+  `tests/unit/sillyMode.spec.js`, `tests/unit/useSillyMode.spec.js`.
 
 ## 🥚 Easter Egg Ideas
 
@@ -121,15 +142,19 @@ to read. See `src/features/effects/utils/screenColor.js`.
 - **Trigger**: Typing the word "goodnight"
 - **Effect**: Automatically switches to a dark theme with stars and moon
 - **Implementation**: Word detection in input, theme switching logic
+- **Decided**: Color Mode is **off while the dark theme is on**, rather than
+  growing a second palette. The seven hues in `colorMode.js` are contrast-checked
+  against the light background only (`tests/unit/colorMode.spec.js`) and would
+  fail AA on a dark ground; the same goes for the screen-colour washes in
+  `screenColor.js`.
 
 ### 🎭 Additional Easter Egg Concepts
 
-- **Rainbow Mode**: Typing "rainbow" cycles through color themes
-- **Party Mode**: Typing "party" adds confetti animations
+- **Party Mode**: Typing "party" bursts confetti from each character as it lands,
+  and from the sides of the screen when the line is sent
 
 ## 🔍 Research Needed
 
-- VoiceOver support for Unicode character names
 - Accessibility considerations for all new modes
 
 ## 📊 User Analytics
@@ -142,6 +167,8 @@ to read. See `src/features/effects/utils/screenColor.js`.
 
 ### **Analytics Implementation**
 
+- **Tool**: PostHog — decided, so this no longer needs a vendor call, only an
+  account, a project key and the client wiring.
 - **Privacy-First Approach**: No personal data collection
 - **Anonymous Tracking**: Session-based analytics without user identification
 - **Performance Monitoring**: Load times, responsiveness metrics
