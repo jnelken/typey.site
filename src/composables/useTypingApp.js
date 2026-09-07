@@ -12,6 +12,8 @@ import { useEasterEggs, spawnForEgg } from '@/features/easter-eggs/composables/u
 import { useEasterEggGuide } from '@/features/easter-eggs/composables/useEasterEggGuide';
 import { useSillyMode } from '@/features/easter-eggs/composables/useSillyMode';
 import { isSillyTrigger } from '@/features/easter-eggs/utils/sillyMode';
+import { useColorMode } from '@/features/easter-eggs/composables/useColorMode';
+import { isColorTrigger } from '@/features/easter-eggs/utils/colorMode';
 import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
 import { parseEquation } from '@/features/math/utils/parseEquation';
 
@@ -34,6 +36,7 @@ export function createTypingApp() {
     currentText: typingState.currentText,
     isCapsLockEnabled: typingSettings.isCapsLockEnabled,
   });
+  const colorSystem = useColorMode();
   const mathSystem = useMathAnimation();
 
   // Handle Enter key press
@@ -66,6 +69,14 @@ export function createTypingApp() {
       // second, and typing it again stops them.
       if (isSillyTrigger(trimmedText)) {
         sillySystem.toggle();
+        typingState.clearCurrentText();
+        return;
+      }
+
+      // Color mode: "color" (or "colour") paints every character a different
+      // color, and typing it again puts the text back.
+      if (isColorTrigger(trimmedText)) {
+        colorSystem.toggle();
         typingState.clearCurrentText();
         return;
       }
@@ -178,6 +189,7 @@ export function createTypingApp() {
     hasPreviousWord: wordPromptSystem.hasPreviousWord,
 
     isSillyModeActive: sillySystem.isActive,
+    isColorModeActive: colorSystem.isActive,
 
     // Guide system
     guideVisible: guideSystem.guideVisible,

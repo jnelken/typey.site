@@ -552,6 +552,53 @@ describe('useTypingApp', () => {
     });
   });
 
+  describe('color mode', () => {
+    const pressEnter = () =>
+      typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+    it('is off until the word is typed', () => {
+      expect(typingApp.isColorModeActive.value).toBe(false);
+    });
+
+    it('turns on for "color" and clears the line it was typed on', async () => {
+      typingApp.currentText.value = 'color';
+      await pressEnter();
+
+      expect(typingApp.isColorModeActive.value).toBe(true);
+      expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('accepts the British spelling too', async () => {
+      typingApp.currentText.value = 'colour';
+      await pressEnter();
+
+      expect(typingApp.isColorModeActive.value).toBe(true);
+    });
+
+    it('turns back off when the word is typed again', async () => {
+      typingApp.currentText.value = 'color';
+      await pressEnter();
+      typingApp.currentText.value = 'COLOR';
+      await pressEnter();
+
+      expect(typingApp.isColorModeActive.value).toBe(false);
+    });
+
+    it('ignores the word inside a longer line', async () => {
+      typingApp.currentText.value = 'what color is it';
+      await pressEnter();
+
+      expect(typingApp.isColorModeActive.value).toBe(false);
+    });
+
+    it('still records the trigger line in history so it can be spoken', async () => {
+      typingApp.currentText.value = 'color';
+      await pressEnter();
+
+      expect(typingApp.completedLines.value).toContain('color');
+    });
+  });
+
   describe('number detection and balloon spawning', () => {
     let appUnderTest;
     let mockSpawnBalloons;

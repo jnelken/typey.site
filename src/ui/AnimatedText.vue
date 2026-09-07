@@ -30,6 +30,7 @@
 <script setup>
 import { computed, ref, watch, nextTick } from 'vue';
 import Text from './Text.vue';
+import { colorForIndex } from '@/features/easter-eggs/utils/colorMode';
 
 const props = defineProps({
   text: {
@@ -88,6 +89,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  colorMode: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['typing-complete', 'character-typed']);
@@ -115,18 +120,18 @@ const characters = computed(() => splitGraphemes(displayedText.value));
 // Faint completion shown right after the typed characters.
 const ghostCharacters = computed(() => splitGraphemes(props.ghostText));
 
-const getCharacterClass = index => {
+// Whether this character is lit up by the read-aloud highlight, either as the
+// word currently being spoken or as part of the word inside a historical line.
+const isSpeakingAt = index => {
   const char = characters.value[index];
-  const isBeingSpoken = props.currentlySpeaking === char;
-  const isInSpeakingQueue = props.speakingQueue.includes(char);
+  if (props.currentlySpeaking === char) return true;
+  if (props.speakingQueue.includes(char)) return true;
 
-  // For historical lines, check if this character should be highlighted
-  const isInSpeakingLine = props.speakingLine === displayedText.value;
+  // For historical lines, the highlight runs from the speaking position to the
+  // end of the word it lands in.
+  if (props.speakingLine !== displayedText.value) return false;
+  if (index < props.speakingPosition) return false;
 
-  // Check if this character is within the current word being spoken
-  const isInCurrentWord = isInSpeakingLine && index >= props.speakingPosition;
-
-  // Find the end of the current word by looking for the next space or end of text
   let wordEndIndex = displayedText.value.length;
   for (let i = props.speakingPosition; i < displayedText.value.length; i++) {
     if (/\s/.test(displayedText.value[i])) {
@@ -135,70 +140,36 @@ const getCharacterClass = index => {
     }
   }
 
-  const isHistoricalHighlight = isInCurrentWord && index < wordEndIndex;
-
-  // Debug logging for troubleshooting (uncomment if needed)
-  // if (isInSpeakingLine) {
-  //   console.log('Character highlighting check:', {
-  //     index,
-  //     char,
-  //     currentlySpeaking: props.currentlySpeaking,
-  //     isBeingSpoken,
-  //     isHistoricalHighlight,
-  //     speakingPosition: props.speakingPosition,
-  //     wordEndIndex,
-  //   });
-  // }
-
-  return [
-    'character',
-    {
-      'character-new': index === characters.value.length - 1 && isTyping.value,
-      'character-speaking':
-        isBeingSpoken || isInSpeakingQueue || isHistoricalHighlight,
-    },
-  ];
+  return index < wordEndIndex;
 };
 
+const isFreshlyTyped = index =>
+  index === characters.value.length - 1 && isTyping.value;
+
+const getCharacterClass = index => [
+  'character',
+  {
+    'character-new': isFreshlyTyped(index),
+    'character-speaking': isSpeakingAt(index),
+  },
+];
+
 const getCharacterStyle = index => {
-  const char = characters.value[index];
-  const isBeingSpoken = props.currentlySpeaking === char;
-  const isInSpeakingQueue = props.speakingQueue.includes(char);
+  const style = {};
 
-  // For historical lines, check if this character should be highlighted
-  const isInSpeakingLine = props.speakingLine === displayedText.value;
-
-  // Check if this character is within the current word being spoken
-  const isInCurrentWord = isInSpeakingLine && index >= props.speakingPosition;
-
-  // Find the end of the current word by looking for the next space or end of text
-  let wordEndIndex = displayedText.value.length;
-  for (let i = props.speakingPosition; i < displayedText.value.length; i++) {
-    if (/\s/.test(displayedText.value[i])) {
-      wordEndIndex = i;
-      break;
-    }
+  if (props.animateOnChange && isFreshlyTyped(index)) {
+    style.animation = 'character-appear 0.3s ease-out';
+  } else if (isSpeakingAt(index)) {
+    style.animation = 'character-speak 0.5s ease-in-out';
   }
 
-  const isHistoricalHighlight = isInCurrentWord && index < wordEndIndex;
-
-  if (
-    props.animateOnChange &&
-    index === characters.value.length - 1 &&
-    isTyping.value
-  ) {
-    return {
-      animation: 'character-appear 0.3s ease-out',
-    };
+  // The speaking highlight owns the color while it is lit — an inline style
+  // here would beat `.character-speaking` and swallow the read-aloud cue.
+  if (props.colorMode && !isSpeakingAt(index)) {
+    style.color = colorForIndex(index);
   }
 
-  if (isBeingSpoken || isInSpeakingQueue || isHistoricalHighlight) {
-    return {
-      animation: 'character-speak 0.5s ease-in-out',
-    };
-  }
-
-  return {};
+  return style;
 };
 
 const typeNextCharacter = async () => {
@@ -287,6 +258,8 @@ defineExpose({
 .character {
   display: inline;
   position: relative;
+  /* Color mode swaps the per-character color; ease it so a toggle fades in. */
+  transition: color 0.3s ease;
 }
 
 .character-new {

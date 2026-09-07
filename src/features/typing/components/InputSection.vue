@@ -13,6 +13,7 @@
         :speaking-position="speakingPosition"
         :speaking-queue="speakingQueue"
         :ghost-text="displayGhostSuffix"
+        :color-mode="isColorModeActive"
         @character-typed="onCharacterTyped" />
     </div>
 
@@ -58,6 +59,7 @@ const {
   speakingPosition,
   speakingQueue,
   isEmojiModeEnabled,
+  isColorModeActive,
 } = useTypingApp();
 
 // Gentle hint of the emoji that the current word is about to summon.

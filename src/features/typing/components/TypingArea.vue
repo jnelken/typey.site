@@ -10,7 +10,10 @@
         v-for="(line, index) in completedLines"
         :key="`line-${index}`"
         class="completed-line"
-        :class="{ 'line-enter': index === completedLines.length - 1 }"
+        :class="{
+          'line-enter': index === completedLines.length - 1,
+          'full-strength': isColorModeActive,
+        }"
         @click="speakHistoryLine(line)">
         <AnimatedText
           :text="displayLine(line)"
@@ -22,7 +25,8 @@
           :currently-speaking="currentlySpeaking"
           :speaking-line="speakingLine"
           :speaking-position="speakingPosition"
-          :speaking-queue="speakingQueue" />
+          :speaking-queue="speakingQueue"
+          :color-mode="isColorModeActive" />
       </div>
     </div>
   </div>
@@ -43,6 +47,7 @@ const {
   speakingPosition,
   speakingQueue,
   isEmojiModeEnabled,
+  isColorModeActive,
 } = useTypingApp();
 
 // History renders in emoji mode too, but clicking a line still speaks the real
@@ -99,6 +104,13 @@ watch(
   cursor: pointer;
   padding: var(--spacing-sm);
   border-radius: var(--radius-md);
+}
+
+/* History lines sit at 0.7 so the current line reads as the live one. In color
+   mode that fade would mute the palette below its checked contrast, so past
+   lines come back to full strength. */
+.completed-line.full-strength {
+  opacity: 1;
 }
 
 .completed-line:hover {
