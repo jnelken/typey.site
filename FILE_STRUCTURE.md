@@ -32,10 +32,11 @@ typey.site/
 │   │   │       └── wordSuggest.js         # Ghost-text completion
 │   │   ├── effects/                       # What happens when a line lands
 │   │   │   ├── components/                # Balloons.vue, Emojis.vue
-│   │   │   ├── composables/               # useBalloons.js, useEmojis.js
+│   │   │   ├── composables/               # useBalloons, useEmojis, useScreenColor
 │   │   │   └── utils/
 │   │   │       ├── wordMotion.js          # How each word moves: path, flair, facing
-│   │   │       └── wordEffect.js          # Turns that into spawn arguments
+│   │   │       ├── wordEffect.js          # Turns that into spawn arguments
+│   │   │       └── screenColor.js         # A colour word washes the whole page
 │   │   ├── easter-eggs/                   # Hidden modes and their triggers
 │   │   │   ├── composables/               # useEasterEggs, useColorMode, useSillyMode
 │   │   │   └── utils/                     # colorMode.js, sillyMode.js, typeahead.js
