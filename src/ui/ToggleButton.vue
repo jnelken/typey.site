@@ -4,7 +4,7 @@
       <span class="toggle-icon">{{
         isEnabled ? enabledIcon : disabledIcon
       }}</span>
-      <span class="toggle-label">{{ label }}</span>
+      <span class="toggle-label" :class="{ caps }">{{ label }}</span>
     </span>
   </Button>
 </template>
@@ -29,6 +29,11 @@ defineProps({
     type: Boolean,
     required: true,
   },
+  // Follows the caps lock setting, like everything else the child reads here.
+  caps: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 defineEmits(['toggle']);
@@ -50,5 +55,11 @@ defineEmits(['toggle']);
 
 .toggle-label {
   font-size: inherit;
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+}
+
+.toggle-label.caps {
+  text-transform: uppercase;
 }
 </style>

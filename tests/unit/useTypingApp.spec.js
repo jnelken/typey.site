@@ -159,6 +159,73 @@ describe('useTypingApp', () => {
     });
   });
 
+  describe('editing the last entry with Up', () => {
+    const up = (overrides = {}) => ({
+      key: 'ArrowUp',
+      metaKey: false,
+      ctrlKey: false,
+      altKey: false,
+      preventDefault: jest.fn(),
+      ...overrides,
+    });
+
+    it('brings the last line back into the input for another go', async () => {
+      typingApp.currentText.value = 'cat';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      const event = up();
+      await typingApp.onKeyDown(event);
+
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(typingApp.currentText.value).toBe('cat');
+    });
+
+    it('takes the line back out of the history, so sending it again does not duplicate it', async () => {
+      typingApp.currentText.value = 'cat';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      await typingApp.onKeyDown(up());
+
+      expect(typingApp.completedLines.value).toEqual([]);
+
+      typingApp.currentText.value = 'cats';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.completedLines.value).toEqual(['cats']);
+    });
+
+    it('only steps back one entry at a time', async () => {
+      typingApp.currentText.value = 'one';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      typingApp.currentText.value = 'two';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      await typingApp.onKeyDown(up());
+
+      expect(typingApp.currentText.value).toBe('two');
+      expect(typingApp.completedLines.value).toEqual(['one']);
+    });
+
+    it('leaves the caret alone when there is already text in the box', async () => {
+      typingApp.currentText.value = 'cat';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      typingApp.currentText.value = 'do';
+
+      const event = up();
+      await typingApp.onKeyDown(event);
+
+      expect(event.preventDefault).not.toHaveBeenCalled();
+      expect(typingApp.currentText.value).toBe('do');
+      expect(typingApp.completedLines.value).toEqual(['cat']);
+    });
+
+    it('does nothing when nothing has been sent yet', async () => {
+      const event = up();
+      await typingApp.onKeyDown(event);
+
+      expect(typingApp.currentText.value).toBe('');
+    });
+  });
+
   describe('caps lock functionality', () => {
     it('should convert lowercase to uppercase when caps lock is enabled', () => {
       typingApp.isCapsLockEnabled.value = true;
@@ -621,9 +688,23 @@ describe('useTypingApp', () => {
     });
 
     it('should spawn balloons when text contains a number at the beginning', async () => {
-      appUnderTest.currentText.value = '5 hello world';
+      appUnderTest.currentText.value = '5 qwx zzy';
       await appUnderTest.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
       expect(mockSpawnBalloons).toHaveBeenCalledWith(5);
+    });
+
+    it('counts the word instead when the number is written against one', async () => {
+      // "5 hello" is five waves, not five balloons — the number belongs to the
+      // word next to it. Balloons keep every other line with a number in it.
+      appUnderTest.currentText.value = '5 hello world';
+      await appUnderTest.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(mockSpawnBalloons).not.toHaveBeenCalled();
+    });
+
+    it('still gives the balloon system its own word', async () => {
+      appUnderTest.currentText.value = '9 balloons';
+      await appUnderTest.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(mockSpawnBalloons).toHaveBeenCalledWith(9);
     });
 
     it('should spawn balloons when text contains a number in the middle', async () => {

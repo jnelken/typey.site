@@ -42,6 +42,12 @@ const props = defineProps({
     type: String,
     default: 'primary',
     validator: (value) => ['primary', 'mono'].includes(value)
+  },
+  // Follows the caps lock setting, for text the child is meant to read as the
+  // letters they will actually type.
+  caps: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -50,7 +56,8 @@ const textClasses = computed(() => [
   `text-${props.size}`,
   `text-weight-${props.weight}`,
   `text-align-${props.align}`,
-  `text-font-${props.font}`
+  `text-font-${props.font}`,
+  { 'text-caps': props.caps }
 ])
 
 const customStyles = computed(() => ({
@@ -90,6 +97,9 @@ const customStyles = computed(() => ({
 .text-align-left { text-align: left; }
 .text-align-center { text-align: center; }
 .text-align-right { text-align: right; }
+
+/* Caps lock */
+.text-caps { text-transform: uppercase; }
 
 /* Font families */
 .text-font-primary { font-family: var(--font-family-primary); }

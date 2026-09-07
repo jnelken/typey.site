@@ -14,6 +14,7 @@
         :speaking-queue="speakingQueue"
         :ghost-text="displayGhostSuffix"
         :color-mode="isColorModeActive"
+        :letter-states="letterStates"
         @character-typed="onCharacterTyped" />
     </div>
 
@@ -46,6 +47,7 @@ import { useTypingApp } from '@/composables/useTypingApp';
 import { matchTypeahead } from '@/features/easter-eggs/utils/typeahead';
 import { suggestCompletion } from '@/features/typing/utils/wordSuggest';
 import { toEmojiText } from '@/features/typing/utils/emojiMode';
+import { typedLetterStates } from '@/features/typing/utils/spelling';
 
 const {
   currentText,
@@ -60,7 +62,18 @@ const {
   speakingQueue,
   isEmojiModeEnabled,
   isColorModeActive,
+  isWordPromptEnabled,
+  promptWord,
 } = useTypingApp();
+
+// Colour the line the child is typing the same way the prompt above it is
+// coloured — but only while what they're typing is plainly an attempt at that
+// word, so a line about dinosaurs isn't painted red and blue for no reason.
+const letterStates = computed(() =>
+  isWordPromptEnabled.value
+    ? typedLetterStates(currentText.value, promptWord.value)
+    : null
+);
 
 // Gentle hint of the emoji that the current word is about to summon.
 const typeaheadEmoji = computed(() => matchTypeahead(currentText.value));
@@ -107,6 +120,7 @@ defineExpose({
   left: 0;
   right: 0;
   background: var(--color-background);
+  transition: background-color 0.5s ease;
   border-top: 2px solid var(--color-primary);
   padding: var(--spacing-lg);
   cursor: text;

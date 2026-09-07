@@ -93,6 +93,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Per-character spelling feedback, aligned with `text`: 'right', 'wrong' or
+  // 'untyped'. Null when there's nothing to say about this line.
+  letterStates: {
+    type: Array,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['typing-complete', 'character-typed']);
@@ -167,6 +173,15 @@ const getCharacterStyle = index => {
   // here would beat `.character-speaking` and swallow the read-aloud cue.
   if (props.colorMode && !isSpeakingAt(index)) {
     style.color = colorForIndex(index);
+  } else if (props.letterStates && !isSpeakingAt(index)) {
+    // Color mode is checked first: it's a mode the child deliberately turned
+    // on, and two per-character color schemes can't both render.
+    const state = props.letterStates[index];
+    if (state === 'right') style.color = 'var(--color-primary)';
+    else if (state === 'wrong') style.color = 'var(--color-mistake)';
+    // Past the first mismatch the letters no longer line up with the word, so
+    // they go quiet rather than staying the "correct" red.
+    else if (state === 'untyped') style.color = 'var(--color-text-light)';
   }
 
   return style;

@@ -15,10 +15,18 @@ A fun, interactive typing application designed for kids with sound effects, text
 
 ### Controls
 
+- **✨ Words** - browse the whole typing dictionary, search it, tap any word to watch what it does
 - **🎵 Sound Toggle** - Enable/disable keystroke sounds
 - **🗣️ Speech Toggle** - Enable/disable text-to-speech
 - **🔄 Auto-Speak Toggle** - Automatically speak completed lines
-- **⇪ Caps Lock** - Force uppercase typing
+- **⇪ Caps Lock** - Force uppercase typing (the title, prompt and settings follow it too)
+
+### Keyboard
+
+- **Enter** - finish the line and set off its animation
+- **↑** - bring the last line back into the input to fix a typo
+- **⌘→ / ⌘←** - skip to the next practice word, or go back to the one before
+- **Escape** - pop every balloon and stop Silly Mode
 
 ### Historical Lines
 
@@ -39,6 +47,9 @@ A fun, interactive typing application designed for kids with sound effects, text
 - **Real-time typing** with visual feedback
 - **Sound effects** for each keystroke
 - **Caps Lock mode** for uppercase typing
+- **Practice prompts** - a word to copy, with each letter turning red as it's spelled right; the first wrong letter turns blue, and a different first letter means you're typing something else, so nothing lights up at all
+- **Colour words wash the screen** - type "red" and the whole page turns red until you send the next line
+- **Motion that matches meaning** - animals run (and turn to face the way they're going), food is thrown and falls back, weather rains, balloons float
 - **Emoji Mode** - every letter, digit and symbol draws as a matching emoji (A → 🍎, B → 🐻); speech still reads the real words
 - **Silly Mode** - type "silly" to have random words land in the input once a second; Escape (or "silly" again) stops them
 - **Color Mode** - type "color" (or "colour") to paint every character a different rainbow color; type it again to go back to plain text

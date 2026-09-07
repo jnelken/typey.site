@@ -16,7 +16,7 @@ describe('resolveWordEffect', () => {
 
   it('uses an animation type the renderer knows', () => {
     for (const word of Object.keys(WORD_EMOJI)) {
-      expect(['float', 'rain', 'burst', 'arc', 'lob', 'bounce']).toContain(
+      expect(['float', 'rain', 'burst', 'run', 'arc', 'lob', 'bounce']).toContain(
         animationTypeForWord(word),
       );
     }
@@ -67,10 +67,10 @@ describe('things with weight obey gravity', () => {
     }
   });
 
-  it('sends a ball across in fewer, bigger copies than a rain of confetti', () => {
+  it('sends a ball across in fewer, bigger copies than a drift of stars', () => {
     const ball = resolveWordEffect('ball');
-    expect(ball.count).toBeLessThan(resolveWordEffect('banana').count);
-    expect(ball.options.minSize).toBeGreaterThan(resolveWordEffect('banana').options.minSize);
+    expect(ball.count).toBeLessThan(resolveWordEffect('star').count);
+    expect(ball.options.minSize).toBeGreaterThan(resolveWordEffect('star').options.minSize);
   });
 
   it('carries the ball emoji into the effect', () => {

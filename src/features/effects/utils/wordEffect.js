@@ -1,55 +1,65 @@
 import { findWordEmoji } from '@/features/typing/utils/wordEmoji';
+import { motionForWord, PATH_OPTIONS } from '@/features/effects/utils/wordMotion';
 
-// Every word in the emoji library gets an animation, not just the ones with a
-// hand-written easter egg. This is the fallback that fills those gaps, so no
-// word a child types ever lands with nothing happening.
+// Every word in the dictionary gets an animation, and the dictionary decides
+// which one — see `wordMotion.js`. This module turns that decision into the
+// arguments `spawnEmojis` wants.
 
-// Drifting up and off the top of the screen is fine for a balloon and wrong
-// for a football. Anything with weight gets one of the gravity animations
-// instead: kicked across in an arc, launched up and falling back, or dropped
-// and bouncing to a stop.
-const HEAVY_WORDS = new Set([
-  'ball', 'soccer', 'basketball', 'football', 'baseball', 'tennis',
-  'volleyball', 'bowling', 'golf', 'hockey',
-  'apple', 'orange', 'peach', 'pear', 'melon', 'watermelon', 'coconut',
-  'potato', 'tomato', 'onion', 'pumpkin', 'egg',
-  'rock', 'coin', 'gem', 'dice', 'medal', 'trophy',
-]);
+// Paths that fall back to the ground instead of drifting off the top.
+const GRAVITY_PATHS = ['arc', 'lob', 'bounce'];
 
-const TYPES = ['float', 'rain', 'burst'];
-const HEAVY_TYPES = ['arc', 'lob', 'bounce'];
+// How many copies a line can ask for. "10 lions" is a treat; a stray "9999" is
+// a frozen tab.
+const COUNT_CAP = 150;
 
-// Per-type feel. Bursts are short and punchy; rain and float drift longer.
-// The gravity types run fewer and larger, so each throw reads as one object.
-const TYPE_OPTIONS = {
-  float: { count: 20, minDuration: 4000, maxDuration: 8000, stagger: 1600, minSize: 24, maxSize: 38 },
-  rain: { count: 26, minDuration: 3500, maxDuration: 7000, stagger: 1400, minSize: 22, maxSize: 36 },
-  burst: { count: 18, minDuration: 2000, maxDuration: 4000, stagger: 800, minSize: 24, maxSize: 40 },
-  arc: { count: 8, minDuration: 2600, maxDuration: 4200, stagger: 1400, minSize: 34, maxSize: 52, scaleMin: 1.1, scaleMax: 1.9 },
-  lob: { count: 8, minDuration: 2400, maxDuration: 3800, stagger: 1500, minSize: 34, maxSize: 52, scaleMin: 1.1, scaleMax: 1.9 },
-  bounce: { count: 10, minDuration: 3000, maxDuration: 4600, stagger: 1600, minSize: 32, maxSize: 50, scaleMin: 1.1, scaleMax: 1.9 },
-};
-
-/** Whether a word names something with enough weight to obey gravity. */
+/** Whether a word names something the app throws or drops rather than floats. */
 export function isHeavyWord(word) {
-  return typeof word === 'string' && HEAVY_WORDS.has(word.toLowerCase());
+  if (typeof word !== 'string' || !word) return false;
+  return GRAVITY_PATHS.includes(motionForWord(word).path);
 }
 
 /**
- * Which animation a word gets. Deterministic, so a word always moves the same
- * way — a child learns that bananas rain and the football bounces — while the
- * library as a whole stays varied without anyone hand-assigning an effect per
- * word.
+ * Which animation a word gets. A property of the word, not of its spelling:
+ * animals run, food is thrown, weather falls.
  */
 export function animationTypeForWord(word) {
-  const types = isHeavyWord(word) ? HEAVY_TYPES : TYPES;
-  if (typeof word !== 'string' || word.length === 0) return types[0];
+  if (typeof word !== 'string' || word.length === 0) return 'float';
+  return motionForWord(word).path;
+}
 
-  let hash = 0;
-  for (const char of word) {
-    hash = (hash * 31 + char.charCodeAt(0)) % 100003;
-  }
-  return types[hash % types.length];
+/**
+ * A count written into the line — "5 lions", "3 cookies" — capped. Returns null
+ * when the child didn't ask for a number, so the word's own default stands.
+ *
+ * This used to be a hand-written regex per easter egg, which meant fifteen
+ * words could be counted and the other six hundred could not.
+ */
+export function countForWord(text, word) {
+  if (typeof text !== 'string' || typeof word !== 'string' || !word) return null;
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = text.toLowerCase().match(new RegExp(`(\\d+)\\s*${escaped}s?\\b`));
+  if (!match) return null;
+  const parsed = parseInt(match[1], 10);
+  if (Number.isNaN(parsed)) return null;
+  return Math.max(1, Math.min(parsed, COUNT_CAP));
+}
+
+/**
+ * The spawn arguments for a word's animation: `{ type, count, options }`.
+ * Exported on its own so the word guide can play the same effect on a tap that
+ * typing the word would play.
+ */
+export function effectForWord(word, emoji, text = '') {
+  const motion = motionForWord(word);
+  const { count: pathCount, ...pathOptions } = PATH_OPTIONS[motion.path];
+
+  const options = { ...pathOptions, flair: motion.flair, facing: motion.facing };
+  if (motion.emojiSet) options.emojiSet = motion.emojiSet;
+  else options.emoji = emoji;
+
+  const count = countForWord(text, word) ?? motion.count ?? pathCount;
+
+  return { type: motion.path, count, options };
 }
 
 /**
@@ -59,9 +69,5 @@ export function animationTypeForWord(word) {
 export function resolveWordEffect(text) {
   const match = findWordEmoji(text);
   if (!match) return null;
-
-  const type = animationTypeForWord(match.word);
-  const { count, ...options } = TYPE_OPTIONS[type];
-
-  return { type, count, options: { ...options, emoji: match.emoji } };
+  return effectForWord(match.word, match.emoji, text);
 }

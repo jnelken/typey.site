@@ -307,6 +307,7 @@ const FOOD_EMOJI = {
 // Weather, sky and growing things
 const NATURE_EMOJI = {
   sun: '☀️',
+  sunny: '☀️',
   moon: '🌙',
   star: '⭐',
   stars: '⭐',
@@ -380,6 +381,7 @@ const VEHICLE_EMOJI = {
   skateboard: '🛹',
   motorcycle: '🏍️',
   train: '🚂',
+  choo: '🚂',
   subway: '🚇',
   tram: '🚊',
   plane: '✈️',
@@ -434,6 +436,9 @@ const PLAY_EMOJI = {
   kite: '🪁',
   balloon: '🎈',
   party: '🎉',
+  yay: '🎉',
+  hooray: '🎉',
+  congrats: '🎉',
   gift: '🎁',
   present: '🎁',
   drum: '🥁',
@@ -442,6 +447,7 @@ const PLAY_EMOJI = {
   trumpet: '🎺',
   violin: '🎻',
   music: '🎵',
+  note: '🎵',
   song: '🎶',
   game: '🎮',
   play: '🎮',
@@ -562,25 +568,69 @@ const SYMBOL_EMOJI = {
   pink: '🩷',
 };
 
-export const WORD_EMOJI = Object.freeze({
-  ...FEELING_EMOJI,
-  ...PEOPLE_EMOJI,
-  ...MAGIC_EMOJI,
-  ...BODY_EMOJI,
-  ...ANIMAL_EMOJI,
-  ...BUG_EMOJI,
-  ...SEA_EMOJI,
-  ...PRODUCE_EMOJI,
-  ...FOOD_EMOJI,
-  ...NATURE_EMOJI,
-  ...SPACE_EMOJI,
-  ...VEHICLE_EMOJI,
-  ...PLACE_EMOJI,
-  ...PLAY_EMOJI,
-  ...THING_EMOJI,
-  ...CLOTHES_EMOJI,
-  ...SYMBOL_EMOJI,
+// The categories, in one place. Grouping is not just documentation: the motion
+// table in `src/features/effects/utils/wordMotion.js` reads it to decide how a
+// word moves, so an animal added below runs across the screen without anyone
+// assigning it an animation.
+export const WORD_CATEGORIES = Object.freeze({
+  feeling: FEELING_EMOJI,
+  people: PEOPLE_EMOJI,
+  magic: MAGIC_EMOJI,
+  body: BODY_EMOJI,
+  animal: ANIMAL_EMOJI,
+  bug: BUG_EMOJI,
+  sea: SEA_EMOJI,
+  produce: PRODUCE_EMOJI,
+  food: FOOD_EMOJI,
+  nature: NATURE_EMOJI,
+  space: SPACE_EMOJI,
+  vehicle: VEHICLE_EMOJI,
+  place: PLACE_EMOJI,
+  play: PLAY_EMOJI,
+  thing: THING_EMOJI,
+  clothes: CLOTHES_EMOJI,
+  symbol: SYMBOL_EMOJI,
 });
+
+// Friendly labels for the categories, used by the word guide.
+export const CATEGORY_LABELS = Object.freeze({
+  feeling: 'Feelings',
+  people: 'People',
+  magic: 'Make-believe',
+  body: 'Body',
+  animal: 'Animals',
+  bug: 'Bugs',
+  sea: 'In the sea',
+  produce: 'Fruit and veg',
+  food: 'Food and treats',
+  nature: 'Weather and nature',
+  space: 'Space',
+  vehicle: 'Things that go',
+  place: 'Places',
+  play: 'Play and music',
+  thing: 'Around the house',
+  clothes: 'Clothes',
+  symbol: 'Signs and colours',
+});
+
+export const WORD_EMOJI = Object.freeze(
+  Object.assign({}, ...Object.values(WORD_CATEGORIES)),
+);
+
+// Which category a word belongs to, or null when it isn't in the library.
+const WORD_CATEGORY = Object.freeze(
+  Object.fromEntries(
+    Object.entries(WORD_CATEGORIES).flatMap(([category, words]) =>
+      Object.keys(words).map(word => [word, category]),
+    ),
+  ),
+);
+
+/** The category a word belongs to ('animal', 'food', …), or null. */
+export function categoryForWord(word) {
+  if (typeof word !== 'string') return null;
+  return WORD_CATEGORY[word.trim().toLowerCase()] ?? null;
+}
 
 // Every word in the library, and the two-word phrases on their own — phrases
 // are checked first so "traffic light" wins over the "light" inside it.

@@ -11,7 +11,20 @@ describe('matchTypeahead', () => {
   });
 
   it('only considers the last word typed', () => {
-    expect(matchTypeahead('i love rain')).toBe('🌈'); // "rain" -> rainbow
+    expect(matchTypeahead('i love rain')).toBe('🌧️');
+  });
+
+  it('prefers the word itself over a longer word starting with it', () => {
+    // "rain" is a word in its own right, so it wins over "rainbow".
+    expect(matchTypeahead('rain')).toBe('🌧️');
+    expect(matchTypeahead('rainb')).toBe('🌈');
+  });
+
+  it('previews any word in the dictionary, not just a hand-picked few', () => {
+    // The old hint list held 28 words, so "cook" showed nothing.
+    expect(matchTypeahead('cook')).toBe('🧑‍🍳');
+    expect(matchTypeahead('cooki')).toBe('🍪');
+    expect(matchTypeahead('giraf')).toBe('🦒');
   });
 
   it('returns null for words shorter than two letters', () => {

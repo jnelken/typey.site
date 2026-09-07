@@ -5,36 +5,42 @@
         label="Sound"
         enabled-icon="🔊"
         disabled-icon="🔇"
+        :caps="isCapsLockEnabled"
         :is-enabled="isSoundEnabled"
         @toggle="toggleSound" />
       <ToggleButton
         label="Speech"
         enabled-icon="🗣️"
         disabled-icon="🤫"
+        :caps="isCapsLockEnabled"
         :is-enabled="isSpeechEnabled"
         @toggle="toggleSpeech" />
       <ToggleButton
         label="Auto-Speak"
         enabled-icon="📢"
         disabled-icon="📵"
+        :caps="isCapsLockEnabled"
         :is-enabled="isAutoSpeakEnabled"
         @toggle="toggleAutoSpeak" />
       <ToggleButton
         label="Emoji Mode"
         enabled-icon="🐱"
         disabled-icon="🔤"
+        :caps="isCapsLockEnabled"
         :is-enabled="isEmojiModeEnabled"
         @toggle="toggleEmojiMode" />
       <ToggleButton
         label="Word Prompt"
         enabled-icon="🎯"
         disabled-icon="🚫"
+        :caps="isCapsLockEnabled"
         :is-enabled="isWordPromptEnabled"
         @toggle="toggleWordPrompt" />
       <ToggleButton
         :label="isCapsLockEnabled ? 'CAPS' : 'caps'"
         enabled-icon="🔠"
         disabled-icon="🔡"
+        :caps="isCapsLockEnabled"
         :is-enabled="isCapsLockEnabled"
         @toggle="toggleCapsLock" />
     </div>

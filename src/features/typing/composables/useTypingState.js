@@ -12,6 +12,13 @@ export function useTypingState() {
     completedLines.value.push(line);
   };
 
+  // Take the most recent line back off the history and hand it back, so it can
+  // be edited and re-sent rather than appearing twice.
+  const popCompletedLine = () => {
+    if (completedLines.value.length === 0) return null;
+    return completedLines.value.pop();
+  };
+
   const clearCurrentText = () => {
     currentText.value = '';
   };
@@ -28,6 +35,7 @@ export function useTypingState() {
     
     // Actions
     addCompletedLine,
+    popCompletedLine,
     clearCurrentText,
     setInputFocus,
   };

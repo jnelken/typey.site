@@ -1,8 +1,8 @@
 <template>
-  <div class="toolbar">
+  <div class="toolbar" :class="{ caps: typingApp.isCapsLockEnabled.value }">
     <button class="toolbar-btn" @click="typingApp.toggleGuide(true)">
       <span class="toolbar-icon">✨</span>
-      <span class="toolbar-label">Magic Words</span>
+      <span class="toolbar-label">Words</span>
     </button>
     <button class="toolbar-btn" @click="settingsOpen = true">
       <span class="toolbar-icon">⚙️</span>
@@ -25,23 +25,23 @@ const settingsOpen = ref(false);
 <style scoped>
 .toolbar {
   display: flex;
-  justify-content: center;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
+  align-items: center;
+  gap: var(--spacing-sm);
   flex-shrink: 0;
 }
 .toolbar-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius-lg);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
   border: 2px solid var(--color-primary);
   background: transparent;
   color: var(--color-primary);
-  font-family: var(--font-family-primary);
-  font-weight: 600;
-  font-size: var(--font-size-base);
+  /* The typing font, like everything else the child reads on this page. */
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all var(--transition-normal);
 }
@@ -52,14 +52,20 @@ const settingsOpen = ref(false);
   box-shadow: var(--shadow-lg);
 }
 .toolbar-icon {
-  font-size: 1.5em;
+  font-size: 1.3em;
   line-height: 1;
 }
+.toolbar.caps .toolbar-label {
+  text-transform: uppercase;
+}
 
-@media (max-width: 768px) {
-  .toolbar {
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
+/* On a narrow screen the icons carry it on their own. */
+@media (max-width: 560px) {
+  .toolbar-label {
+    display: none;
+  }
+  .toolbar-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
   }
 }
 </style>

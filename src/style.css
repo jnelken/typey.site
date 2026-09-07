@@ -9,6 +9,9 @@
   --color-text-primary: #2f3640;
   --color-text-secondary: #57606f;
   --color-text-light: #a4b0be;
+  /* Blue for a mistyped letter — deliberately not a warning red, which is
+   * already the colour a correct letter turns. */
+  --color-mistake: #2f6fed;
   
   /* Typography
    * No `cursive` in the stack: where Comic Sans is missing it resolves to an
@@ -82,6 +85,9 @@ body {
   min-height: 100%;
   font-family: var(--font-family-primary);
   background-color: var(--color-background);
+  /* Typing a colour re-points --color-background, so the whole page washes
+     over to it rather than snapping. */
+  transition: background-color 0.5s ease;
   color: var(--color-text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;

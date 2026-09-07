@@ -1,4 +1,13 @@
 import { ref } from 'vue';
+import { FLAIRS, TRAVELLING_PATHS } from '@/features/effects/utils/wordMotion';
+
+// How long one cycle of a repeating flourish takes, in ms. Grow and pulse are
+// absent because they play once, over the effect's own duration.
+const FLAIR_TEMPO = {
+  spin: [4000, 9000],
+  bobble: [600, 1100],
+  throb: [700, 1200],
+};
 
 let effectIdCounter = 0;
 
@@ -45,16 +54,22 @@ export function useEmojis() {
         ? options.direction
         : Math.random() > 0.5 ? 'left' : 'right';
 
-      // Optional rotation (for snowflakes, etc.)
-      let rotate = !!options.rotate;
-      let rotateDuration;
-      if (rotate) {
-        const rmin = options.rotateMin ?? 5000;
-        const rmax = options.rotateMax ?? 10000;
-        rotateDuration = Math.floor(randomBetween(rmin, rmax));
-      }
+      // The flourish layered on the path, and how long one cycle of it takes.
+      // Spin and bobble repeat, so they get their own tempo; grow and pulse
+      // play once across the life of the effect.
+      const flair = FLAIRS.includes(options.flair) ? options.flair : 'none';
+      const flairDuration = flair === 'none'
+        ? 0
+        : Math.floor(randomBetween(...(FLAIR_TEMPO[flair] || [duration, duration])));
 
-      addEffect({ type, emoji, left, top, duration, delay, size, direction, rotate, rotateDuration });
+      // Which way the glyph is drawn. A travelling effect flips horizontally
+      // when it's headed the other way, so nothing runs backwards.
+      const facing = options.facing || 'left';
+      const flipped = TRAVELLING_PATHS.includes(type)
+        && facing !== 'any'
+        && facing !== direction;
+
+      addEffect({ type, emoji, left, top, duration, delay, size, direction, flair, flairDuration, flipped });
     }
   };
 

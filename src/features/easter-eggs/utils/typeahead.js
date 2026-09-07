@@ -1,24 +1,30 @@
-import { EASTER_EGGS } from '@/constants/emojiEasterEggs';
-
-// Build a flat list of { word, emoji } from the easter-egg hints once.
-const HINTS = EASTER_EGGS.flatMap(egg =>
-  (egg.hints || [])
-    .filter(h => typeof h === 'string' && /^[a-z]/i.test(h))
-    .map(word => ({ word: word.toLowerCase(), emoji: (egg.emojis || [])[0] })),
-);
+import { EMOJI_WORDS, emojiForWord } from '@/features/typing/utils/wordEmoji';
 
 // Gentle preview: while the child types, peek at the last word and, if it's a
-// prefix of a magic word, return that effect's emoji so we can hint at the fun
-// that's coming. Returns null when there's nothing worth previewing.
+// prefix of a word we have a picture for, return that picture so we can hint at
+// the fun that's coming.
+//
+// This used to read a hand-written list of 28 hints, so typing "cook" showed
+// nothing even though 🍪 was already in the library. It now reads the same
+// dictionary the prompts and the guide read.
+
+// Single words only — a phrase like "traffic light" can't be a prefix of the
+// one word under the cursor.
+const PREVIEW_WORDS = EMOJI_WORDS.filter(word => !word.includes(' '));
+
 export function matchTypeahead(text) {
   if (typeof text !== 'string') return null;
   const word = text.trim().toLowerCase().split(/\s+/).pop();
   if (!word || word.length < 2) return null;
 
-  for (const hint of HINTS) {
-    if (hint.emoji && hint.word.startsWith(word)) {
-      return hint.emoji;
+  // An exact word wins; otherwise the nearest word it could still become, so
+  // "cook" previews the cookie rather than a cookbook three letters further on.
+  let best = null;
+  for (const candidate of PREVIEW_WORDS) {
+    if (candidate === word) return emojiForWord(candidate);
+    if (candidate.startsWith(word) && (!best || candidate.length < best.length)) {
+      best = candidate;
     }
   }
-  return null;
+  return best ? emojiForWord(best) : null;
 }

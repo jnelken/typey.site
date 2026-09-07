@@ -1,11 +1,16 @@
 <template>
   <div class="emoji" :class="effectClass" :style="rootStyle">
-    <span class="emoji-inner" :class="{ rotate: effect.rotate }" :style="innerStyle">{{ effect.emoji }}</span>
+    <span class="emoji-lift">
+      <span class="emoji-flair" :class="flairClass">
+        <span class="emoji-glyph" :class="{ flipped: effect.flipped }">{{ effect.emoji }}</span>
+      </span>
+    </span>
   </div>
-  </template>
+</template>
 
 <script setup>
 import { computed } from 'vue';
+import { TRAVELLING_PATHS } from '@/features/effects/utils/wordMotion';
 
 const props = defineProps({
   effect: {
@@ -14,44 +19,52 @@ const props = defineProps({
   },
 });
 
-// Effects that travel sideways need to know which way they're headed.
-const TRAVELLING = ['run', 'arc'];
-
 const effectClass = computed(() => {
   const type = props.effect.type || 'float';
   const dir = props.effect.direction === 'left' ? 'left' : 'right';
-  return [`effect-${type}`, TRAVELLING.includes(type) ? `go-${dir}` : null].filter(Boolean);
+  return [
+    `effect-${type}`,
+    TRAVELLING_PATHS.includes(type) ? `go-${dir}` : null,
+  ].filter(Boolean);
+});
+
+const flairClass = computed(() => {
+  const flair = props.effect.flair;
+  return flair && flair !== 'none' ? `flair-${flair}` : null;
 });
 
 const rootStyle = computed(() => {
   const e = props.effect;
-  const duration = `${e.duration || 4000}ms`;
-  const delay = `${e.delay || 0}ms`;
-  const fontSize = `${e.size || 32}px`;
-  const left = e.left || '50%';
-  const dir = e.direction || 'right';
   const style = {
-    left,
-    fontSize,
-    '--dur': duration,
-    '--delay': delay,
-    '--dir': dir,
+    left: e.left || '50%',
+    fontSize: `${e.size || 32}px`,
+    '--dur': `${e.duration || 4000}ms`,
+    '--delay': `${e.delay || 0}ms`,
+    '--flair-dur': `${e.flairDuration || e.duration || 4000}ms`,
   };
   // Only set top for burst effects; the rest are anchored top/bottom in CSS
-  const type = props.effect.type || 'float';
+  const type = e.type || 'float';
   if (type === 'burst' && e.top) {
     style.top = e.top;
   }
   return style;
 });
-
-const innerStyle = computed(() => {
-  const e = props.effect;
-  return e.rotate ? { '--rot-dur': `${e.rotateDuration || 6000}ms` } : {};
-});
 </script>
 
 <style scoped>
+/* Four layers, so nothing overwrites anything else.
+ *
+ * `.emoji`       travels across the screen        (transform)
+ * `.emoji-lift`  carries height for gravity paths (transform)
+ * `.emoji-flair` spins, bobs, grows or pulses     (rotate / scale)
+ * `.emoji-glyph` faces the way it's going         (scale)
+ *
+ * The inner two use the individual `rotate` and `scale` properties rather than
+ * `transform`. They compose independently, so a flourish and a horizontal flip
+ * can sit on the same element without one silently winning — which is exactly
+ * what went wrong when the flip was first tried as `transform: scaleX(-1)` on
+ * an element whose keyframes already animated `transform: translateY`.
+ */
 .emoji {
   position: fixed;
   z-index: 1001;
@@ -62,13 +75,77 @@ const innerStyle = computed(() => {
   opacity: 0;
 }
 
-.emoji-inner { display: inline-block; }
-.emoji-inner.rotate { animation: emoji-rotate var(--rot-dur, 6000ms) linear infinite; }
-
-@keyframes emoji-rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.emoji-lift,
+.emoji-flair,
+.emoji-glyph {
+  display: inline-block;
 }
+
+/* A glyph drawn facing left, sent to the right, is turned around. */
+.emoji-glyph.flipped {
+  scale: -1 1;
+}
+
+/* --- Flourishes ------------------------------------------------------
+ * Modifiers, not paths: any of these layers onto any path below.
+ */
+
+.flair-spin {
+  animation: flair-spin var(--flair-dur, 6000ms) var(--delay, 0ms) linear infinite;
+}
+
+@keyframes flair-spin {
+  from { rotate: 0deg; }
+  to { rotate: 360deg; }
+}
+
+/* Bobble: a rocking wobble, like a bobblehead. */
+.flair-bobble {
+  animation: flair-bobble var(--flair-dur, 900ms) var(--delay, 0ms)
+    ease-in-out infinite alternate;
+}
+
+@keyframes flair-bobble {
+  from { rotate: -14deg; }
+  to { rotate: 14deg; }
+}
+
+/* Grow: swells as it fades out. Plays once, over the effect's own life. */
+.flair-grow {
+  animation: flair-grow var(--flair-dur, 4000ms) var(--delay, 0ms) ease-out both;
+}
+
+@keyframes flair-grow {
+  from { scale: 1; opacity: 1; }
+  to { scale: 2.2; opacity: 0; }
+}
+
+/* Pulse: swells and comes back to its own size. */
+.flair-pulse {
+  animation: flair-pulse var(--flair-dur, 4000ms) var(--delay, 0ms) ease-in-out both;
+}
+
+@keyframes flair-pulse {
+  0% { scale: 1; }
+  50% { scale: 1.45; }
+  100% { scale: 1; }
+}
+
+/* Throb: large, small, large — a heartbeat, on repeat. */
+.flair-throb {
+  animation: flair-throb var(--flair-dur, 900ms) var(--delay, 0ms)
+    ease-in-out infinite;
+}
+
+@keyframes flair-throb {
+  0% { scale: 1; }
+  20% { scale: 1.3; }
+  35% { scale: 1; }
+  55% { scale: 1.22; }
+  100% { scale: 1; }
+}
+
+/* --- Paths ------------------------------------------------------------ */
 
 /* Rain: fall from above to below */
 .effect-rain {
@@ -135,10 +212,10 @@ const innerStyle = computed(() => {
   100% { transform: scale(1.1); opacity: 0; }
 }
 
-/* --- Effects that obey gravity ---------------------------------------
+/* --- Paths that obey gravity ------------------------------------------
  * A thrown thing shouldn't drift off the top of the screen. These three
  * split the motion in two: the outer element carries it sideways at a
- * steady speed while the inner one handles height, easing out on the way
+ * steady speed while the lift span handles height, easing out on the way
  * up and in on the way down so the weight reads right.
  */
 
@@ -152,7 +229,7 @@ const innerStyle = computed(() => {
 .effect-arc.go-right { animation-name: emoji-run-right; }
 .effect-arc.go-left { animation-name: emoji-run-left; }
 
-.effect-arc .emoji-inner {
+.effect-arc .emoji-lift {
   animation: emoji-arc-height var(--dur, 4000ms) var(--delay, 0ms) both;
 }
 
@@ -170,7 +247,7 @@ const innerStyle = computed(() => {
   animation-timing-function: linear;
 }
 
-.effect-lob .emoji-inner {
+.effect-lob .emoji-lift {
   animation: emoji-lob-height var(--dur, 4000ms) var(--delay, 0ms) both;
 }
 

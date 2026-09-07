@@ -13,6 +13,7 @@ export function useTypingEvents({
   onEscapePressed,
   onShuffleWord,
   onPreviousWord,
+  onEditLastEntry,
 }) {
   const onKeyDown = async (event) => {
     const key = event.key;
@@ -22,6 +23,13 @@ export function useTypingEvents({
       await onEnterPressed();
     } else if (key === 'Escape') {
       if (onEscapePressed) onEscapePressed();
+    } else if (key === 'ArrowUp' && !event.metaKey && !event.ctrlKey && !event.altKey) {
+      // Up on an empty line brings the last thing they sent back for another
+      // go. With text in the box, Up keeps its normal job of moving the caret.
+      if (currentText.value === '' && onEditLastEntry) {
+        event.preventDefault();
+        onEditLastEntry();
+      }
     } else if (event.metaKey && key === 'ArrowRight') {
       // Cmd+Right skips to a new practice word instead of jumping the cursor.
       event.preventDefault();

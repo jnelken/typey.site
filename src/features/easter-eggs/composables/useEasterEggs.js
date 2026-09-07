@@ -1,18 +1,21 @@
-import { EASTER_EGGS } from '@/constants/emojiEasterEggs';
+import { SPECIAL_EFFECTS } from '@/constants/emojiEasterEggs';
 // This composable is a factory that takes dependencies from the caller
 import { BALLOON_MAX } from '@/constants/balloons';
-import { resolveWordEffect } from '@/features/effects/utils/wordEffect';
+import { resolveWordEffect, countForWord } from '@/features/effects/utils/wordEffect';
+import { findWordEmoji } from '@/features/typing/utils/wordEmoji';
 
-// Build the spawn arguments (type, count, options) for an egg. When `text` is
-// provided, an embedded number (e.g. "5 lions") overrides the fallback count.
-// Shared by live evaluation and the guide's tap-to-preview.
-export function resolveSpawn(egg, text = '') {
+// Words the balloon system owns outright — see the exception below.
+const BALLOON_WORDS = ['balloon', 'balloons'];
+
+// Build the spawn arguments (type, count, options) for a special effect. When
+// `text` is provided, an embedded number (e.g. "$5") sets the count.
+export function resolveSpawn(special, text = '') {
   const lower = typeof text === 'string' ? text.toLowerCase() : '';
 
-  let count = egg.count?.fallback ?? 10;
-  const cap = egg.count?.cap ?? 150;
-  if (egg.count?.numberPattern) {
-    const m = lower.match(egg.count.numberPattern);
+  let count = special.count?.fallback ?? 10;
+  const cap = special.count?.cap ?? 150;
+  if (special.count?.numberPattern) {
+    const m = lower.match(special.count.numberPattern);
     // The first group that matched holds the number, so a pattern can accept
     // the same count written more than one way ("$5" or "5$").
     const digits = m && m.slice(1).find(group => group !== undefined);
@@ -22,51 +25,65 @@ export function resolveSpawn(egg, text = '') {
     }
   }
 
-  const emojis = egg.emojis || ['✨'];
-  const options = { ...egg.options };
+  const emojis = special.emojis || ['✨'];
+  const options = { ...special.options };
   if (Array.isArray(emojis) && emojis.length > 1) options.emojiSet = emojis;
   else if (Array.isArray(emojis) && emojis.length === 1) options.emoji = emojis[0];
   else if (typeof emojis === 'string') options.emoji = emojis;
 
-  // Direction handling for the animations that travel sideways
-  if (egg.type === 'run' || egg.type === 'arc') {
-    const dir = egg.options?.direction;
-    if (dir === 'left' || dir === 'right') options.direction = dir;
-    else options.direction = Math.random() > 0.5 ? 'left' : 'right';
-  }
-
-  return { type: egg.type, count, options };
+  return { type: special.type, count, options };
 }
 
-// Spawn a single egg's effect immediately (used by the guide preview).
-export function spawnForEgg(egg, spawnEmojis, text = '') {
-  if (!egg || typeof spawnEmojis !== 'function') return;
-  const { type, count, options } = resolveSpawn(egg, text);
-  spawnEmojis(type, count, options);
+/**
+ * Play the effect a word would play if it were typed. Used by the word guide's
+ * tap-to-preview, so a tap and a typed word are guaranteed to look the same.
+ */
+export function spawnForWord(word, spawnEmojis) {
+  if (typeof spawnEmojis !== 'function') return;
+  const effect = resolveWordEffect(word);
+  if (!effect) return;
+  spawnEmojis(effect.type, effect.count, effect.options);
 }
 
-// Evaluate text against declarative easter egg config and spawn effects
+// Evaluate a finished line and spawn whatever it earns.
 export function useEasterEggs({ spawnBalloons }) {
   const evaluateEasterEggs = (text, spawnEmojis, onTrigger) => {
     if (!text || typeof text !== 'string') return false;
     const lower = text.toLowerCase();
     let triggered = false;
 
-    for (const egg of EASTER_EGGS) {
-      const any = egg.triggersAny || [];
-      const all = egg.mustAlsoMatch || [];
+    // Specials first: they read punctuation a word never could.
+    for (const special of SPECIAL_EFFECTS) {
+      const any = special.triggersAny || [];
+      const all = special.mustAlsoMatch || [];
 
       const anyMatch = any.length === 0 || any.some(re => re.test(lower));
       const allMatch = all.length === 0 || all.every(re => re.test(lower));
       if (!anyMatch || !allMatch) continue;
 
-      const { type, count, options } = resolveSpawn(egg, text);
+      const { type, count, options } = resolveSpawn(special, text);
       spawnEmojis(type, count, options);
       triggered = true;
-      if (typeof onTrigger === 'function') onTrigger(egg);
     }
 
-    // If no easter egg triggered, consider spawning balloons from a bare number
+    // A number written against a word counts that word: "5 lions" is five
+    // lions. This has to be settled before the balloon check below, which would
+    // otherwise see the 5 on its own and float five balloons instead.
+    if (!triggered) {
+      const match = findWordEmoji(text);
+      // "25 balloons" is the one exception: balloons are real, poppable objects
+      // in this app, not an emoji effect, so the word belongs to the balloon
+      // system and falls through to it.
+      const isBalloons = match && BALLOON_WORDS.includes(match.word);
+      if (match && !isBalloons && countForWord(text, match.word) !== null) {
+        const effect = resolveWordEffect(text);
+        spawnEmojis(effect.type, effect.count, effect.options);
+        triggered = true;
+        if (typeof onTrigger === 'function') onTrigger(match.word);
+      }
+    }
+
+    // A bare number floats that many balloons.
     if (!triggered) {
       const parts = text.split(/\s+/); // Split by whitespace
       for (const part of parts) {
@@ -82,13 +99,16 @@ export function useEasterEggs({ spawnBalloons }) {
       }
     }
 
-    // Last resort: any word we have a picture for still animates, so words
-    // without a hand-written easter egg don't land silently.
+    // Any word we have a picture for animates the way that word moves.
     if (!triggered) {
       const effect = resolveWordEffect(text);
       if (effect) {
         spawnEmojis(effect.type, effect.count, effect.options);
         triggered = true;
+        if (typeof onTrigger === 'function') {
+          const match = findWordEmoji(text);
+          if (match) onTrigger(match.word);
+        }
       }
     }
 

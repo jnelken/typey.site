@@ -8,8 +8,9 @@ import { useSound } from '@/features/audio/composables/useSound';
 import { useSpeech } from '@/features/audio/composables/useSpeech';
 import { useBalloons } from '@/features/effects/composables/useBalloons';
 import { useEmojis } from '@/features/effects/composables/useEmojis';
-import { useEasterEggs, spawnForEgg } from '@/features/easter-eggs/composables/useEasterEggs';
-import { useEasterEggGuide } from '@/features/easter-eggs/composables/useEasterEggGuide';
+import { useScreenColor } from '@/features/effects/composables/useScreenColor';
+import { useEasterEggs, spawnForWord } from '@/features/easter-eggs/composables/useEasterEggs';
+import { useWordGuide } from '@/features/typing/composables/useWordGuide';
 import { useSillyMode } from '@/features/easter-eggs/composables/useSillyMode';
 import { isSillyTrigger } from '@/features/easter-eggs/utils/sillyMode';
 import { useColorMode } from '@/features/easter-eggs/composables/useColorMode';
@@ -30,8 +31,9 @@ export function createTypingApp() {
   const speechSystem = useSpeech();
   const balloonsSystem = useBalloons();
   const emojisSystem = useEmojis();
+  const screenColorSystem = useScreenColor();
   const easterEggsSystem = useEasterEggs({ spawnBalloons: balloonsSystem.spawnBalloons });
-  const guideSystem = useEasterEggGuide();
+  const guideSystem = useWordGuide();
   const sillySystem = useSillyMode({
     currentText: typingState.currentText,
     isCapsLockEnabled: typingSettings.isCapsLockEnabled,
@@ -48,6 +50,11 @@ export function createTypingApp() {
       typingState.addCompletedLine(typingState.currentText.value);
 
       const trimmedText = typingState.currentText.value.trim();
+
+      // The screen takes its colour from the line just sent, and keeps it until
+      // the next one. Decided up here so it holds for every kind of line — the
+      // ones below that handle themselves and return early included.
+      screenColorSystem.setScreenColorFromText(trimmedText);
 
       // The prompt only moves on once the word has actually been spelled
       // right — a wrong try leaves it up for another go.
@@ -99,7 +106,7 @@ export function createTypingApp() {
       easterEggsSystem.evaluateEasterEggs(
         trimmedText,
         emojisSystem.spawnEmojis,
-        egg => guideSystem.revealForEgg(egg)
+        word => guideSystem.revealForWord(word)
       );
 
       // Submit to API for Tidbyt companion app
@@ -138,6 +145,13 @@ export function createTypingApp() {
         wordPromptSystem.previousPromptWord();
       }
     },
+    // The line has already had its animation and has already gone to the
+    // Tidbyt companion; editing it sends a second entry rather than undoing
+    // the first. That's the honest trade for letting a typo be fixed.
+    onEditLastEntry: () => {
+      const line = typingState.popCompletedLine();
+      if (line !== null) typingState.currentText.value = line;
+    },
   });
 
   // Wrapper functions for event handlers to include state updates
@@ -155,12 +169,12 @@ export function createTypingApp() {
     }
   };
 
-  // Play an effect on demand (used by the guide's tap-to-preview rows).
+  // Play a word's effect on demand (used by the guide's tap-to-preview cards).
   // Closes the guide so the animation is visible full-screen.
-  const previewEasterEgg = egg => {
-    guideSystem.revealForEgg(egg);
+  const previewWord = word => {
+    guideSystem.revealForWord(word);
     guideSystem.toggle(false);
-    spawnForEgg(egg, emojisSystem.spawnEmojis);
+    spawnForWord(word, emojisSystem.spawnEmojis);
   };
 
   const initApp = () => {
@@ -182,6 +196,7 @@ export function createTypingApp() {
     speechDebug: speechSystem.speechDebug,
     balloons: balloonsSystem.balloons,
     emojiEffects: emojisSystem.effects,
+    screenColor: screenColorSystem.screenColor,
     mathEquation: mathSystem.current,
     promptWord: wordPromptSystem.promptWord,
     promptEmoji: wordPromptSystem.promptEmoji,
@@ -191,13 +206,16 @@ export function createTypingApp() {
     isSillyModeActive: sillySystem.isActive,
     isColorModeActive: colorSystem.isActive,
 
-    // Guide system
+    // Word guide
     guideVisible: guideSystem.guideVisible,
-    guideItems: guideSystem.menuItems,
+    guideGroups: guideSystem.guideGroups,
+    guideSecrets: guideSystem.guideSecrets,
+    guideFilter: guideSystem.guideFilter,
+    guideWordCount: guideSystem.guideWordCount,
     discoveredHints: guideSystem.discovered,
     isHintDiscovered: guideSystem.isDiscovered,
     toggleGuide: guideSystem.toggle,
-    previewEasterEgg,
+    previewWord,
 
     // Methods
     onKeyDown: eventHandlers.onKeyDown,
@@ -219,6 +237,7 @@ export function createTypingApp() {
     popAllBalloons: balloonsSystem.popAllBalloons,
     spawnEmojis: emojisSystem.spawnEmojis,
     clearEmojis: emojisSystem.clearEmojis,
+    resetScreenColor: screenColorSystem.resetScreenColor,
     initApp,
   };
 

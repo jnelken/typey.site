@@ -6,16 +6,20 @@
     padding="lg"
     @click="handleGlobalClick">
     <div class="typing-app">
-      <div class="header">
-        <Text tag="h1" size="3xl" align="center" color="primary" weight="bold">
+      <!-- Title and controls share one slim row so the word the child is
+           copying gets the room instead. -->
+      <header class="topbar">
+        <Text
+          tag="h1"
+          size="lg"
+          color="primary"
+          weight="bold"
+          font="mono"
+          :caps="typingApp.isCapsLockEnabled.value">
           🎯 Typey Site
         </Text>
-        <Text tag="p" size="lg" align="center" color="secondary">
-          Fun typing for kids!
-        </Text>
-      </div>
-
-      <Toolbar />
+        <Toolbar />
+      </header>
 
       <WordPrompt />
 
@@ -33,7 +37,7 @@
     <Balloons :balloons="typingApp.balloons.value" />
     <Emojis :effects="typingApp.emojiEffects.value" />
     <MathAnimation />
-    <EasterEggGuide />
+    <WordGuide />
 
     <pre v-if="showSpeechDebug" class="speech-debug">{{ typingApp.speechDebug.value }}</pre>
   </Container>
@@ -50,7 +54,7 @@ import InputSection from './features/typing/components/InputSection.vue';
 import Balloons from './features/effects/components/Balloons.vue';
 import Emojis from './features/effects/components/Emojis.vue';
 import MathAnimation from './features/math/components/MathAnimation.vue';
-import EasterEggGuide from './features/easter-eggs/components/EasterEggGuide.vue';
+import WordGuide from './features/typing/components/WordGuide.vue';
 import { createTypingApp, provideTypingApp } from './composables/useTypingApp';
 
 const inputSection = ref(null);
@@ -97,9 +101,19 @@ onMounted(() => {
   position: relative;
 }
 
-.header {
-  padding: var(--spacing-lg) 0 var(--spacing-md);
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
   flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .topbar h1 {
+    font-size: var(--font-size-base);
+  }
 }
 
 .help-text {
