@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { useWordGuide } from '@/features/typing/composables/useWordGuide';
+import { useWordGuide, SECRET_WORDS } from '@/features/typing/composables/useWordGuide';
 import { EMOJI_WORDS } from '@/features/typing/utils/wordEmoji';
 
 describe('useWordGuide', () => {
@@ -48,6 +48,44 @@ describe('useWordGuide', () => {
 
     expect(words).toEqual(expect.arrayContaining(['$5', 'silly', 'color', 'qwerty']));
     expect(guide.guideSecrets.value.every(s => s.description)).toBe(true);
+  });
+
+  it('lists every typed trigger, including the ones that share an effect', () => {
+    const guide = useWordGuide();
+    const words = guide.guideSecrets.value.map(s => s.word);
+
+    expect(words).toEqual(
+      expect.arrayContaining(['color', 'rainbow', 'red', '$5', '2 + 3', 'silly', 'qwerty']),
+    );
+  });
+
+  it('shows the secrets alone when opened from settings', () => {
+    const guide = useWordGuide();
+    guide.openSecrets();
+
+    expect(guide.guideVisible.value).toBe(true);
+    expect(guide.guideSecretsOnly.value).toBe(true);
+    expect(guide.guideGroups.value).toEqual([]);
+    expect(guide.guideWordCount.value).toBe(0);
+    expect(guide.guideSecrets.value.length).toBe(SECRET_WORDS.length);
+  });
+
+  it('drops a stale filter when settings opens the secrets', () => {
+    const guide = useWordGuide();
+    guide.guideFilter.value = 'cook';
+    guide.openSecrets();
+
+    expect(guide.guideFilter.value).toBe('');
+  });
+
+  it('gives the dictionary back the next time the guide opens in full', () => {
+    const guide = useWordGuide();
+    guide.openSecrets();
+    guide.toggle(false);
+    guide.toggle(true);
+
+    expect(guide.guideSecretsOnly.value).toBe(false);
+    expect(guide.guideWordCount.value).toBe(EMOJI_WORDS.length);
   });
 
   it('searches the secrets alongside the dictionary', () => {

@@ -1,10 +1,14 @@
 <template>
   <Modal
     :open="typingApp.guideVisible.value"
-    title="✨ Words to Type ✨"
+    :title="typingApp.guideSecretsOnly.value ? '🤫 Secret Words 🤫' : '✨ Words to Type ✨'"
     @close="typingApp.toggleGuide(false)">
     <p class="guide-sub">
-      Type one of these words, then tap a card to see what it does!
+      {{
+        typingApp.guideSecretsOnly.value
+          ? 'Type one of these on a line of its own to see what it does.'
+          : 'Type one of these words, then tap a card to see what it does!'
+      }}
     </p>
 
     <input
@@ -41,7 +45,9 @@
     </section>
 
     <section v-if="typingApp.guideSecrets.value.length" class="guide-group">
-      <h3 class="guide-group-title">Secret words</h3>
+      <h3 v-if="!typingApp.guideSecretsOnly.value" class="guide-group-title">
+        Secret words
+      </h3>
       <ul class="guide-list secrets">
         <li
           v-for="secret in typingApp.guideSecrets.value"

@@ -12,6 +12,8 @@ export const SECRET_WORDS = Object.freeze([
   { word: '2 + 3', emoji: '🔢', description: 'Counts out the answer' },
   { word: 'silly', emoji: '🤪', description: 'Types random words for you' },
   { word: 'color', emoji: '🌈', description: 'Paints every letter a colour' },
+  { word: 'rainbow', emoji: '🌈', description: 'Another way to say color' },
+  { word: 'red', emoji: '🟥', description: 'Any colour name washes the screen' },
   { word: 'qwerty', emoji: '✨', description: 'Opens this list' },
 ]);
 
@@ -27,10 +29,16 @@ export function useWordGuide() {
   const visible = ref(false);
   const discovered = ref(new Set());
   const filter = ref('');
+  // Opened from Settings, the guide shows only the secret words — the point
+  // there is recalling the handful of typed triggers, and six hundred
+  // dictionary cards above them is what made that hard to do.
+  const secretsOnly = ref(false);
 
   // Every word, grouped by category, filtered by what's typed in the search
   // box. Empty groups drop out so the list doesn't leave holes.
   const groups = computed(() => {
+    if (secretsOnly.value) return [];
+
     const needle = filter.value.trim().toLowerCase();
 
     return Object.entries(WORD_CATEGORIES)
@@ -67,8 +75,18 @@ export function useWordGuide() {
 
   const toggle = state => {
     visible.value = typeof state === 'boolean' ? state : !visible.value;
+    // Typing "qwerty" always opens the full guide, so a secrets-only view left
+    // over from Settings doesn't silently hide the dictionary.
+    if (visible.value) secretsOnly.value = false;
     // A stale filter would hide most of the list next time it opens.
     if (!visible.value) filter.value = '';
+  };
+
+  /** Open the guide showing the secret words alone. */
+  const openSecrets = () => {
+    filter.value = '';
+    secretsOnly.value = true;
+    visible.value = true;
   };
 
   return {
@@ -77,9 +95,11 @@ export function useWordGuide() {
     guideSecrets: secrets,
     guideFilter: filter,
     guideWordCount: wordCount,
+    guideSecretsOnly: secretsOnly,
     discovered,
     isDiscovered,
     revealForWord,
     toggle,
+    openSecrets,
   };
 }

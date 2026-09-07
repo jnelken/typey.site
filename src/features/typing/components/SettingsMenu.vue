@@ -43,6 +43,17 @@
         :caps="isCapsLockEnabled"
         :is-enabled="isCapsLockEnabled"
         @toggle="toggleCapsLock" />
+
+      <!-- Not a toggle: the secret words aren't discoverable by browsing the
+           dictionary, so this is where you come to be reminded of them. -->
+      <Button variant="ghost" size="sm" @click="showSecretWords">
+        <span class="settings-action">
+          <span class="settings-action-icon">🤫</span>
+          <span class="settings-action-label" :class="{ caps: isCapsLockEnabled }">
+            Secret Words
+          </span>
+        </span>
+      </Button>
     </div>
   </Modal>
 </template>
@@ -50,6 +61,7 @@
 <script setup>
 import Modal from '@/ui/Modal.vue';
 import ToggleButton from '@/ui/ToggleButton.vue';
+import Button from '@/ui/Button.vue';
 import { useTypingApp } from '@/composables/useTypingApp';
 
 defineProps({
@@ -59,7 +71,7 @@ defineProps({
   },
 });
 
-defineEmits(['close']);
+const emit = defineEmits(['close']);
 
 const {
   isSoundEnabled,
@@ -74,10 +86,41 @@ const {
   toggleCapsLock,
   toggleEmojiMode,
   toggleWordPrompt,
+  openSecretWords,
 } = useTypingApp();
+
+// Two modals stacked on top of each other would leave the settings list
+// showing behind the word list, so settings steps aside.
+const showSecretWords = () => {
+  emit('close');
+  openSecretWords();
+};
 </script>
 
 <style scoped>
+.settings-action {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 120px;
+  justify-content: center;
+}
+
+.settings-action-icon {
+  font-size: 2em;
+  line-height: 1;
+}
+
+.settings-action-label {
+  font-size: inherit;
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+}
+
+.settings-action-label.caps {
+  text-transform: uppercase;
+}
+
 .settings-list {
   display: flex;
   flex-direction: column;

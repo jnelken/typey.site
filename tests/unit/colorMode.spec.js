@@ -21,9 +21,16 @@ describe('isColorTrigger', () => {
     expect(isColorTrigger('  Colour  ')).toBe(true);
   });
 
+  it('treats "rainbow" as the same effect, not a mode of its own', () => {
+    expect(isColorTrigger('rainbow')).toBe(true);
+    expect(isColorTrigger('  RAINBOW ')).toBe(true);
+    expect(COLOR_TRIGGERS).toContain('rainbow');
+  });
+
   it('does not fire on the word inside a longer line', () => {
     expect(isColorTrigger('what color is it')).toBe(false);
     expect(isColorTrigger('colorful')).toBe(false);
+    expect(isColorTrigger('rainbows')).toBe(false);
   });
 
   it('handles non-string input', () => {

@@ -1,12 +1,17 @@
-// Color Mode — typing "color" (or "colour") on its own line paints every
-// character a different color, cycling through a rainbow palette.
+// Color Mode — typing "color" (or "colour", or "rainbow") on its own line
+// paints every character a different color, cycling through a rainbow palette.
+//
+// "rainbow" is an alias rather than a mode of its own: the roadmap once planned
+// a separate Rainbow Mode that cycled whole colour themes, and there is only
+// one palette here by design, so the word people reach for lands on the effect
+// that already exists.
 //
 // Like emoji mode, this is display-only: the palette is applied per rendered
 // character in `AnimatedText`, so speech, easter eggs, word suggestions and
 // the Tidbyt submission all keep reading the real text. A screen reader still
 // gets exactly the letters that were typed.
 
-export const COLOR_TRIGGERS = ['color', 'colour'];
+export const COLOR_TRIGGERS = ['color', 'colour', 'rainbow'];
 
 // The page background (`--color-background` in `src/style.css`). Every palette
 // entry is contrast-checked against it, so keep the two in step.

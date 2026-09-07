@@ -212,9 +212,11 @@ export function createTypingApp() {
     guideSecrets: guideSystem.guideSecrets,
     guideFilter: guideSystem.guideFilter,
     guideWordCount: guideSystem.guideWordCount,
+    guideSecretsOnly: guideSystem.guideSecretsOnly,
     discoveredHints: guideSystem.discovered,
     isHintDiscovered: guideSystem.isDiscovered,
     toggleGuide: guideSystem.toggle,
+    openSecretWords: guideSystem.openSecrets,
     previewWord,
 
     // Methods
