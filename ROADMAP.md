@@ -13,12 +13,12 @@ real text. See `src/features/typing/utils/emojiMode.js`.
 
 ### 🤪 Silly Mode
 
-Shipped 2026-09-06. Typing "silly" on its own line starts a run of random words
-landing in the input, one a second, so a nonsense line builds itself and can be
-sent with Enter for the usual animation. The words come from the emoji library,
-so each one has a picture behind it, and they match caps lock. The run stops on
-"silly" again, on Escape, or by itself after `SILLY_MAX_WORDS` (20) so a
-forgotten tab stays quiet. See `src/features/easter-eggs/utils/sillyMode.js`.
+Shipped 2026-09-06, and changed on 2026-09-07 to send its words rather than
+stack them — see **Silly Mode Sends Its Own Words** below. Typing "silly" on its
+own line starts a run of random words from the emoji library, so each one has a
+picture behind it, and they match caps lock. The run stops on "silly" again, on
+Escape, or by itself at `SILLY_MAX_WORDS` so a forgotten tab stays quiet. See
+`src/features/easter-eggs/utils/sillyMode.js`.
 
 ### 🌈 Color Mode
 
@@ -121,19 +121,25 @@ cards, which is not somewhere you find them. Typing "qwerty" still opens the
 full guide. See `SECRET_WORDS` in
 `src/features/typing/composables/useWordGuide.js`.
 
-## Upcoming Features
-
 ### 🤪 Silly Mode Sends Its Own Words
 
-- **What**: Silly Mode types a word into the input and leaves it there. Instead,
-  each word should be **sent** on its own — so it gets the usual animation —
-  with the run capped at **5 words** and each send **3 seconds** apart.
-- **Why**: the point of the mode is watching something happen; a line that just
-  fills up is the least interesting version of it.
-- **Touchpoints**: `src/features/easter-eggs/utils/sillyMode.js` (`SILLY_MAX_WORDS`,
-  interval), `src/features/easter-eggs/composables/useSillyMode.js`,
-  `src/composables/useTypingApp.js` (the run needs to reach `handleEnterKey`),
-  `tests/unit/sillyMode.spec.js`, `tests/unit/useSillyMode.spec.js`.
+Shipped 2026-09-07. A silly run used to type its words into the input and leave
+them there, so twenty words piled into one line that only animated if the child
+happened to press Enter. Each word is now **sent on its own** — one dictionary
+word per line, with its animation — five of them, three seconds apart, which is
+about how long a word takes to cross the screen and land.
+
+The word **replaces** the line rather than joining it. The send handler clears
+the input only after awaiting the API call, so a word left in the box would ride
+along with the next one on a slow network — which is the pile-up this change
+exists to stop. The cost is that a half-typed word is overwritten while a run is
+going; the run is five words and Escape stops it.
+
+A run also never sends a word that is itself a mode trigger, even though
+`silly` and `rainbow` are perfectly good dictionary words with pictures: a
+trigger returns early from the send handler, so it plays no animation — and
+those two would stop the run and switch Color Mode on respectively. `SILLY_WORDS`
+in `src/features/easter-eggs/utils/sillyMode.js` is the library minus that set.
 
 ## 🥚 Easter Egg Ideas
 

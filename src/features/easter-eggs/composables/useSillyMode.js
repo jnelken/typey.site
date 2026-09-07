@@ -2,19 +2,19 @@ import { ref } from 'vue';
 import {
   SILLY_INTERVAL_MS,
   SILLY_MAX_WORDS,
-  appendSillyWord,
   randomSillyWord,
 } from '@/features/easter-eggs/utils/sillyMode';
 
 /**
- * Typing "silly" starts a run of random words landing in the input, one a
- * second. The child stays in control throughout: they can keep typing, press
- * Enter to send the line (and set off its animation), type "silly" again, or
- * press Escape to stop.
+ * Typing "silly" starts a run of random words, each one dropped into the input
+ * and sent on its own so it plays its animation. The child stays in control
+ * throughout: they can type over it, type "silly" again, or press Escape to
+ * stop.
  */
 export function useSillyMode({
   currentText,
   isCapsLockEnabled,
+  sendLine,
   pickWord = randomSillyWord,
   intervalMs = SILLY_INTERVAL_MS,
   maxWords = SILLY_MAX_WORDS,
@@ -32,16 +32,23 @@ export function useSillyMode({
     isActive.value = false;
   };
 
-  const addWord = () => {
+  const sendWord = () => {
     const word = pickWord(lastWord);
     if (!word) return;
     lastWord = word;
     // Caps lock is what the rest of the app types in, so a silly word matches
-    // it rather than dropping lowercase into an otherwise uppercase line.
+    // it rather than sending lowercase from an otherwise uppercase session.
     const cased = isCapsLockEnabled?.value ? word.toUpperCase() : word;
-    currentText.value = appendSillyWord(currentText.value, cased);
+    // The word replaces the line rather than joining it. The send handler
+    // clears the input only after awaiting the API call, so anything left in
+    // there would ride along with the next word on a slow network — which is
+    // the pile-up this mode was changed to stop doing.
+    currentText.value = cased;
     wordsAdded += 1;
+    // Stop before sending, so the last word of a run still goes out but the
+    // timer is already cleared when it does.
     if (wordsAdded >= maxWords) stop();
+    sendLine?.();
   };
 
   const start = () => {
@@ -49,7 +56,7 @@ export function useSillyMode({
     wordsAdded = 0;
     lastWord = '';
     isActive.value = true;
-    timer = setInterval(addWord, intervalMs);
+    timer = setInterval(sendWord, intervalMs);
   };
 
   const toggle = () => {

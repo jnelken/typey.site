@@ -10,7 +10,7 @@ import {
 export const SECRET_WORDS = Object.freeze([
   { word: '$5', emoji: '💵', description: 'Rains one bill per dollar' },
   { word: '2 + 3', emoji: '🔢', description: 'Counts out the answer' },
-  { word: 'silly', emoji: '🤪', description: 'Types random words for you' },
+  { word: 'silly', emoji: '🤪', description: 'Sends five random words for you' },
   { word: 'color', emoji: '🌈', description: 'Paints every letter a colour' },
   { word: 'rainbow', emoji: '🌈', description: 'Another way to say color' },
   { word: 'red', emoji: '🟥', description: 'Any colour name washes the screen' },

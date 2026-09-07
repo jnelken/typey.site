@@ -52,7 +52,7 @@ A fun, interactive typing application designed for kids with sound effects, text
 - **Colour words wash the screen** - type "red" and the whole page turns red until you send the next line
 - **Motion that matches meaning** - animals run (and turn to face the way they're going), food is thrown and falls back, weather rains, balloons float
 - **Emoji Mode** - every letter, digit and symbol draws as a matching emoji (A → 🍎, B → 🐻); speech still reads the real words
-- **Silly Mode** - type "silly" to have random words land in the input once a second; Escape (or "silly" again) stops them
+- **Silly Mode** - type "silly" to have five random words send themselves, three seconds apart, each with its own animation; Escape (or "silly" again) stops them
 - **Color Mode** - type "color" (or "colour", or "rainbow") to paint every character a different rainbow color; type it again to go back to plain text
 - **Auto-scroll** to keep content in view
 

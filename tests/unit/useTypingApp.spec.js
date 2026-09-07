@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTypingApp } from '@/composables/useTypingApp';
+import { SILLY_WORDS } from '@/features/easter-eggs/utils/sillyMode';
 
 describe('useTypingApp', () => {
   let typingApp;
@@ -573,15 +574,39 @@ describe('useTypingApp', () => {
 
       expect(typingApp.isSillyModeActive.value).toBe(true);
       expect(typingApp.currentText.value).toBe('');
+    });
 
-      jest.advanceTimersByTime(1000);
-      expect(typingApp.currentText.value.length).toBeGreaterThan(0);
+    // A sent line lands in the history synchronously, which is what makes the
+    // run observable here — the input is cleared later, after the API call.
+    it('sends each word rather than piling them into the input', () => {
+      typingApp.currentText.value = 'silly';
+      pressEnter();
+      const before = typingApp.completedLines.value.length;
+
+      jest.advanceTimersByTime(3000);
+      const [first] = typingApp.completedLines.value.slice(before);
+      // One dictionary word per line, not a line growing a word at a time.
+      expect(SILLY_WORDS).toContain(first.toLowerCase());
+
+      jest.advanceTimersByTime(3000);
+      expect(typingApp.completedLines.value).toHaveLength(before + 2);
+    });
+
+    it('stops itself after five words', () => {
+      typingApp.currentText.value = 'silly';
+      pressEnter();
+      const before = typingApp.completedLines.value.length;
+
+      jest.advanceTimersByTime(60000);
+
+      expect(typingApp.isSillyModeActive.value).toBe(false);
+      expect(typingApp.completedLines.value).toHaveLength(before + 5);
     });
 
     it('is off until the word is typed', () => {
       expect(typingApp.isSillyModeActive.value).toBe(false);
-      jest.advanceTimersByTime(3000);
-      expect(typingApp.currentText.value).toBe('');
+      jest.advanceTimersByTime(9000);
+      expect(typingApp.completedLines.value).toEqual([]);
     });
 
     it('ignores the word inside a longer line', async () => {
@@ -594,28 +619,28 @@ describe('useTypingApp', () => {
     it('stops when the word is typed again', async () => {
       typingApp.currentText.value = 'silly';
       await pressEnter();
-      jest.advanceTimersByTime(1000);
+      jest.advanceTimersByTime(3000);
 
       typingApp.currentText.value = 'silly';
       await pressEnter();
-      const settled = typingApp.currentText.value;
-      jest.advanceTimersByTime(5000);
+      const settled = typingApp.completedLines.value.length;
+      jest.advanceTimersByTime(15000);
 
       expect(typingApp.isSillyModeActive.value).toBe(false);
-      expect(typingApp.currentText.value).toBe(settled);
+      expect(typingApp.completedLines.value).toHaveLength(settled);
     });
 
     it('stops on Escape', async () => {
       typingApp.currentText.value = 'silly';
       await pressEnter();
-      jest.advanceTimersByTime(1000);
+      jest.advanceTimersByTime(3000);
 
       await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
-      const settled = typingApp.currentText.value;
-      jest.advanceTimersByTime(5000);
+      const settled = typingApp.completedLines.value.length;
+      jest.advanceTimersByTime(15000);
 
       expect(typingApp.isSillyModeActive.value).toBe(false);
-      expect(typingApp.currentText.value).toBe(settled);
+      expect(typingApp.completedLines.value).toHaveLength(settled);
     });
   });
 

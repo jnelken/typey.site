@@ -37,6 +37,10 @@ export function createTypingApp() {
   const sillySystem = useSillyMode({
     currentText: typingState.currentText,
     isCapsLockEnabled: typingSettings.isCapsLockEnabled,
+    // Each silly word goes out as if it had been typed and entered, which is
+    // what gives it its animation. `handleEnterKey` is declared just below;
+    // a run only ever calls this from a timer, long after that.
+    sendLine: () => handleEnterKey(),
   });
   const colorSystem = useColorMode();
   const mathSystem = useMathAnimation();
@@ -72,8 +76,8 @@ export function createTypingApp() {
         return;
       }
 
-      // Silly mode: "silly" starts random words landing in the input once a
-      // second, and typing it again stops them.
+      // Silly mode: "silly" starts a short run of random words, each sent on
+      // its own so it animates, and typing it again stops them.
       if (isSillyTrigger(trimmedText)) {
         sillySystem.toggle();
         typingState.clearCurrentText();

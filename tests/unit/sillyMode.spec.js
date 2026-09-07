@@ -1,10 +1,11 @@
 import { describe, it, expect } from '@jest/globals';
 import {
   SILLY_TRIGGER,
+  SILLY_WORDS,
   isSillyTrigger,
-  appendSillyWord,
   randomSillyWord,
 } from '@/features/easter-eggs/utils/sillyMode';
+import { COLOR_TRIGGERS } from '@/features/easter-eggs/utils/colorMode';
 import { EMOJI_WORDS } from '@/features/typing/utils/wordEmoji';
 
 describe('isSillyTrigger', () => {
@@ -30,33 +31,30 @@ describe('isSillyTrigger', () => {
   });
 });
 
-describe('appendSillyWord', () => {
-  it('starts an empty line without a leading space', () => {
-    expect(appendSillyWord('', 'lion')).toBe('lion');
+describe('SILLY_WORDS', () => {
+  it('is the emoji library', () => {
+    expect(SILLY_WORDS.length).toBeGreaterThan(0);
+    for (const word of SILLY_WORDS) expect(EMOJI_WORDS).toContain(word);
   });
 
-  it('separates words with a single space', () => {
-    expect(appendSillyWord('lion', 'pizza')).toBe('lion pizza');
+  it('leaves out the mode triggers, which send nothing and would derail a run', () => {
+    for (const trigger of [SILLY_TRIGGER, ...COLOR_TRIGGERS]) {
+      expect(SILLY_WORDS).not.toContain(trigger);
+    }
   });
 
-  it('does not double the space when the line already ends in one', () => {
-    expect(appendSillyWord('lion ', 'pizza')).toBe('lion pizza');
-  });
-
-  it('leaves the line alone when there is no word to add', () => {
-    expect(appendSillyWord('lion', '')).toBe('lion');
-    expect(appendSillyWord('lion', null)).toBe('lion');
-  });
-
-  it('treats a missing line as empty', () => {
-    expect(appendSillyWord(undefined, 'lion')).toBe('lion');
+  it('is a real exclusion: "silly" and "rainbow" are dictionary words', () => {
+    // If these ever leave the dictionary the filter above stops proving
+    // anything, so the exclusion is only meaningful while this holds.
+    expect(EMOJI_WORDS).toContain('silly');
+    expect(EMOJI_WORDS).toContain('rainbow');
   });
 });
 
 describe('randomSillyWord', () => {
-  it('always picks a word from the emoji library', () => {
+  it('always picks a word a run can send', () => {
     for (let i = 0; i < 50; i++) {
-      expect(EMOJI_WORDS).toContain(randomSillyWord());
+      expect(SILLY_WORDS).toContain(randomSillyWord());
     }
   });
 
