@@ -3,8 +3,13 @@
 // otherwise null. Intentionally strict: the whole (trimmed) string must be the
 // equation, so normal sentences and bare numbers fall through to other
 // behaviors. Subtraction that would go negative returns null (kept age-safe).
+//
+// A trailing "=answer" is accepted and ignored — a kid typing "1+1=2" (or
+// "1+1=3") is still typing the equation "1+1" and should get its animation
+// either way; the computed `result` always comes from a/op/b, never from what
+// they typed after the "=".
 
-const EQUATION_PATTERN = /^(\d+)\s*([+-])\s*(\d+)$/;
+const EQUATION_PATTERN = /^(\d+)\s*([+-])\s*(\d+)(?:\s*=\s*\d+)?$/;
 
 export function parseEquation(input) {
   if (typeof input !== 'string') return null;

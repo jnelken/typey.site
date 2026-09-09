@@ -45,8 +45,12 @@ describe('parseEquation', () => {
     expect(parseEquation('1+2+3')).toBeNull();
   });
 
-  it('returns null for a trailing equals/answer', () => {
-    expect(parseEquation('3+1=4')).toBeNull();
+  it('ignores a trailing =answer, correct or not', () => {
+    expect(parseEquation('3+1=4')).toEqual({ a: 3, b: 1, op: '+', result: 4 });
+    expect(parseEquation('1+1=2')).toEqual({ a: 1, b: 1, op: '+', result: 2 });
+    expect(parseEquation('1+1=3')).toEqual({ a: 1, b: 1, op: '+', result: 2 });
+    expect(parseEquation('5-2=1')).toEqual({ a: 5, b: 2, op: '-', result: 3 });
+    expect(parseEquation('1 + 1 = 2')).toEqual({ a: 1, b: 1, op: '+', result: 2 });
   });
 
   it('returns null for incomplete expressions', () => {
