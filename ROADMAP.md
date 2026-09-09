@@ -141,6 +141,84 @@ trigger returns early from the send handler, so it plays no animation — and
 those two would stop the run and switch Color Mode on respectively. `SILLY_WORDS`
 in `src/features/easter-eggs/utils/sillyMode.js` is the library minus that set.
 
+## 📐 Planned
+
+### 🍉 Produce Splatter and the Colour It Leaves Behind
+
+Designed, not yet built — the full plan is in
+[`docs/plans/produce-splatter.md`](docs/plans/produce-splatter.md).
+
+Produce is already thrown on the gravity paths and lands at the bottom of the
+screen, where it currently just fades out. It should **burst** instead: fruit on
+`lob` and `arc` splits at the top of its arc, fruit on `bounce` splats on first
+ground contact, both spraying coloured droplets. The word's colour then washes
+the page the same way typing a colour does, lasting until the next line is sent.
+
+Two decisions worth knowing without opening the plan. **No fruit-ninja library**
+— they are canvas- or Phaser-based, and everything here is CSS keyframes on DOM
+nodes, so one could not reuse the existing paths or be driven by the dictionary.
+And the produce-to-colour map holds *colour names*, not hexes, so every wash
+resolves through `SCREEN_COLORS` and the contrast test in
+`tests/unit/screenColor.spec.js` covers the feature for free.
+
+The droplet burst lands as `src/ui/Splatter.vue`, built to take a palette rather
+than a single colour so Party Mode below can reuse it as-is.
+
+### 🔋 What `%` Does
+
+Designed, not yet built — the full plan is in
+[`docs/plans/percent-battery.md`](docs/plans/percent-battery.md).
+
+`$5` is the app's only punctuation trigger; `%` currently does nothing at all,
+falling through every branch of `evaluateEasterEggs` and landing silently. Typing
+`50%` should draw a **battery charged to half** — a horizontal bar filling left to
+right on a looping full-screen canvas, built as a sibling of `src/features/math/`
+rather than as another emoji spawn.
+
+Three decisions worth knowing without opening the plan. **A battery rather than a
+pizza with a slice eaten**: every numeric trigger here maps the number to what
+*appears* — `$5` gives five bills, `5` gives five balloons, `2 + 3` gives five
+dots — and "50% eaten" would invert that rule exactly once, for the most abstract
+quantity in the app. **Two colour bands, not three**: a red/amber/green fill can't
+be drawn, because Okabe-Ito orange measures 2.25:1 against white and the palette
+has no darker amber, so it is vermillion below 20% and green above — the same wall
+that made the "yellow" wash a deep gold. And `% 50` **changes** rather than gains a
+behaviour: it floats fifty balloons today, and will charge a battery instead.
+
+Percent joins the practice prompts across the full 1–100 range. `'%': '💯'` is
+already in `emojiMode.js`, so those prompts render whole with Emoji Mode on.
+
+### 🎨 Emoji Families
+
+Designed, not yet built — the full plan is in
+[`docs/plans/emoji-families.md`](docs/plans/emoji-families.md).
+
+Typing a word spawns a swarm of one emoji: eight identical ⚽ arcing across the
+screen for "ball". A ball is not only a soccer ball, though — it is
+⚽🏀🏈⚾🎾🏐, and all of them should fly. The dictionary already supports a pool
+of glyphs (`emojiSet`, used by fourteen words such as `fish` → 🐠🐟🐡); this
+sweeps all 489 words for the same opportunity, landing about twenty-eight
+families, and moves the mechanism next to the words it describes.
+
+Three decisions worth knowing without opening the plan. **Every member of a
+family must itself be a correct picture of the word** — 🏈 is a ball, 🎳 and ⛳
+are not — which is what keeps a spelling app honest: generic words get families,
+so `ball` mixes but `basketball` stays 🏀. Because the rule is about correctness
+of the picture, selection stays uniform and no weighting is needed. **A family
+belongs to the word, not to its number**: `star` gets the same mix as `stars`,
+which retires today's deliberate singular/plural split for star, heart and
+flower — the plan's one intentional regression. And **families move out of
+`wordMotion.js` into `wordEmoji.js`**, because which glyphs a word can be drawn
+as is a dictionary fact, not a motion fact.
+
+The sweep also turns up a live bug. `facing` applies to every glyph in a swarm,
+so a family that mixes a head-on glyph with a side-on one on a travelling path
+sends the side-on member backwards half the time — which is what `dog`
+(🐶 + 🐕) and `cat` (🐱 + 🐈) do today, since both sit in `FRONT_FACING` and
+never flip. Dropping those four words from that list fixes it, because flipping
+a head-on glyph is a no-op; `FRONT_FACING` is an optimisation, not a
+correctness guard.
+
 ## 🥚 Easter Egg Ideas
 
 ### 🌙 Dark Theme Trigger
@@ -157,7 +235,15 @@ in `src/features/easter-eggs/utils/sillyMode.js` is the library minus that set.
 ### 🎭 Additional Easter Egg Concepts
 
 - **Party Mode**: Typing "party" bursts confetti from each character as it lands,
-  and from the sides of the screen when the line is sent
+  and from the sides of the screen when the line is sent. Confetti and produce
+  splatter are the same primitive — a burst of small coloured particles from a
+  point — so this should be built on `Splatter.vue` from **Produce Splatter**
+  above rather than as a second particle system.
+- **`50% cookie`**: eat a proportion of any dictionary word's picture, reusing
+  `findWordEmoji` the way `5 lions` already does. Needs **What `%` Does** above
+  first, and needs one constraint decided before it's built: a wedge cut through
+  🍪 reads as *eaten*, but the same wedge through 🦁 reads as *broken*, so it has
+  to be restricted to the food and fruit categories with a fallback for the rest.
 
 ## 🔍 Research Needed
 
