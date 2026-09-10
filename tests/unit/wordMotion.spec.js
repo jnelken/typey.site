@@ -54,13 +54,30 @@ describe('which way a travelling thing faces', () => {
   });
 
   it('never flips a glyph drawn head-on', () => {
-    for (const word of ['dog', 'cat', 'lion', 'bus', 'robot']) {
+    for (const word of ['lion', 'bus', 'robot']) {
       expect(motionForWord(word).facing).toBe('any');
+    }
+  });
+
+  it('flips a family that mixes a head-on glyph with a side-on one', () => {
+    // dog and cat pair a head-on primary with a side-on sibling, so they take
+    // the animal default rather than sitting in FRONT_FACING — otherwise 🐕
+    // and 🐈 run tail-first half the time.
+    for (const word of ['dog', 'cat']) {
+      expect(motionForWord(word).facing).toBe('left');
     }
   });
 
   it('knows the plane points the other way', () => {
     expect(motionForWord('plane').facing).toBe('right');
+  });
+});
+
+describe('motion stays about motion', () => {
+  it('returns no emojiSet for any word', () => {
+    for (const word of Object.keys(WORD_EMOJI)) {
+      expect(motionForWord(word).emojiSet).toBeUndefined();
+    }
   });
 });
 

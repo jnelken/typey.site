@@ -4,7 +4,7 @@ import {
   animationTypeForWord,
   isHeavyWord,
 } from '@/features/effects/utils/wordEffect';
-import { WORD_EMOJI, findWordEmoji } from '@/features/typing/utils/wordEmoji';
+import { WORD_EMOJI, WORD_FAMILY, findWordEmoji } from '@/features/typing/utils/wordEmoji';
 import { useEasterEggs } from '@/features/easter-eggs/composables/useEasterEggs';
 
 describe('resolveWordEffect', () => {
@@ -75,6 +75,32 @@ describe('things with weight obey gravity', () => {
 
   it('carries the ball emoji into the effect', () => {
     expect(resolveWordEffect('soccer').options.emoji).toBe('⚽');
+  });
+});
+
+describe('emoji families', () => {
+  it('mixes related balls when the word is the generic one', () => {
+    const set = resolveWordEffect('ball').options.emojiSet;
+    expect(set).toEqual(expect.arrayContaining(['⚽', '🏀', '🏈']));
+  });
+
+  it('keeps a specific ball as a single glyph', () => {
+    const effect = resolveWordEffect('soccer');
+    expect(effect.options.emojiSet).toBeUndefined();
+    expect(effect.options.emoji).toBe('⚽');
+  });
+
+  it('puts the word\'s own emoji first in every family pool', () => {
+    for (const word of Object.keys(WORD_FAMILY)) {
+      const effect = resolveWordEffect(word);
+      expect(effect.options.emojiSet[0]).toBe(WORD_EMOJI[word]);
+    }
+  });
+
+  it('sets options.emoji for every word in the dictionary', () => {
+    for (const word of Object.keys(WORD_EMOJI)) {
+      expect(resolveWordEffect(word).options.emoji).toBe(WORD_EMOJI[word]);
+    }
   });
 });
 

@@ -1,8 +1,10 @@
 import { describe, it, expect } from '@jest/globals';
 import {
   WORD_EMOJI,
+  WORD_FAMILY,
   EMOJI_WORDS,
   emojiForWord,
+  familyForWord,
   findWordEmoji,
 } from '@/features/typing/utils/wordEmoji';
 import { SUGGESTION_WORDS } from '@/features/typing/utils/wordSuggest';
@@ -55,6 +57,44 @@ describe('emojiForWord', () => {
     expect(emojiForWord('the')).toBeNull();
     expect(emojiForWord('')).toBeNull();
     expect(emojiForWord(null)).toBeNull();
+  });
+});
+
+describe('WORD_FAMILY', () => {
+  it('only lists words that already live in the dictionary', () => {
+    const orphans = Object.keys(WORD_FAMILY).filter(word => !WORD_EMOJI[word]);
+    expect(orphans).toEqual([]);
+  });
+
+  it('gives every family a non-empty list of distinct glyphs', () => {
+    for (const [word, family] of Object.entries(WORD_FAMILY)) {
+      expect(Array.isArray(family)).toBe(true);
+      expect(family.length).toBeGreaterThan(0);
+      for (const glyph of family) {
+        expect(typeof glyph).toBe('string');
+        expect(glyph.length).toBeGreaterThan(0);
+      }
+      expect(new Set(family).size).toBe(family.length);
+    }
+  });
+});
+
+describe('familyForWord', () => {
+  it('ignores case and surrounding space', () => {
+    expect(familyForWord('  BALL ')).toEqual(WORD_FAMILY.ball);
+    expect(familyForWord('Ball')).toEqual(WORD_FAMILY.ball);
+  });
+
+  it('returns null for a word it does not hold', () => {
+    expect(familyForWord('soccer')).toBeNull();
+    expect(familyForWord('the')).toBeNull();
+    expect(familyForWord('')).toBeNull();
+  });
+
+  it('returns null for non-string input', () => {
+    expect(familyForWord(null)).toBeNull();
+    expect(familyForWord(undefined)).toBeNull();
+    expect(familyForWord(42)).toBeNull();
   });
 });
 
