@@ -17,6 +17,8 @@ import { useColorMode } from '@/features/easter-eggs/composables/useColorMode';
 import { isColorTrigger } from '@/features/easter-eggs/utils/colorMode';
 import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
 import { parseEquation } from '@/features/math/utils/parseEquation';
+import { usePercentAnimation } from '@/features/percent/composables/usePercentAnimation';
+import { parsePercent } from '@/features/percent/utils/parsePercent';
 
 const TYPING_APP_KEY = Symbol('typing-app');
 
@@ -44,6 +46,7 @@ export function createTypingApp() {
   });
   const colorSystem = useColorMode();
   const mathSystem = useMathAnimation();
+  const percentSystem = usePercentAnimation();
 
   // Handle Enter key press
   const handleEnterKey = async () => {
@@ -106,6 +109,19 @@ export function createTypingApp() {
         return;
       }
 
+      // Percent: "50%" or "%50" draws a battery charged that much, and speaks
+      // the amount instead of running the usual emoji/balloon effects.
+      const percent = parsePercent(trimmedText);
+      if (percent) {
+        percentSystem.play(percent);
+        await typingAPI.submitEntry(typingState.currentText.value);
+        typingState.clearCurrentText();
+        if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
+          speechSystem.speakLine(`${percent.percent} percent`);
+        }
+        return;
+      }
+
       // Easter eggs: emoji effects based on input
       easterEggsSystem.evaluateEasterEggs(
         trimmedText,
@@ -133,8 +149,11 @@ export function createTypingApp() {
     speakLetter: speechSystem.speakLetter,
     isSpeechEnabled: speechSystem.isSpeechEnabled,
     onEnterPressed: handleEnterKey,
-    // The math animation stays up (replayable) until the next character is typed.
-    onPrintableKey: () => mathSystem.clear(),
+    // Math and battery animations stay up (replayable) until the next character.
+    onPrintableKey: () => {
+      mathSystem.clear();
+      percentSystem.clear();
+    },
     onEscapePressed: () => {
       sillySystem.stop();
       balloonsSystem.popAllBalloons();
@@ -202,6 +221,7 @@ export function createTypingApp() {
     emojiEffects: emojisSystem.effects,
     screenColor: screenColorSystem.screenColor,
     mathEquation: mathSystem.current,
+    batteryCharge: percentSystem.current,
     promptWord: wordPromptSystem.promptWord,
     promptEmoji: wordPromptSystem.promptEmoji,
     promptType: wordPromptSystem.promptType,

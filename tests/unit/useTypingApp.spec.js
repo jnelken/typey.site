@@ -556,6 +556,41 @@ describe('useTypingApp', () => {
     });
   });
 
+  describe('percent battery handling', () => {
+    it('plays the battery for 50% and floats no balloons', async () => {
+      typingApp.currentText.value = '50%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 50 });
+      expect(typingApp.balloons.value).toEqual([]);
+    });
+
+    it('plays the battery for "% 50" instead of floating fifty balloons', async () => {
+      // Behaviour change: before the percent branch, "% 50" split into a bare
+      // "50" token and floated fifty balloons.
+      typingApp.currentText.value = '% 50';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 50 });
+      expect(typingApp.balloons.value).toEqual([]);
+    });
+
+    it('dismisses the battery when the child types the next character', async () => {
+      typingApp.currentText.value = '50%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).not.toBeNull();
+      await typingApp.onKeyDown({
+        key: 'a',
+        preventDefault: jest.fn(),
+        target: {
+          get selectionStart() {
+            return typingApp.currentText.value.length;
+          },
+          setSelectionRange: jest.fn(),
+        },
+      });
+      expect(typingApp.batteryCharge.value).toBeNull();
+    });
+  });
+
   describe('silly mode', () => {
     const pressEnter = () =>
       typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });

@@ -65,6 +65,10 @@ describe('Secret words from settings', () => {
       expect(getByText(secret.description)).toBeTruthy();
     });
 
+    // The percent battery trigger is findable from Settings → Secret Words.
+    expect(getByText('50%')).toBeTruthy();
+    expect(getByText('Charges a battery that much')).toBeTruthy();
+
     expect(container.querySelectorAll('.guide-card:not(.secret)').length).toBe(0);
   });
 

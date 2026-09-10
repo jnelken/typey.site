@@ -54,6 +54,7 @@ A fun, interactive typing application designed for kids with sound effects, text
 - **Emoji Mode** - every letter, digit and symbol draws as a matching emoji (A → 🍎, B → 🐻); speech still reads the real words
 - **Silly Mode** - type "silly" to have five random words send themselves, three seconds apart, each with its own animation; Escape (or "silly" again) stops them
 - **Color Mode** - type "color" (or "colour", or "rainbow") to paint every character a different rainbow color; type it again to go back to plain text
+- **Percent Battery** - type `50%` (or any percent from 0–100) to fill a battery to that charge; low charge is red, the rest is green
 - **Auto-scroll** to keep content in view
 
 ### 🔊 **Speech Synthesis**

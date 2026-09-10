@@ -141,6 +141,34 @@ trigger returns early from the send handler, so it plays no animation — and
 those two would stop the run and switch Color Mode on respectively. `SILLY_WORDS`
 in `src/features/easter-eggs/utils/sillyMode.js` is the library minus that set.
 
+### 🔋 Percent Battery
+
+Shipped 2026-09-09. Typing `50%` draws a battery charged to half — a full-screen
+canvas bar filling left to right, looping so it can be watched more than once.
+Values clamp to 0–100; a full charge gets a bolt and a pulse. Percent joins the
+practice prompts across 1–100. Built as a sibling of `src/features/math/` rather
+than another emoji spawn. See `src/features/percent/`.
+
+**Decisions this made that the concept left open.** **A battery rather than a
+pizza with a slice eaten**: every numeric trigger here maps the number to what
+*appears* — `$5` gives five bills, `5` gives five balloons, `2 + 3` gives five
+dots — and "50% eaten" would invert that rule exactly once, for the most abstract
+quantity in the app. A battery at 50% keeps the rule, and it is a proportion a
+four-year-old has already seen an adult worry about. **An exact-fill bar with
+ticks, not discrete segments**: the fill width is `percent / 100` of the inner
+body, with marks at 25 / 50 / 75 drawn over it — a bar with no scale can't be
+read, the same argument `dotLayout.js` makes for grouping dots into fives.
+**Two colour bands, not three**: this is measured, not taste. Fill has to clear
+WCAG 3:1 non-text contrast, and the harshest ground is the `black` wash
+`#d4d8dd`, not white. Against that wash only Okabe-Ito blue clears unaided; no
+palette colour can carry a low/high distinction on its own. The fill is stroked
+in `COLOR_TEXT` `#2b2d42` instead, so WCAG 1.4.11 is satisfied by the boundary,
+and both bands clear 3:1 against that outline — vermillion ≤20%, green above.
+There is no amber middle because there is no darker amber in the palette that
+reaches the floor; the same wall that made the "yellow" wash a deep gold. And
+`% 50` **changes** rather than gains a behaviour: it floated fifty balloons
+before, and now charges a battery instead.
+
 ## 📐 Planned
 
 ### 🍉 Produce Splatter and the Colour It Leaves Behind
@@ -164,29 +192,18 @@ resolves through `SCREEN_COLORS` and the contrast test in
 The droplet burst lands as `src/ui/Splatter.vue`, built to take a palette rather
 than a single colour so Party Mode below can reuse it as-is.
 
-### 🔋 What `%` Does
+### 🍪 `50% cookie`
 
-Designed, not yet built — the full plan is in
-[`docs/plans/percent-battery.md`](docs/plans/percent-battery.md).
+Out of scope for Percent Battery, worth building later. Eating a proportion of
+any dictionary word's emoji — `50% cookie` — would reuse `findWordEmoji` the way
+`5 lions` already does, and generalise the same way counting did. One constraint
+has to be stated before it's built: a wedge through 🍪 reads as *eaten*, and the
+same wedge through 🦁 reads as *broken*, so it would have to be restricted to the
+dictionary's food and fruit categories with a fallback for everything else.
 
-`$5` is the app's only punctuation trigger; `%` currently does nothing at all,
-falling through every branch of `evaluateEasterEggs` and landing silently. Typing
-`50%` should draw a **battery charged to half** — a horizontal bar filling left to
-right on a looping full-screen canvas, built as a sibling of `src/features/math/`
-rather than as another emoji spawn.
-
-Three decisions worth knowing without opening the plan. **A battery rather than a
-pizza with a slice eaten**: every numeric trigger here maps the number to what
-*appears* — `$5` gives five bills, `5` gives five balloons, `2 + 3` gives five
-dots — and "50% eaten" would invert that rule exactly once, for the most abstract
-quantity in the app. **Two colour bands, not three**: a red/amber/green fill can't
-be drawn, because Okabe-Ito orange measures 2.25:1 against white and the palette
-has no darker amber, so it is vermillion below 20% and green above — the same wall
-that made the "yellow" wash a deep gold. And `% 50` **changes** rather than gains a
-behaviour: it floats fifty balloons today, and will charge a battery instead.
-
-Percent joins the practice prompts across the full 1–100 range. `'%': '💯'` is
-already in `emojiMode.js`, so those prompts render whole with Emoji Mode on.
+This is also what makes the percent early return genuinely load-bearing. Bare
+`50%` can't reach the counting path anyway; `50% cookie` would hit `findWordEmoji`
+and `countForWord` and claim the line first.
 
 ### 🎨 Emoji Families
 
@@ -239,11 +256,8 @@ correctness guard.
   splatter are the same primitive — a burst of small coloured particles from a
   point — so this should be built on `Splatter.vue` from **Produce Splatter**
   above rather than as a second particle system.
-- **`50% cookie`**: eat a proportion of any dictionary word's picture, reusing
-  `findWordEmoji` the way `5 lions` already does. Needs **What `%` Does** above
-  first, and needs one constraint decided before it's built: a wedge cut through
-  🍪 reads as *eaten*, but the same wedge through 🦁 reads as *broken*, so it has
-  to be restricted to the food and fruit categories with a fallback for the rest.
+- **`50% cookie`**: see **`50% cookie`** under Planned — the bare percent battery
+  is shipped; this is the food-restricted eaten-wedge follow-on.
 
 ## 🔍 Research Needed
 

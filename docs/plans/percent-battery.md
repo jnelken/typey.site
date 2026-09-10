@@ -92,24 +92,36 @@ property of being a proportion a four-year-old has already seen an adult worry a
 
 The obvious design is red / amber / green. The palette can't do it.
 
-Fill colour has to clear the WCAG **3:1 non-text contrast** minimum against the page, which
-the screen-colour wash can repaint to any of ten pale grounds (white being the worst case).
-Measured against white:
+Fill colour has to clear the WCAG **3:1 non-text contrast** minimum. The screen-colour wash
+can repaint the ground to any of ten pale colours, and **the worst case is the `black` wash
+`#d4d8dd`, not white** — for a dark fill on a light ground, contrast *falls* as the ground
+darkens, so white is the friendliest ground, not the harshest. Measured against `#d4d8dd`:
 
-| Colour | Ratio vs `#ffffff` | |
-| --- | --- | --- |
-| Vermillion `#D55E00` | 3.87 | ✅ |
-| Green `#009E73` | 3.42 | ✅ |
-| Orange `#E69F00` | **2.25** | ❌ |
-| Yellow `#F0E442` | **1.32** | ❌ |
+| Colour | vs `#d4d8dd` | vs `#ffffff` | |
+| --- | --- | --- | --- |
+| Vermillion `#D55E00` | **2.70** | 3.87 | ❌ |
+| Green `#009E73` | **2.39** | 3.42 | ❌ |
+| Orange `#E69F00` | 1.57 | 2.25 | ❌ |
+| Yellow `#F0E442` | 1.01 | 1.32 | ❌ |
+| Blue `#0072B2` | 3.62 | 5.19 | ✅ |
 
-There is no darker amber in the Okabe-Ito palette, so the middle band has nothing to be
-drawn in. This is the same wall `screenColor.js` hit, and the reason its "yellow" wash
-landed as a deep gold.
+**Only blue clears it unaided — so no palette colour can carry a low/high distinction on its
+own.** Rather than collapse to one colour, the fill rect is **stroked in `COLOR_TEXT`
+`#2b2d42`** (9.42 against the worst wash). WCAG 1.4.11 is satisfied by the boundary rather
+than by the fill against the page, and both bands clear 3:1 against that outline —
+vermillion 3.49, green 3.94. The stroke also gives the charge edge — the one edge that
+carries the meaning — a hard boundary at every percent below 100, which it otherwise
+wouldn't have.
 
-So: **`≤20%` vermillion, above that green.** Low charge is red, like every battery indicator
-a child has already seen; there is no middle. Don't write the drawing code around three
-bands and discover this at test time.
+So: **`≤20%` vermillion, above that green, both outlined.** Low charge is red, like every
+battery indicator a child has already seen; there is no middle, because there is no darker
+amber in Okabe-Ito to draw one in. This is the same wall `screenColor.js` hit, and the
+reason its "yellow" wash landed as a deep gold.
+
+Note that vermillion and green contrast only 1.13 against *each other* — they differ in hue,
+not luminance, so `dotLayout.js`'s "differ in luminance" comment doesn't hold for this pair.
+It doesn't need to: the two bands never appear at the same time, and the bar length and the
+numeric label both carry the same information.
 
 ---
 
@@ -176,6 +188,10 @@ Per frame:
 - **Fill** — rounded rect inset by `bodyH * 0.12`, width `innerW * (percent / 100)`,
   animated `0 → percent` with `smoothstep` across `PLAY_MS`. Colour picked from the
   **final** percent, not the animating value, so it doesn't change colour mid-fill.
+  **Stroked in `COLOR_TEXT` at `bodyH * 0.03`** — half the shell's weight, so it reads as
+  an edge rather than a second shell. This stroke is what carries the WCAG 1.4.11 boundary
+  (see the colour-band decision above); without it the charge edge has no contrast against
+  a dark wash. Skip the stroke only when `percent` is 0 and there is no rect to draw.
 - **Ticks** at 25 / 50 / 75, drawn *over* the fill in `rgba(0,0,0,0.18)` — the alpha the
   dots already use for their stroke. A bar with no scale can't be read; this is the same
   argument `dotLayout.js` makes for grouping dots into fives.
@@ -245,9 +261,12 @@ New:
 - `tests/unit/usePercentAnimation.spec.js` — mirror `tests/unit/useMathAnimation.spec.js`
   case for case, **plus a `play({ percent: 0 })` case** asserting `current` becomes
   non-null.
-- `tests/unit/batteryColor.spec.js` — both fill colours clear 3:1 against every wash in
-  `screenColor.js`. Copy the inline `luminance` / `contrast` helpers from
-  `tests/unit/screenColor.spec.js`, which is where that pattern already lives.
+- `tests/unit/batteryColor.spec.js` — both fill colours clear 3:1 **against the
+  `COLOR_TEXT` outline they are stroked with**, and that outline itself clears 3:1 against
+  every wash in `screenColor.js` (plus `DEFAULT_SCREEN_COLOR`). Copy the inline `luminance`
+  / `contrast` helpers from `tests/unit/screenColor.spec.js`, which is where that pattern
+  already lives. **Do not assert the fills against the washes directly — they do not clear
+  3:1 there and are not required to; the outline is the boundary.**
 
 Extended:
 

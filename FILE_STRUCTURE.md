@@ -44,6 +44,10 @@ typey.site/
 │   │   │   ├── components/MathAnimation.vue
 │   │   │   ├── composables/useMathAnimation.js
 │   │   │   └── utils/                     # dotLayout.js, parseEquation.js
+│   │   ├── percent/                       # "50%" battery charge animation
+│   │   │   ├── components/BatteryAnimation.vue
+│   │   │   ├── composables/usePercentAnimation.js
+│   │   │   └── utils/parsePercent.js
 │   │   └── audio/
 │   │       └── composables/               # useSound.js, useSpeech.js
 │   ├── composables/
@@ -51,7 +55,8 @@ typey.site/
 │   ├── constants/
 │   │   ├── balloons.js
 │   │   ├── emojiEasterEggs.js             # Effects no dictionary word can carry ($5)
-│   │   └── layout.js
+│   │   ├── layout.js
+│   │   └── palette.js                     # Shared Okabe-Ito colours (dots + battery)
 │   ├── ui/                                # Shared presentational components
 │   │   ├── AnimatedText.vue               # Per-character text: speech, colour, feedback
 │   │   ├── Balloon.vue
@@ -88,6 +93,7 @@ typey.site/
 | A different way a word should move | `src/features/effects/utils/wordMotion.js` |
 | A new animation path or flourish | `src/ui/EmojiEffect.vue`, then name it in `wordMotion.js` |
 | A hidden mode with its own trigger word | `src/features/easter-eggs/` |
+| A punctuation-triggered canvas animation (like `%` or `+`) | `src/features/percent/` or `src/features/math/`, sibling feature slices |
 | A component two features both need | `src/ui/` |
 
 The dictionary is the source of truth. Adding a word there puts it into the
