@@ -51,6 +51,7 @@ A fun, interactive typing application designed for kids with sound effects, text
 - **Practice prompts** - a word to copy, with each letter turning red as it's spelled right; the first wrong letter turns blue, and a different first letter means you're typing something else, so nothing lights up at all
 - **Colour words wash the screen** - type "red" and the whole page turns red until you send the next line
 - **Motion that matches meaning** - animals run (and turn to face the way they're going), food is thrown and falls back, weather rains, balloons float
+- **Emoji families** - typing a generic word like "ball" or "tree" mixes related glyphs; specific words like "soccer" stay a single picture
 - **Emoji Mode** - every letter, digit and symbol draws as a matching emoji (A → 🍎, B → 🐻); speech still reads the real words
 - **Silly Mode** - type "silly" to have five random words send themselves, three seconds apart, each with its own animation; Escape (or "silly" again) stops them
 - **Color Mode** - type "color" (or "colour", or "rainbow") to paint every character a different rainbow color; type it again to go back to plain text

@@ -169,6 +169,41 @@ reaches the floor; the same wall that made the "yellow" wash a deep gold. And
 `% 50` **changes** rather than gains a behaviour: it floated fifty balloons
 before, and now charges a battery instead.
 
+### 🎨 Emoji Families
+
+Shipped 2026-09-09. Typing a word spawned a swarm of one emoji — eight identical
+⚽ for "ball". A ball is not only a soccer ball, so `ball` now flies as
+⚽🏀🏈⚾🎾🏐, and sixty-six words carry a family like it. The dictionary already
+had the mechanism (`emojiSet`, used by fourteen entries such as `fish` → 🐠🐟🐡),
+but it lived in the motion table; the whole 489-word dictionary is swept for the
+same opportunity and the table moves into `wordEmoji.js`, next to the words it
+describes, because which glyphs a word can be drawn as is a dictionary fact
+rather than a motion fact. See `WORD_FAMILY` and `familyForWord` in
+`src/features/typing/utils/wordEmoji.js`.
+
+**The authoring rule.** Every member of a family must itself be a correct picture
+of the word — 🏈 is a ball, 🎳 and ⛳ are not — which is what keeps a spelling app
+honest. Generic words get families, so `ball` mixes but `basketball` stays 🏀;
+`soccer` is the control case, asserted in `tests/unit/wordEffect.spec.js` rather
+than assumed. Because the rule is about correctness of the picture, selection
+stays uniform and no weighting is needed.
+
+**A family belongs to the word, not to its number.** `star` gets the same mix as
+`stars`, which retires the deliberate singular/plural split for star, heart and
+flower — the one intentional regression. `hearts` also stops excluding its own
+💕, which rejoins the swarm; it is a heart.
+
+**The sweep fixed a live bug.** `facing` is per-word and applies to every glyph
+in a swarm, so a family mixing a head-on glyph with a side-on one on a travelling
+path sent the side-on member backwards half the time — which is what `dog`
+(🐶 + 🐕) and `cat` (🐱 + 🐈) did, since both sat in `FRONT_FACING` and never
+flipped. Dropping those four words from that list fixes it: flipping a head-on
+glyph is a no-op, so the list is an optimisation and not a correctness guard.
+The rule it leaves behind is that when a family mixes orientations on a
+travelling path, take the side-on member's orientation. `boat` was rejected as a
+family for exactly that reason — 🚤 faces left, ⛵ does not, and there is no third
+glyph to break the tie.
+
 ## 📐 Planned
 
 ### 🍉 Produce Splatter and the Colour It Leaves Behind
@@ -204,37 +239,6 @@ dictionary's food and fruit categories with a fallback for everything else.
 This is also what makes the percent early return genuinely load-bearing. Bare
 `50%` can't reach the counting path anyway; `50% cookie` would hit `findWordEmoji`
 and `countForWord` and claim the line first.
-
-### 🎨 Emoji Families
-
-Designed, not yet built — the full plan is in
-[`docs/plans/emoji-families.md`](docs/plans/emoji-families.md).
-
-Typing a word spawns a swarm of one emoji: eight identical ⚽ arcing across the
-screen for "ball". A ball is not only a soccer ball, though — it is
-⚽🏀🏈⚾🎾🏐, and all of them should fly. The dictionary already supports a pool
-of glyphs (`emojiSet`, used by fourteen words such as `fish` → 🐠🐟🐡); this
-sweeps all 489 words for the same opportunity, landing about twenty-eight
-families, and moves the mechanism next to the words it describes.
-
-Three decisions worth knowing without opening the plan. **Every member of a
-family must itself be a correct picture of the word** — 🏈 is a ball, 🎳 and ⛳
-are not — which is what keeps a spelling app honest: generic words get families,
-so `ball` mixes but `basketball` stays 🏀. Because the rule is about correctness
-of the picture, selection stays uniform and no weighting is needed. **A family
-belongs to the word, not to its number**: `star` gets the same mix as `stars`,
-which retires today's deliberate singular/plural split for star, heart and
-flower — the plan's one intentional regression. And **families move out of
-`wordMotion.js` into `wordEmoji.js`**, because which glyphs a word can be drawn
-as is a dictionary fact, not a motion fact.
-
-The sweep also turns up a live bug. `facing` applies to every glyph in a swarm,
-so a family that mixes a head-on glyph with a side-on one on a travelling path
-sends the side-on member backwards half the time — which is what `dog`
-(🐶 + 🐕) and `cat` (🐱 + 🐈) do today, since both sit in `FRONT_FACING` and
-never flip. Dropping those four words from that list fixes it, because flipping
-a head-on glyph is a no-op; `FRONT_FACING` is an optimisation, not a
-correctness guard.
 
 ## 🥚 Easter Egg Ideas
 
