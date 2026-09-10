@@ -65,7 +65,7 @@ const DEFAULT_MOTION = { paths: ['float', 'burst'], flairs: ['none'], facing: 'a
 // it's travelling changes nothing except which whisker is on the left. Listed
 // so the flip is spent only where it reads.
 const FRONT_FACING = [
-  'cat', 'kitty', 'dog', 'puppy', 'mouse', 'hamster', 'rabbit', 'bunny', 'fox',
+  'mouse', 'hamster', 'rabbit', 'bunny', 'fox',
   'bear', 'panda', 'koala', 'tiger', 'lion', 'lions', 'cow', 'pig', 'frog',
   'monkey', 'gorilla', 'wolf', 'horse', 'pony', 'chick', 'penguin', 'raccoon',
   'sloth', 'bug', 'caterpillar', 'ladybug', 'spider', 'scorpion', 'web',
@@ -82,7 +82,7 @@ const WORD_MOTION = Object.freeze({
     'volleyball', 'bowling', 'golf', 'hockey'], { paths: ['bounce', 'arc'], flairs: ['spin'] }),
   ...fill(['balloon', 'kite'], { paths: ['float'], flairs: ['bobble'] }),
   ...fill(['party', 'yay', 'hooray', 'congrats', 'fun'],
-    { paths: ['burst'], flairs: ['spin', 'none'], emojiSet: ['🎉', '🎊'], count: 40 }),
+    { paths: ['burst'], flairs: ['spin', 'none'], count: 40 }),
   ...fill(['gift', 'present'], { paths: ['rain'], flairs: ['spin'] }),
   ...fill(['music', 'note', 'song'], { paths: ['float'], flairs: ['bobble'], count: 20 }),
   // Athletes are drawn side-on, facing left, so they turn around like an animal.
@@ -92,7 +92,7 @@ const WORD_MOTION = Object.freeze({
 
   // Symbols that want to be felt rather than read.
   ...fill(['heart'], { paths: ['float'], flairs: ['throb'], count: 20 }),
-  ...fill(['hearts'], { paths: ['float'], flairs: ['throb'], emojiSet: ['💖', '💗', '💞'], count: 20 }),
+  ...fill(['hearts'], { paths: ['float'], flairs: ['throb'], count: 20 }),
   ...fill(['sparkles'], { paths: ['float'], flairs: ['spin'], count: 24 }),
   ...fill(['hundred', 'check', 'yes'], { paths: ['burst'], flairs: ['grow'] }),
 
@@ -100,11 +100,11 @@ const WORD_MOTION = Object.freeze({
   ...fill(['snow', 'snowflake'], { paths: ['rain'], flairs: ['spin'], count: 40 }),
   ...fill(['rain'], { paths: ['rain'], flairs: ['none'], count: 40 }),
   ...fill(['star'], { paths: ['float'], flairs: ['spin'], count: 24 }),
-  ...fill(['stars'], { paths: ['float'], flairs: ['spin'], emojiSet: ['⭐', '✨'], count: 24 }),
+  ...fill(['stars'], { paths: ['float'], flairs: ['spin'], count: 24 }),
   ...fill(['sun', 'sunny', 'moon', 'rainbow', 'fire', 'lightning'],
     { paths: ['float'], flairs: ['pulse'], count: 8 }),
   ...fill(['flower'], { paths: ['float'], flairs: ['bobble'], count: 20 }),
-  ...fill(['flowers'], { paths: ['float'], flairs: ['bobble'], emojiSet: ['🌸', '🌼', '🌷'], count: 20 }),
+  ...fill(['flowers'], { paths: ['float'], flairs: ['bobble'], count: 20 }),
   ...fill(['tornado'], { paths: ['run'], flairs: ['spin'], facing: 'any' }),
   ...fill(['wind'], { paths: ['run'], flairs: ['none'], facing: 'right' }),
 
@@ -117,31 +117,31 @@ const WORD_MOTION = Object.freeze({
   // Heavy things, wherever their category filed them.
   ...fill(['rock', 'log', 'coin', 'gem', 'ring', 'medal', 'trophy', 'dice', 'hammer',
     'pumpkin'], { paths: ['bounce', 'lob'], flairs: ['spin', 'none'] }),
-  ...fill(['money'], { paths: ['rain'], flairs: ['spin'], emojiSet: ['💵', '💸'], count: 40 }),
+  ...fill(['money'], { paths: ['rain'], flairs: ['spin'], count: 40 }),
 
   // Food with a shape of its own.
   ...fill(['pizza'], { paths: ['rain'], flairs: ['spin'], count: 30 }),
-  ...fill(['apple'], { paths: ['lob', 'bounce'], flairs: ['spin'], emojiSet: ['🍎', '🍏'] }),
-  ...fill(['icecream', 'ice cream'], { paths: ['float'], flairs: ['bobble'], emojiSet: ['🍦', '🍨'], count: 16 }),
+  ...fill(['apple'], { paths: ['lob', 'bounce'], flairs: ['spin'] }),
+  ...fill(['icecream', 'ice cream'], { paths: ['float'], flairs: ['bobble'], count: 16 }),
   ...fill(['water', 'milk', 'juice', 'tea', 'soda', 'honey'], { paths: ['rain'], flairs: ['none'] }),
 
-  // Animals whose glyphs come in a pair, and the ones that don't run.
-  ...fill(['dino', 'dinosaur'], { paths: ['run'], flairs: ['bobble'], emojiSet: ['🦕', '🦖'], count: 6 }),
-  ...fill(['dog', 'puppy'], { paths: ['run'], flairs: ['bobble'], emojiSet: ['🐶', '🐕'], count: 6 }),
-  ...fill(['cat', 'kitty'], { paths: ['run'], flairs: ['bobble'], emojiSet: ['🐱', '🐈'], count: 6 }),
-  ...fill(['fish'], { paths: ['run'], flairs: ['bobble'], emojiSet: ['🐠', '🐟', '🐡'], count: 18 }),
+  // Animals with motion overrides, and the ones that don't run.
+  ...fill(['dino', 'dinosaur'], { paths: ['run'], flairs: ['bobble'], count: 6 }),
+  ...fill(['dog', 'puppy'], { paths: ['run'], flairs: ['bobble'], count: 6 }),
+  ...fill(['cat', 'kitty'], { paths: ['run'], flairs: ['bobble'], count: 6 }),
+  ...fill(['fish'], { paths: ['run'], flairs: ['bobble'], count: 18 }),
   ...fill(['bee'], { paths: ['float'], flairs: ['bobble'], count: 16 }),
   ...fill(['butterfly', 'butterflies'], { paths: ['float'], flairs: ['bobble'], count: 10 }),
   ...fill(['bird', 'dove', 'eagle', 'owl', 'parrot', 'bat'], { paths: ['float'], flairs: ['bobble'] }),
   ...fill(['snail', 'worm', 'sloth', 'turtle'], { paths: ['run'], flairs: ['none'] }),
-  ...fill(['dragon'], { paths: ['float'], flairs: ['bobble'], emojiSet: ['🐉', '🐲'], count: 6 }),
+  ...fill(['dragon'], { paths: ['float'], flairs: ['bobble'], count: 6 }),
   ...fill(['unicorn', 'unicorns'], { paths: ['run'], flairs: ['bobble'], facing: 'left', count: 5 }),
   ...fill(['paw', 'feather', 'web', 'bone'], { paths: ['rain'], flairs: ['none'] }),
 
   // Vehicles. Emergency vehicles and buses are drawn head-on; the plane points
   // up and to the right, so it is the one thing that flips the other way.
-  ...fill(['train'], { paths: ['run'], flairs: ['none'], emojiSet: ['🚂', '🚃'], count: 5 }),
-  ...fill(['choo'], { paths: ['run'], flairs: ['none'], emojiSet: ['🚂', '🚃'], count: 5 }),
+  ...fill(['train'], { paths: ['run'], flairs: ['none'], count: 5 }),
+  ...fill(['choo'], { paths: ['run'], flairs: ['none'], count: 5 }),
   ...fill(['plane', 'airplane'], { paths: ['run'], flairs: ['none'], facing: 'right' }),
   ...fill(['bus', 'school bus', 'ambulance', 'firetruck', 'fire truck', 'police car', 'taxi'],
     { paths: ['run'], flairs: ['none'], facing: 'any' }),
@@ -173,7 +173,7 @@ function pick(list, word, salt) {
 }
 
 /**
- * How a word moves: `{ path, flair, facing, emojiSet?, count? }`.
+ * How a word moves: `{ path, flair, facing, count? }`.
  *
  * Deterministic — a child learns that the football bounces and the bee bobs,
  * and it stays true every time they type it.
@@ -192,7 +192,6 @@ export function motionForWord(word) {
   const facing = FRONT_FACING.includes(key) ? 'any' : (motion.facing ?? 'left');
 
   const resolved = { path, flair, facing };
-  if (motion.emojiSet) resolved.emojiSet = motion.emojiSet;
   if (motion.count) resolved.count = motion.count;
   return resolved;
 }

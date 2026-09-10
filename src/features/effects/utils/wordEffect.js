@@ -1,4 +1,4 @@
-import { findWordEmoji } from '@/features/typing/utils/wordEmoji';
+import { findWordEmoji, familyForWord } from '@/features/typing/utils/wordEmoji';
 import { motionForWord, PATH_OPTIONS } from '@/features/effects/utils/wordMotion';
 
 // Every word in the dictionary gets an animation, and the dictionary decides
@@ -53,9 +53,9 @@ export function effectForWord(word, emoji, text = '') {
   const motion = motionForWord(word);
   const { count: pathCount, ...pathOptions } = PATH_OPTIONS[motion.path];
 
-  const options = { ...pathOptions, flair: motion.flair, facing: motion.facing };
-  if (motion.emojiSet) options.emojiSet = motion.emojiSet;
-  else options.emoji = emoji;
+  const options = { ...pathOptions, flair: motion.flair, facing: motion.facing, emoji };
+  const family = familyForWord(word);
+  if (family) options.emojiSet = [...new Set([emoji, ...family])];
 
   const count = countForWord(text, word) ?? motion.count ?? pathCount;
 

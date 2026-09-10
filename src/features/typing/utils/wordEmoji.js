@@ -592,6 +592,109 @@ export const WORD_CATEGORIES = Object.freeze({
   symbol: SYMBOL_EMOJI,
 });
 
+// Related glyphs a word can also be drawn as. Authoring rules a future editor
+// cannot infer from the data alone:
+// (a) Every member must itself be a correct picture of the word (🏈 is a ball;
+//     🎳 and ⛳ are not). Generic words get families; specific words (soccer,
+//     basketball, poodle, rose) stay single.
+// (b) A family belongs to the word, not to its number — star and stars share
+//     one family.
+// (c) When a family mixes orientations on a travelling path (run/arc), take
+//     the side-on member's orientation.
+export const WORD_FAMILY = Object.freeze({
+  // Play
+  ball: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐'],
+  book: ['📚', '📖', '📕', '📗', '📘'],
+  toy: ['🧸', '🪀', '🧩'],
+  game: ['🎮', '🕹️'],
+  cards: ['🃏', '🎴'],
+  medal: ['🏅', '🎖️'],
+  music: ['🎵', '🎶'],
+  note: ['🎵', '🎶'],
+  song: ['🎵', '🎶'],
+
+  // Symbol
+  heart: ['❤️', '💕', '💖', '💗', '💞', '🧡', '💛', '💚', '💙', '💜'],
+  hearts: ['❤️', '💕', '💖', '💗', '💞', '🧡', '💛', '💚', '💙', '💜'],
+  check: ['✅', '☑️', '✔️'],
+  yes: ['✅', '☑️', '✔️'],
+  sparkles: ['✨', '💫'],
+
+  // Nature
+  tree: ['🌳', '🌲', '🌴'],
+  leaf: ['🍃', '🍂', '🍁'],
+  earth: ['🌍', '🌎', '🌏'],
+  world: ['🌍', '🌎', '🌏'],
+  mountain: ['⛰️', '🏔️', '🗻'],
+  plant: ['🪴', '🌱', '🌿'],
+  rain: ['🌧️', '💧'],
+  star: ['⭐', '🌟', '✨'],
+  stars: ['⭐', '🌟', '✨'],
+  flower: ['🌸', '🌼', '🌷', '🌺'],
+  flowers: ['🌸', '🌼', '🌷', '🌺'],
+
+  // Food and produce
+  cake: ['🎂', '🍰'],
+  candy: ['🍬', '🍭', '🍫'],
+  bread: ['🍞', '🥖'],
+  toast: ['🍞', '🥖'],
+  meat: ['🍖', '🍗'],
+  pepper: ['🌶️', '🫑'],
+  apple: ['🍎', '🍏'],
+  icecream: ['🍦', '🍨'],
+  'ice cream': ['🍦', '🍨'],
+
+  // Animals
+  dog: ['🐶', '🐕', '🐩'],
+  puppy: ['🐶', '🐕', '🐩'],
+  cat: ['🐱', '🐈'],
+  kitty: ['🐱', '🐈'],
+  bear: ['🐻', '🐻‍❄️'],
+  bird: ['🐦', '🕊️'],
+  fish: ['🐠', '🐟', '🐡'],
+  dino: ['🦕', '🦖'],
+  dinosaur: ['🦕', '🦖'],
+  dragon: ['🐉', '🐲'],
+
+  // Vehicles
+  car: ['🚗', '🚙'],
+  cars: ['🚗', '🚙'],
+  truck: ['🚚', '🚛'],
+  plane: ['✈️', '🛩️'],
+  airplane: ['✈️', '🛩️'],
+  train: ['🚂', '🚃'],
+  choo: ['🚂', '🚃'],
+
+  // Clothes
+  hat: ['🎩', '🧢', '👒'],
+  shoe: ['👟', '👞', '🥾'],
+  shoes: ['👟', '👞', '🥾'],
+  shirt: ['👕', '👚'],
+
+  // Places and things
+  house: ['🏠', '🏡'],
+  home: ['🏠', '🏡'],
+  castle: ['🏰', '🏯'],
+  key: ['🔑', '🗝️'],
+  money: ['💵', '💸', '💰'],
+
+  // Body
+  hand: ['🖐️', '✋', '🤚'],
+
+  // Party
+  party: ['🎉', '🎊'],
+  yay: ['🎉', '🎊'],
+  hooray: ['🎉', '🎊'],
+  congrats: ['🎉', '🎊'],
+  fun: ['🎉', '🎊'],
+});
+
+/** The related glyphs a word can also be drawn as, or null. */
+export function familyForWord(word) {
+  if (typeof word !== 'string') return null;
+  return WORD_FAMILY[word.trim().toLowerCase()] ?? null;
+}
+
 // Friendly labels for the categories, used by the word guide.
 export const CATEGORY_LABELS = Object.freeze({
   feeling: 'Feelings',
