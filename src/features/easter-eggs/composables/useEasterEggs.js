@@ -35,14 +35,16 @@ export function resolveSpawn(special, text = '') {
 }
 
 /**
- * Play the effect a word would play if it were typed. Used by the word guide's
- * tap-to-preview, so a tap and a typed word are guaranteed to look the same.
+ * Play the effect a word would play if it were typed. Used by the prompt's
+ * tap-to-preview, so a tap and a typed word are guaranteed to look the same —
+ * except the count, which a preview can cap so the screen doesn't fill up.
  */
-export function spawnForWord(word, spawnEmojis) {
+export function spawnForWord(word, spawnEmojis, { count, finale } = {}) {
   if (typeof spawnEmojis !== 'function') return;
   const effect = resolveWordEffect(word);
   if (!effect) return;
-  spawnEmojis(effect.type, effect.count, effect.options);
+  const options = finale === undefined ? effect.options : { ...effect.options, finale };
+  spawnEmojis(effect.type, count ?? effect.count, options);
 }
 
 // Evaluate a finished line and spawn whatever it earns.

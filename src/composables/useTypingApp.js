@@ -193,11 +193,12 @@ export function createTypingApp() {
   };
 
   // Play a word's effect on demand (used by the guide's tap-to-preview cards).
-  // Closes the guide so the animation is visible full-screen.
+  // Closes the guide so the animation is visible full-screen. Skips the
+  // finale glyph so a tap reads as a hint rather than the real payoff.
   const previewWord = word => {
     guideSystem.revealForWord(word);
     guideSystem.toggle(false);
-    spawnForWord(word, emojisSystem.spawnEmojis);
+    spawnForWord(word, emojisSystem.spawnEmojis, { finale: false });
   };
 
   const initApp = () => {
