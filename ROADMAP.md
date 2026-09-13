@@ -226,6 +226,25 @@ glyph to break the tie.
 
 ## 📐 Planned
 
+### 🌸 Grow-and-Spin for Things That Don't Travel
+
+**Motion That Matches Meaning** (shipped, above) picks a *path* from the
+word's category — but a path is still assumed, even for words that don't
+travel in real life. A flower doesn't fly across the screen; it opens. Right
+now `flower`/`flowers` take the `float` path with a `bobble` flair, drifting
+like a balloon. Instead they should stay in place and get bigger while
+rotating — a flourish-only effect with no path, matching what the emoji
+depicts rather than picking any path its category allows.
+
+Once this exists it's worth auditing other `nature`/`space` words that don't
+have inherent motion (sun, tree, star) for the same fix, not just flower.
+
+**Touchpoints**: `src/features/effects/utils/wordMotion.js` — the `WORD_MOTION`
+entries for `flower`/`flowers` (currently `{ paths: ['float'], flairs:
+['bobble'], count: 20 }`), and possibly a stationary option alongside `PATHS`
+if "no path, flourish only" doesn't already fall out of the existing `grow` +
+`spin` flairs.
+
 ### 🍉 Produce Splatter and the Colour It Leaves Behind
 
 Designed, not yet built — the full plan is in
