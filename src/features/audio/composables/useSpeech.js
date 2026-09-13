@@ -223,17 +223,26 @@ export function useSpeech() {
     });
   };
 
+  // Some symbols get mispronounced (or misread as an unrelated word, e.g. a
+  // lone "-" read as "semi-colon") when a bare voice engine sees them
+  // in isolation, outside the word/sentence context it expects. Speak the
+  // name instead, matching the wording already used for math equations.
+  const SYMBOL_SPEECH = {
+    '-': 'minus',
+    '+': 'plus',
+  };
+
   const speakLetter = letter => {
     if (typeof letter === 'string' && letter.length === 1 && letter !== ' ') {
       // Create speech object with original letter for highlighting and lowercase for speech
       const speechData = {
         label: letter,
-        value: letter.toLowerCase()
+        value: SYMBOL_SPEECH[letter] || letter.toLowerCase()
       };
-      return speak(speechData.value, { 
-        rate: 1.0, 
-        pitch: 1.4, 
-        speechData: speechData 
+      return speak(speechData.value, {
+        rate: 1.0,
+        pitch: 1.4,
+        speechData: speechData
       });
     }
     return Promise.resolve();

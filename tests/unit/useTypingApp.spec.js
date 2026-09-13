@@ -557,6 +557,18 @@ describe('useTypingApp', () => {
   });
 
   describe('percent battery handling', () => {
+    const typeCharacter = key =>
+      typingApp.onKeyDown({
+        key,
+        preventDefault: jest.fn(),
+        target: {
+          get selectionStart() {
+            return typingApp.currentText.value.length;
+          },
+          setSelectionRange: jest.fn(),
+        },
+      });
+
     it('plays the battery for 50% and floats no balloons', async () => {
       typingApp.currentText.value = '50%';
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
@@ -573,20 +585,38 @@ describe('useTypingApp', () => {
       expect(typingApp.balloons.value).toEqual([]);
     });
 
-    it('dismisses the battery when the child types the next character', async () => {
+    it('keeps an over-100% charge as typed rather than capping it', async () => {
+      typingApp.currentText.value = '250%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 250 });
+    });
+
+    it('drains a point per character instead of dismissing the battery', async () => {
+      // Behaviour change: a keystroke used to clear the battery. It now stays
+      // docked on screen and each character costs it a point of charge.
       typingApp.currentText.value = '50%';
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
-      expect(typingApp.batteryCharge.value).not.toBeNull();
-      await typingApp.onKeyDown({
-        key: 'a',
-        preventDefault: jest.fn(),
-        target: {
-          get selectionStart() {
-            return typingApp.currentText.value.length;
-          },
-          setSelectionRange: jest.fn(),
-        },
-      });
+      const { id } = typingApp.batteryCharge.value;
+
+      await typeCharacter('a');
+      await typeCharacter('b');
+
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 48, id });
+    });
+
+    it('stops draining at 0% and keeps the battery on screen', async () => {
+      typingApp.currentText.value = '2%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      for (const key of ['a', 'b', 'c', 'd']) await typeCharacter(key);
+
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
+    });
+
+    it('clears the battery on Escape', async () => {
+      typingApp.currentText.value = '50%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
       expect(typingApp.batteryCharge.value).toBeNull();
     });
   });

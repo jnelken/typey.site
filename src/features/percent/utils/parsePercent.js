@@ -2,7 +2,8 @@
 // (and with optional space). Returns { percent } for an exact match, otherwise
 // null. Intentionally strict: the whole (trimmed) string must be the percent,
 // so sentences and "50% cookie" fall through to other behaviors. Values above
-// 100 clamp to 100; the three-digit cap means "1000%" doesn't match at all.
+// 100 are kept as typed — an overcharged battery is the joke — and the
+// three-digit cap means the range is 0–999 and "1000%" doesn't match at all.
 
 const PERCENT_PATTERN = /^(\d{1,3})\s*%$|^%\s*(\d{1,3})$/;
 
@@ -16,5 +17,5 @@ export function parsePercent(input) {
   const value = parseInt(raw, 10);
   if (Number.isNaN(value)) return null;
 
-  return { percent: Math.min(value, 100) };
+  return { percent: value };
 }

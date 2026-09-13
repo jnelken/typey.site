@@ -74,6 +74,20 @@ describe('useSpeech', () => {
       await Promise.resolve();
       expect(window.speechSynthesis.speak).not.toHaveBeenCalled();
     });
+
+    it('should speak "minus" instead of the raw "-" character', async () => {
+      SpeechSynthesisUtterance.mockClear();
+      speech.speakLetter('-');
+      await Promise.resolve();
+      expect(SpeechSynthesisUtterance).toHaveBeenCalledWith('minus');
+    });
+
+    it('should speak "plus" instead of the raw "+" character', async () => {
+      SpeechSynthesisUtterance.mockClear();
+      speech.speakLetter('+');
+      await Promise.resolve();
+      expect(SpeechSynthesisUtterance).toHaveBeenCalledWith('plus');
+    });
   });
 
   describe('speakWord', () => {

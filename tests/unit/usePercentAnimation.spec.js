@@ -35,6 +35,38 @@ describe('usePercentAnimation', () => {
     expect(current.value).toBeNull();
   });
 
+  it('drain() takes a point off without replacing the battery', () => {
+    const { current, play, drain } = usePercentAnimation();
+    play({ percent: 50 });
+    const { id } = current.value;
+    drain();
+    drain();
+    // Same id on purpose: a drain must not replay the arrival animation.
+    expect(current.value).toEqual({ percent: 48, id });
+  });
+
+  it('drain() floors at 0 and leaves the battery on screen', () => {
+    const { current, play, drain } = usePercentAnimation();
+    play({ percent: 1 });
+    drain();
+    drain();
+    expect(current.value).toMatchObject({ percent: 0 });
+  });
+
+  it('drain() with no battery is a no-op', () => {
+    const { current, drain } = usePercentAnimation();
+    drain();
+    expect(current.value).toBeNull();
+  });
+
+  it('keeps an overcharge above 100 and drains it back down', () => {
+    const { current, play, drain } = usePercentAnimation();
+    play({ percent: 250 });
+    expect(current.value).toMatchObject({ percent: 250 });
+    drain();
+    expect(current.value).toMatchObject({ percent: 249 });
+  });
+
   it('play({ percent: 0 }) sets current (0% is a legitimate charge)', () => {
     const { current, play } = usePercentAnimation();
     play({ percent: 0 });

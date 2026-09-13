@@ -143,11 +143,14 @@ in `src/features/easter-eggs/utils/sillyMode.js` is the library minus that set.
 
 ### 🔋 Percent Battery
 
-Shipped 2026-09-09. Typing `50%` draws a battery charged to half — a full-screen
-canvas bar filling left to right, looping so it can be watched more than once.
-Values clamp to 0–100; a full charge gets a bolt and a pulse. Percent joins the
-practice prompts across 1–100. Built as a sibling of `src/features/math/` rather
-than another emoji spawn. See `src/features/percent/`.
+Shipped 2026-09-09, extended 2026-09-11. Typing `50%` charges a battery to half:
+it fills big in the middle of the screen, then flies up and parks in the corner
+as a menubar-style indicator — percent on the left, battery on the right — and
+stays there, losing a point of charge with every key pressed until it reads 0%
+or Escape clears it. Values run 0–999; anything over 100% bursts a jagged jet of
+charge out past the terminal and sets off a screen-filling electrical storm.
+Percent joins the practice prompts across 1–100. Built as a sibling of
+`src/features/math/` rather than another emoji spawn. See `src/features/percent/`.
 
 **Decisions this made that the concept left open.** **A battery rather than a
 pizza with a slice eaten**: every numeric trigger here maps the number to what
@@ -168,6 +171,23 @@ There is no amber middle because there is no darker amber in the palette that
 reaches the floor; the same wall that made the "yellow" wash a deep gold. And
 `% 50` **changes** rather than gains a behaviour: it floated fifty balloons
 before, and now charges a battery instead.
+
+**Decisions the persistent-battery extension made.** **It docks instead of
+staying big**: a charge that drains per keystroke is only legible if the child
+can see the input line and the number at the same time, and the hero-sized bar
+sat directly over `TypingArea` and `InputSection`. The arrival animation keeps
+the drama; the parked indicator keeps the app usable. It parks lower and smaller
+below 640px, where the word prompt owns the band the corner would otherwise use.
+**A drain keeps the same `id`**: `id` means "a new battery, replay the arrival",
+so `drain()` changes only `percent` and the draw loop eases to the new value —
+otherwise every keystroke would restart the 0→n fill. The old looping replay is
+gone for the same reason: a bar that re-fills on a timer can't also report a
+live value. **The storm is capped, not maximal**: flashes are held to three a
+second at partial opacity rather than a white-out (WCAG 2.3.1, photosensitivity),
+and the whole storm is skipped under `prefers-reduced-motion`. **The spill is
+capped at `MAX_SPILL`**: at 999% an honest `percent / 100` bar would be ten
+screens wide, so the jet caps its reach and the parked indicator shifts left by
+however far it currently extends, sliding back as the charge drains.
 
 ### 🎨 Emoji Families
 

@@ -149,14 +149,17 @@ export function createTypingApp() {
     speakLetter: speechSystem.speakLetter,
     isSpeechEnabled: speechSystem.isSpeechEnabled,
     onEnterPressed: handleEnterKey,
-    // Math and battery animations stay up (replayable) until the next character.
+    // The math animation stays up (replayable) until the next character. The
+    // battery is the opposite: it docks and stays, and every keystroke costs it
+    // a point of charge — the whole point is watching it run down as you type.
     onPrintableKey: () => {
       mathSystem.clear();
-      percentSystem.clear();
+      percentSystem.drain();
     },
     onEscapePressed: () => {
       sillySystem.stop();
       balloonsSystem.popAllBalloons();
+      percentSystem.clear();
     },
     onShuffleWord: () => {
       if (typingSettings.isWordPromptEnabled.value) {

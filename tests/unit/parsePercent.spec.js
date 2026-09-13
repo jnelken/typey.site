@@ -29,9 +29,10 @@ describe('parsePercent', () => {
     expect(parsePercent('0%')).toEqual({ percent: 0 });
   });
 
-  it('clamps values above 100 to 100', () => {
-    expect(parsePercent('200%')).toEqual({ percent: 100 });
-    expect(parsePercent('%250')).toEqual({ percent: 100 });
+  it('keeps values above 100 as typed (an overcharge is the joke)', () => {
+    expect(parsePercent('200%')).toEqual({ percent: 200 });
+    expect(parsePercent('%250')).toEqual({ percent: 250 });
+    expect(parsePercent('999%')).toEqual({ percent: 999 });
   });
 
   it('returns null for a bare %', () => {
