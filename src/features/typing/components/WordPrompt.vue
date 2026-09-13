@@ -3,7 +3,14 @@
     <Text size="sm" align="center" color="light" font="mono" :caps="isCapsLockEnabled">
       {{ label }}
     </Text>
-    <div class="word-prompt-row">
+    <div
+      class="word-prompt-row"
+      role="button"
+      tabindex="0"
+      title="Tap to preview"
+      @click="previewWord(promptWord)"
+      @keydown.enter="previewWord(promptWord)"
+      @keydown.space.prevent="previewWord(promptWord)">
       <span class="word-prompt-word" :class="{ long: displayWord.length > 8 }">
         <span
           v-for="(letter, index) in letters"
@@ -31,6 +38,7 @@ const {
   isWordPromptEnabled,
   isCapsLockEnabled,
   currentText,
+  previewWord,
 } = useTypingApp();
 
 // The prompt is what the child copies, so it has to be spelled the way their
@@ -72,6 +80,7 @@ const label = computed(() => LABELS[promptType.value] ?? LABELS.word);
   justify-content: center;
   gap: var(--spacing-md);
   flex-wrap: wrap;
+  cursor: pointer;
 }
 
 /* The word the child is copying is the biggest thing on the page. Clamped

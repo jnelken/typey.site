@@ -7,7 +7,7 @@
       {{
         typingApp.guideSecretsOnly.value
           ? 'Type one of these on a line of its own to see what it does.'
-          : 'Type one of these words, then tap a card to see what it does!'
+          : 'Tap a card to make it the word to type!'
       }}
     </p>
 
@@ -35,7 +35,7 @@
           :key="item.word"
           class="guide-card"
           :class="{ found: typingApp.isHintDiscovered(item.word) }"
-          @click="typingApp.previewWord(item.word)">
+          @click="typingApp.setPromptWord(item.word)">
           <span class="card-emojis">{{ item.emoji }}</span>
           <span class="card-word" :class="{ caps: typingApp.isCapsLockEnabled.value }">
             {{ item.word }}

@@ -195,13 +195,21 @@ export function createTypingApp() {
     }
   };
 
-  // Play a word's effect on demand (used by the guide's tap-to-preview cards).
-  // Closes the guide so the animation is visible full-screen. Skips the
-  // finale glyph so a tap reads as a hint rather than the real payoff.
+  // A tap on the prompt plays a small preview of its animation — a handful of
+  // emojis rather than the dozen-plus a typed line earns, and without the
+  // finale glyph, so it reads as a hint and not the real payoff.
+  const PREVIEW_EMOJI_COUNT = 5;
+
   const previewWord = word => {
     guideSystem.revealForWord(word);
+    spawnForWord(word, emojisSystem.spawnEmojis, { count: PREVIEW_EMOJI_COUNT, finale: false });
+  };
+
+  // Tapping a word guide card sets it as the prompt to copy-type, and closes
+  // the guide so the prompt is visible.
+  const setPromptWord = word => {
+    wordPromptSystem.promptWord.value = word;
     guideSystem.toggle(false);
-    spawnForWord(word, emojisSystem.spawnEmojis, { finale: false });
   };
 
   const initApp = () => {
@@ -246,6 +254,7 @@ export function createTypingApp() {
     toggleGuide: guideSystem.toggle,
     openSecretWords: guideSystem.openSecrets,
     previewWord,
+    setPromptWord,
 
     // Methods
     onKeyDown: eventHandlers.onKeyDown,
