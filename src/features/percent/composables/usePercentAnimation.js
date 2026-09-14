@@ -6,9 +6,9 @@ let percentIdCounter = 0;
 // hazard: the screen's frame runs with electricity and every letter typed is
 // zapped off the line. Strictly above, so an even 1000% is still calm.
 export const ZAP_THRESHOLD = 1000;
-// What one zap costs. Same number as the threshold, so the charge is spent in
-// whole "lightning bolts" and a child can count how many they have left.
-export const ZAP_COST = 1000;
+// What one zap costs. Cheaper than the threshold so a big charge fires many
+// bolts before it falls back under the danger line.
+export const ZAP_COST = 100;
 
 // Holds the battery's charge. The BatteryAnimation component watches `current`
 // and draws it: a new `id` plays the big arrival animation, after which the

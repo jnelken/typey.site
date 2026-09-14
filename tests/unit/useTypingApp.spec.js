@@ -694,13 +694,13 @@ describe('useTypingApp', () => {
       expect(typingApp.isBatteryOvercharged.value).toBe(true);
     });
 
-    it('eats the letter just typed and spends 1000% doing it', async () => {
+    it('eats the letter just typed and spends 100% doing it', async () => {
       await charge(3000);
       await typeCharacter('a');
 
       // The letter lands first — the bolt has to have something to hit.
       expect(typingApp.currentText.value).toBe('A');
-      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2000 });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2900 });
       expect(typingApp.zapBolts.value).toHaveLength(1);
 
       jest.advanceTimersByTime(STRIKE_MS);
@@ -711,20 +711,18 @@ describe('useTypingApp', () => {
       await charge(3000);
       const { id } = typingApp.batteryCharge.value;
       await typeCharacter('a');
-      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2000, id });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2900, id });
     });
 
     it('goes back to draining a point once the charge falls under the line', async () => {
-      await charge(2500);
-      await typeCharacter('a');  // 1500
-      jest.advanceTimersByTime(STRIKE_MS);
-      await typeCharacter('b');  // 500 — the last zap
+      await charge(1100);
+      await typeCharacter('a'); // 1000 — last zap
       jest.advanceTimersByTime(STRIKE_MS);
       expect(typingApp.currentText.value).toBe('');
 
       await typeCharacter('c');
       expect(typingApp.currentText.value).toBe('C');
-      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 499 });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 999 });
       jest.advanceTimersByTime(BOLT_MS);
       expect(typingApp.currentText.value).toBe('C');
     });
@@ -743,7 +741,7 @@ describe('useTypingApp', () => {
 
       expect(typingApp.batteryCharge.value).toBeNull();
       expect(typingApp.zapBolts.value).toEqual([]);
-      // The 1000% was spent on the keystroke, so the letter cannot survive it.
+      // The 100% was spent on the keystroke, so the letter cannot survive it.
       expect(typingApp.currentText.value).toBe('');
 
       jest.advanceTimersByTime(BOLT_MS * 2);

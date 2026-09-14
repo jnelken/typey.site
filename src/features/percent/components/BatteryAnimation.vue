@@ -9,7 +9,11 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { useTypingApp } from '@/composables/useTypingApp';
-import { GROUP_COLORS } from '@/constants/palette';
+import {
+  COLOR_TEXT,
+  COLOR_OVER,
+  batteryFillColor,
+} from '@/features/percent/utils/batteryColor';
 import {
   framePoints,
   boltPoints,
@@ -17,11 +21,6 @@ import {
   seededRandom,
 } from '@/features/percent/utils/electricFrame';
 import { STRIKE_MS, BOLT_MS } from '@/features/percent/composables/useZaps';
-
-const COLOR_TEXT = '#2b2d42';
-const COLOR_LOW = GROUP_COLORS[0];   // vermillion — ≤20%
-const COLOR_HIGH = GROUP_COLORS[3];  // green — above 20%
-const COLOR_OVER = GROUP_COLORS[2];  // yellow — the charge spilling past 100%
 
 // Two phases. ARRIVE plays the charge big in the middle of the screen; DOCK
 // flies it up to the corner, where it parks for good as a menubar-style
@@ -52,8 +51,8 @@ const FRAME_LAP_MS = 3200;
 // New jitter this often, so the frame crackles rather than seethes.
 const CRACKLE_MS = 110;
 
-// An overcharge can read up to 9999%, which would run bars off both edges — the
-// spill is capped at this multiple of the battery's inner width instead.
+// An overcharge can read up to a million percent, which would run bars off both
+// edges — the spill is capped at this multiple of the battery's inner width.
 const MAX_SPILL = 1.6;
 // How far past the spill's body the bursting point reaches.
 const SPILL_TIP = 1.12;
@@ -87,11 +86,6 @@ const roundRect = (ctx, x, y, w, h, r) => {
   ctx.closePath();
 };
 
-const fillColorFor = percent => {
-  if (percent > 100) return COLOR_OVER;
-  return percent <= 20 ? COLOR_LOW : COLOR_HIGH;
-};
-
 // Everything the indicator needs, derived from one number: the body width.
 // The label sits to the left of the shell the way a phone's menubar reads.
 const geometryFor = (ctx, bodyW, label) => {
@@ -119,7 +113,7 @@ const drawShell = (ctx, geo, bodyX, bodyY) => {
   ctx.fill();
 };
 
-const drawFill = (ctx, geo, bodyX, bodyY, percent, shown) => {
+const drawFill = (ctx, geo, bodyX, bodyY, shown, fillColor) => {
   const { bodyW, bodyH } = geo;
   const inset = bodyH * 0.14;
   const innerW = bodyW - inset * 2;
@@ -131,7 +125,7 @@ const drawFill = (ctx, geo, bodyX, bodyY, percent, shown) => {
   // Inside the shell: never wider than the shell itself.
   const insideW = innerW * (Math.min(shown, 100) / 100);
   if (insideW > 0) {
-    ctx.fillStyle = fillColorFor(percent);
+    ctx.fillStyle = fillColor;
     roundRect(ctx, x, y, insideW, innerH, radius);
     ctx.fill();
     // Outline carries WCAG 1.4.11; skip only when there is no rect (0%).
@@ -167,7 +161,7 @@ const spillWidthFor = (geo, shown) => {
 // The joke: charge past 100% bursts straight out of the terminal nub and keeps
 // going, taller than the battery and ending in a ragged lightning edge. Drawn
 // after the shell so it reads as bursting out over it, not tucked behind.
-const drawSpill = (ctx, geo, inner, bodyY, shown, wobble) => {
+const drawSpill = (ctx, geo, inner, bodyY, shown, wobble, fillColor) => {
   const { bodyH } = geo;
   const over = (shown - 100) / 100;
   if (over <= 0) return;
@@ -191,7 +185,7 @@ const drawSpill = (ctx, geo, inner, bodyY, shown, wobble) => {
   };
 
   ctx.save();
-  ctx.fillStyle = COLOR_OVER;
+  ctx.fillStyle = fillColor;
   ctx.strokeStyle = COLOR_TEXT;
   ctx.lineWidth = bodyH * 0.05;
   ctx.lineJoin = 'miter';
@@ -477,9 +471,10 @@ const draw = () => {
   // stops by itself as soon as a zap spends the charge back under the line.
   if (typingApp.isBatteryOvercharged.value) drawElectricFrame(ctx, w, h, elapsed, reduced);
 
+  const fillColor = batteryFillColor(percent, elapsed, reduced);
   drawShell(ctx, geo, bodyX, bodyY);
-  const inner = drawFill(ctx, geo, bodyX, bodyY, percent, displayed);
-  drawSpill(ctx, geo, inner, bodyY, displayed, now / 90);
+  const inner = drawFill(ctx, geo, bodyX, bodyY, displayed, fillColor);
+  drawSpill(ctx, geo, inner, bodyY, displayed, now / 90, fillColor);
   drawLabel(ctx, geo, labelRight, cy, `${percent}%`);
 
   // Bolts last, over everything: they are what the child is watching.

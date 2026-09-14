@@ -46,7 +46,7 @@ export function useZaps({ onStrike } = {}) {
   // Escape wipes the battery and the bolts in the air — but a bolt in the air
   // has already been paid for at the keystroke that fired it, so it still eats
   // its letter on the way out. Cancelling the bite instead would charge the
-  // child 1000% and hand the letter back, the one place in this feature where
+  // child 100% and hand the letter back, the one place in this feature where
   // the accounting would visibly not add up.
   const clear = () => {
     pending.forEach(entry => {

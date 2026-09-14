@@ -101,12 +101,20 @@ describe('usePercentAnimation', () => {
 
     it('stops firing once the charge falls back under the threshold', () => {
       const { current, play, zap, isOvercharged } = usePercentAnimation();
-      play({ percent: 2500 });
-      expect(zap()).toBe(true);  // 1500
-      expect(zap()).toBe(true);  // 500
+      play({ percent: 1100 });
+      expect(zap()).toBe(true); // 1000 — still at the line, no longer over
       expect(zap()).toBe(false);
       expect(isOvercharged.value).toBe(false);
-      expect(current.value).toMatchObject({ percent: 500 });
+      expect(current.value).toMatchObject({ percent: 1000 });
+    });
+
+    it('keeps zapping while still above the threshold after cheap bolts', () => {
+      const { current, play, zap, isOvercharged } = usePercentAnimation();
+      play({ percent: 2500 });
+      expect(zap()).toBe(true); // 2400
+      expect(zap()).toBe(true); // 2300
+      expect(isOvercharged.value).toBe(true);
+      expect(current.value).toMatchObject({ percent: 2300 });
     });
 
     it('zap() with no battery is a no-op', () => {
