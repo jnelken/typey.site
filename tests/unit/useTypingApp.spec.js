@@ -664,6 +664,25 @@ describe('useTypingApp', () => {
       await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
       expect(typingApp.batteryCharge.value).toBeNull();
     });
+
+    it('locks at a million when typed past max and survives Escape', async () => {
+      typingApp.currentText.value = '2500000%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toMatchObject({
+        percent: 1_000_000,
+        locked: true,
+        overflow: 2500000,
+      });
+
+      await typeCharacter('a');
+      expect(typingApp.batteryCharge.value.percent).toBe(1_000_000);
+
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toMatchObject({
+        percent: 1_000_000,
+        locked: true,
+      });
+    });
   });
 
   describe('overcharged battery zaps letters', () => {

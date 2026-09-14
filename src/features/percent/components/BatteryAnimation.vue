@@ -28,6 +28,8 @@ import { STRIKE_MS, BOLT_MS } from '@/features/percent/composables/useZaps';
 const ARRIVE_MS = 1600;
 const DOCK_MS = 750;
 const STORM_MS = 1800;
+// How long the oversized (over-a-million) number takes to tumble off screen.
+const FALL_MS = 1600;
 
 // Parked geometry: right edge of the viewport, below the app's own top row —
 // the title and toolbar reach the right of the content column on a wide screen,
@@ -214,6 +216,44 @@ const drawLabel = (ctx, geo, labelRight, cy, label) => {
   ctx.textBaseline = 'middle';
   ctx.font = `bold ${geo.fontSize}px "Comic Sans MS", "Baloo 2", system-ui, sans-serif`;
   ctx.fillText(label, labelRight, cy);
+};
+
+// The gag for typing past a million: the ridiculous number tumbles off the
+// bottom while the battery itself stays locked at the million-percent max.
+const drawFallingOverflow = (ctx, w, h, overflow, elapsed, reduced) => {
+  const label = `${overflow}%`;
+  const life = reduced ? 1 : clamp01(elapsed / FALL_MS);
+  if (life >= 1 && !reduced) return;
+
+  const fontSize = Math.min(w * 0.12, 96);
+  ctx.save();
+  ctx.font = `bold ${fontSize}px "Comic Sans MS", "Baloo 2", system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = COLOR_TEXT;
+
+  if (reduced) {
+    // Reduced motion: flash the number once in place, then it's gone — the
+    // battery still keeps the capped million until the page refreshes.
+    if (elapsed < 400) {
+      ctx.globalAlpha = 1 - elapsed / 400;
+      ctx.fillText(label, w / 2, h * 0.28);
+    }
+    ctx.restore();
+    return;
+  }
+
+  const startY = h * 0.28;
+  const endY = h + fontSize;
+  const x = w / 2 + Math.sin(life * Math.PI * 2) * w * 0.04;
+  const y = lerp(startY, endY, life * life);
+  const spin = life * Math.PI * 0.7;
+
+  ctx.translate(x, y);
+  ctx.rotate(spin);
+  ctx.globalAlpha = 1 - life * 0.85;
+  ctx.fillText(label, 0, 0);
+  ctx.restore();
 };
 
 // Screen-filling electricity for an overcharge. Flashes are held to three a
@@ -408,7 +448,11 @@ const draw = () => {
 
   const now = performance.now();
   const elapsed = now - startTime;
-  const { percent } = charge;
+  const { percent, overflow } = charge;
+  const reduced = prefersReducedMotion();
+
+  // Oversized typed value tumbles away while the battery keeps the million cap.
+  if (overflow != null) drawFallingOverflow(ctx, w, h, overflow, elapsed, reduced);
 
   // Arrival fills 0 → charge once; after that the bar simply follows the live
   // value, easing toward it so each keystroke's point slides off.
@@ -443,7 +487,7 @@ const draw = () => {
   const bodyY = cy - geo.bodyH / 2;
 
   // The storm starts the instant the charge blows past full, not before.
-  if (percent > 100 && displayed >= 100 && !stormStart && !prefersReducedMotion()) {
+  if (percent > 100 && displayed >= 100 && !stormStart && !reduced) {
     stormStart = now;
   }
   if (stormStart) drawStorm(ctx, w, h, bodyX + geo.bodyW, cy, now - stormStart);
@@ -466,7 +510,6 @@ const draw = () => {
     ctx.restore();
   }
 
-  const reduced = prefersReducedMotion();
   // The frame runs with current for as long as the charge is dangerous; it
   // stops by itself as soon as a zap spends the charge back under the line.
   if (typingApp.isBatteryOvercharged.value) drawElectricFrame(ctx, w, h, elapsed, reduced);

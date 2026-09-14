@@ -55,9 +55,14 @@ describe('parsePercent', () => {
     expect(parsePercent('%1000000')).toEqual({ percent: MAX_CHARGE });
   });
 
-  it('returns null above the million-percent cap', () => {
-    expect(parsePercent('1000001%')).toBeNull();
-    expect(parsePercent('9999999%')).toBeNull();
+  it('keeps values above a million as typed (the overflow gag)', () => {
+    expect(parsePercent('1000001%')).toEqual({ percent: 1000001 });
+    expect(parsePercent('9999999%')).toEqual({ percent: 9999999 });
+    expect(parsePercent('%2000000')).toEqual({ percent: 2000000 });
+  });
+
+  it('returns null past fifteen digits', () => {
+    expect(parsePercent('1000000000000000%')).toBeNull();
   });
 
   it('returns null for non-string / empty input', () => {
