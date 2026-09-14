@@ -287,6 +287,46 @@ operands stay bare numbers, because they are the things being counted as dots.
 **A modifier buys no new arithmetic**: `$2 - $5` is still `null`, the same
 age-safe floor subtraction always had.
 
+### 🌸 Things That Don't Travel Stay Put
+
+Shipped 2026-09-14. **Motion That Matches Meaning** gave every word a path, but
+a path was still assumed even for words naming things that never go anywhere: a
+flower drifted up off the top of the screen like a balloon. There is now a path
+that goes nowhere — `bloom` opens the glyph where it was planted, swelling it
+over the effect's own life while a `spin` flair turns it. `flower`, `flowers`,
+`rose`, `sunflower` and `tulip` take it. See `PATH_OPTIONS.bloom` in
+`src/features/effects/utils/wordMotion.js` and `.effect-bloom` in
+`src/ui/EmojiEffect.vue`.
+
+**Decisions this made that the concept left open.** **The growth is a path, not
+a flair**: a word gets exactly one flair and this effect needs two things at
+once, so the swelling went on the path layer and left the flair slot free for
+`spin` — which animates `rotate` on an inner element and so composes with it
+rather than overwriting it, the same four-layer rule the travelling paths
+already live by. Reusing the existing `grow` flair would have fought itself: it
+fades to nothing *and* scales, so the bloom would have double-faded and lost its
+turn. **A patch runs fewer and smaller**: twelve glyphs rather than float's
+twenty, and a smaller size band, because a travelling glyph shares the screen
+with its crowd for a moment while a stationary one sits in its patch for the
+whole effect and keeps growing — the same twenty would have piled up rather than
+read as flowers. **It opens and holds rather than popping**: `burst` was the
+nearest existing path and was rejected, because a burst is an event and a bloom
+is a thing that is *there*. **A `bloom` needs a `top` of its own**: every other
+path is anchored to a screen edge in CSS and animates away from it, so only
+`burst` was ever handed a vertical position; a path that never leaves its spawn
+point needs one too, or the whole patch stacks into a single band. That rule is
+now `PLACED_PATHS` rather than a check for one path by name. **The named flowers
+came along**: `rose`, `sunflower` and `tulip` are the same thing said more
+precisely, and `flower`'s own family already spawns 🌷 — a tulip that drifted
+away when typed by name would have contradicted the tulip blooming beside it.
+
+**Left deliberately undone.** The ticket also invited an audit of other rooted
+words — `sun`, `tree`, `star`, and `plant` / `seed` / `grass` / `clover` beside
+them. Those are a taste call rather than the same fix: `WORD_MOTION` records "the
+sun and the moon just hang" as a decision and a spec asserts that sun, star and
+moon float, so changing them means overruling a call already made, not filling a
+gap. Raised on DEV-51 for a separate pass.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
@@ -294,12 +334,11 @@ Linear is the source of truth for live scope, status, and blockers. All tickets 
 
 | Order | Ticket | Blocked by | Demonstrable outcome |
 | --- | --- | --- | --- |
-| 1 | [DEV-51: Make stationary words grow and spin](https://linear.app/jnelken/issue/DEV-51) | None | Flowers and other stationary subjects flourish in place instead of travelling. |
-| 2 | [DEV-52: Splatter produce and leave its color behind](https://linear.app/jnelken/issue/DEV-52) | None | Thrown fruit bursts into palette-aware droplets and leaves an accessible page wash. |
-| 3 | [DEV-53: Show an eaten proportion for food emoji](https://linear.app/jnelken/issue/DEV-53) | None | Inputs such as `50% cookie` reveal an eaten fraction while non-food words fall back safely. |
-| 4 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
-| 5 | [DEV-55: Burst confetti in Party Mode](https://linear.app/jnelken/issue/DEV-55) | [DEV-52](https://linear.app/jnelken/issue/DEV-52) | Typing `party` reuses the splatter primitive for character and edge confetti. |
-| 6 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
+| 1 | [DEV-52: Splatter produce and leave its color behind](https://linear.app/jnelken/issue/DEV-52) | None | Thrown fruit bursts into palette-aware droplets and leaves an accessible page wash. |
+| 2 | [DEV-53: Show an eaten proportion for food emoji](https://linear.app/jnelken/issue/DEV-53) | None | Inputs such as `50% cookie` reveal an eaten fraction while non-food words fall back safely. |
+| 3 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
+| 4 | [DEV-55: Burst confetti in Party Mode](https://linear.app/jnelken/issue/DEV-55) | [DEV-52](https://linear.app/jnelken/issue/DEV-52) | Typing `party` reuses the splatter primitive for character and edge confetti. |
+| 5 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
 
 ## Cross-cutting success criteria
 
