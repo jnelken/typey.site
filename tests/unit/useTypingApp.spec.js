@@ -684,8 +684,15 @@ describe('useTypingApp', () => {
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
     };
 
-    beforeEach(() => jest.useFakeTimers());
-    afterEach(() => jest.useRealTimers());
+    beforeEach(() => {
+      jest.useFakeTimers();
+      // Force hits so letter-eating cases stay deterministic; miss cases override.
+      jest.spyOn(Math, 'random').mockReturnValue(0);
+    });
+    afterEach(() => {
+      Math.random.mockRestore();
+      jest.useRealTimers();
+    });
 
     it('reports an overcharge above 1000% and not at it', async () => {
       await charge(1000);
@@ -705,6 +712,20 @@ describe('useTypingApp', () => {
 
       jest.advanceTimersByTime(STRIKE_MS);
       expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('usually misses: a non-hit bolt spends charge but leaves the letter', async () => {
+      Math.random.mockReturnValue(1 / 5);
+      await charge(3000);
+      await typeCharacter('a');
+
+      expect(typingApp.currentText.value).toBe('A');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2900 });
+      expect(typingApp.zapBolts.value).toHaveLength(1);
+
+      jest.advanceTimersByTime(BOLT_MS);
+      expect(typingApp.currentText.value).toBe('A');
+      expect(typingApp.zapBolts.value).toEqual([]);
     });
 
     it('keeps the same battery rather than replaying its arrival', async () => {
@@ -734,14 +755,14 @@ describe('useTypingApp', () => {
       expect(typingApp.zapBolts.value).toEqual([]);
     });
 
-    it('Escape takes the bolt off screen but the letter it paid for still goes', async () => {
+    it('Escape takes the bolt off screen but a hit letter still goes', async () => {
       await charge(3000);
       await typeCharacter('a');
       await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
 
       expect(typingApp.batteryCharge.value).toBeNull();
       expect(typingApp.zapBolts.value).toEqual([]);
-      // The 100% was spent on the keystroke, so the letter cannot survive it.
+      // A hit was rolled on the keystroke, so the letter cannot survive Escape.
       expect(typingApp.currentText.value).toBe('');
 
       jest.advanceTimersByTime(BOLT_MS * 2);

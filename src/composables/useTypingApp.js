@@ -205,8 +205,8 @@ export function createTypingApp() {
       mathSystem.clear();
       eatenSystem.clear();
       // An overcharge spends itself a bolt at a time instead of a point at a
-      // time, and each bolt costs the child the letter they just typed. It
-      // stops on its own once the charge falls back under the threshold.
+      // time. Bolts miss often — only about one in five eats the letter just
+      // typed. It stops on its own once the charge falls back under the line.
       if (percentSystem.zap()) {
         zapSystem.strike();
         soundSystem.playZapSound();
