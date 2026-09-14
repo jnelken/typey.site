@@ -56,6 +56,7 @@ A fun, interactive typing application designed for kids with sound effects, text
 - **Silly Mode** - type "silly" to have five random words send themselves, three seconds apart, each with its own animation; Escape (or "silly" again) stops them
 - **Color Mode** - type "color" (or "colour", or "rainbow") to paint every character a different rainbow color; type it again to go back to plain text
 - **Percent Battery** - type `50%` (or any percent from 0-999) to charge a battery to that much; it then parks in the corner like a phone's charge indicator and loses a point with every key you press. Over 100% the charge bursts out of the battery and the screen fills with lightning
+- **Equation modifiers** - put a `$` or `%` on either side of a sum (`2 + 3$`, `20 + 30%`) and the answer arrives in those units: five bills raining, or a battery charged to 50%. Mix them and the last one typed wins
 - **Auto-scroll** to keep content in view
 
 ### 🔊 **Speech Synthesis**

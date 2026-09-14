@@ -556,6 +556,50 @@ describe('useTypingApp', () => {
     });
   });
 
+  describe('equation modifiers', () => {
+    const sendLine = async text => {
+      typingApp.currentText.value = text;
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+    };
+
+    it('rains the answer in bills for a "$" equation', async () => {
+      await sendLine('2 + 3$');
+      expect(typingApp.mathEquation.value).toMatchObject({ result: 5, modifier: '$' });
+      // One bill per dollar of the answer (plus the burst's finale glyph).
+      const bills = typingApp.emojiEffects.value;
+      expect(bills.length).toBeGreaterThanOrEqual(5);
+      expect(bills.every(effect => ['💵', '💸'].includes(effect.emoji))).toBe(true);
+    });
+
+    it('charges the battery to the answer for a "%" equation', async () => {
+      await sendLine('20 + 30%');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 50 });
+    });
+
+    it('plays only the last modifier when they conflict', async () => {
+      await sendLine('2% + 3$');
+      expect(typingApp.batteryCharge.value).toBeNull();
+      expect(typingApp.emojiEffects.value.length).toBeGreaterThanOrEqual(5);
+    });
+
+    it('still plays the dot animation under the modifier effect', async () => {
+      await sendLine('2 + 3%');
+      expect(typingApp.mathEquation.value).toMatchObject({ a: 2, b: 3, result: 5 });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 5 });
+    });
+
+    it('speaks the answer in the modifier\'s units', async () => {
+      typingApp.isAutoSpeakEnabled.value = true;
+      typingApp.isSpeechEnabled.value = true;
+      await sendLine('2 + 3$');
+      expect(typingApp.speakingLine.value).toBe('2 plus 3 equals 5 dollars');
+      await sendLine('2 + 3%');
+      expect(typingApp.speakingLine.value).toBe('2 plus 3 equals 5 percent');
+      await sendLine('0 + 1$');
+      expect(typingApp.speakingLine.value).toBe('0 plus 1 equals 1 dollar');
+    });
+  });
+
   describe('percent battery handling', () => {
     const typeCharacter = key =>
       typingApp.onKeyDown({

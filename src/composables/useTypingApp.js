@@ -9,7 +9,11 @@ import { useSpeech } from '@/features/audio/composables/useSpeech';
 import { useBalloons } from '@/features/effects/composables/useBalloons';
 import { useEmojis } from '@/features/effects/composables/useEmojis';
 import { useScreenColor } from '@/features/effects/composables/useScreenColor';
-import { useEasterEggs, spawnForWord } from '@/features/easter-eggs/composables/useEasterEggs';
+import {
+  useEasterEggs,
+  spawnForWord,
+  spawnMoneyRain,
+} from '@/features/easter-eggs/composables/useEasterEggs';
 import { useWordGuide } from '@/features/typing/composables/useWordGuide';
 import { useSillyMode } from '@/features/easter-eggs/composables/useSillyMode';
 import { isSillyTrigger } from '@/features/easter-eggs/utils/sillyMode';
@@ -47,6 +51,22 @@ export function createTypingApp() {
   const colorSystem = useColorMode();
   const mathSystem = useMathAnimation();
   const percentSystem = usePercentAnimation();
+
+  // An equation's modifier plays on the answer: "2 + 3$" rains five bills,
+  // "2 + 3%" charges the battery to five percent. The dot animation still runs
+  // underneath — the modifier says what the dots are worth, not what replaces
+  // them.
+  const playModifierEffect = equation => {
+    if (equation.modifier === '$') spawnMoneyRain(equation.result, emojisSystem.spawnEmojis);
+    if (equation.modifier === '%') percentSystem.play({ percent: equation.result });
+  };
+
+  const spokenAnswer = equation => {
+    const { result, modifier } = equation;
+    if (modifier === '$') return `${result} ${result === 1 ? 'dollar' : 'dollars'}`;
+    if (modifier === '%') return `${result} percent`;
+    return `${result}`;
+  };
 
   // Handle Enter key press
   const handleEnterKey = async () => {
@@ -96,15 +116,20 @@ export function createTypingApp() {
       }
 
       // Math: an "a + b" equation plays the count-up animation and speaks the
-      // answer instead of running the usual emoji/balloon effects.
+      // answer instead of running the usual emoji/balloon effects. A "$" or "%"
+      // written on either side says what the answer *is*, so the answer also
+      // plays that modifier's own effect — bills raining, or a battery charged.
       const equation = parseEquation(trimmedText);
       if (equation) {
         mathSystem.play(equation);
+        playModifierEffect(equation);
         await typingAPI.submitEntry(typingState.currentText.value);
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
           const word = equation.op === '+' ? 'plus' : 'minus';
-          speechSystem.speakLine(`${equation.a} ${word} ${equation.b} equals ${equation.result}`);
+          speechSystem.speakLine(
+            `${equation.a} ${word} ${equation.b} equals ${spokenAnswer(equation)}`
+          );
         }
         return;
       }

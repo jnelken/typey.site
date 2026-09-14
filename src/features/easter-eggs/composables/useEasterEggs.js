@@ -35,6 +35,20 @@ export function resolveSpawn(special, text = '') {
 }
 
 /**
+ * Rain a given number of bills, for callers that know the amount without a line
+ * to read it from — an equation carrying a "$" modifier, where the amount is
+ * the answer rather than anything the child typed. Routed through the same
+ * special as a typed "$5" so the two look identical.
+ */
+export function spawnMoneyRain(count, spawnEmojis) {
+  if (typeof spawnEmojis !== 'function') return;
+  const special = SPECIAL_EFFECTS.find(effect => effect.id === 'money-rain');
+  if (!special) return;
+  const spawn = resolveSpawn(special, `$${count}`);
+  spawnEmojis(spawn.type, spawn.count, spawn.options);
+}
+
+/**
  * Play the effect a word would play if it were typed. Used by the prompt's
  * tap-to-preview, so a tap and a typed word are guaranteed to look the same —
  * except the count, which a preview can cap so the screen doesn't fill up.

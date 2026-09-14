@@ -224,6 +224,29 @@ travelling path, take the side-on member's orientation. `boat` was rejected as a
 family for exactly that reason — 🚤 faces left, ⛵ does not, and there is no third
 glyph to break the tie.
 
+### 💲 Equation Modifiers
+
+Shipped 2026-09-13. An equation's answer can now be given units: a `$` or `%`
+written against either number says what the total *is*, and the answer plays
+that effect on top of the dot count-up. `2 + 3$` counts five dots and rains five
+bills; `20 + 30%` counts to fifty and charges the battery to 50%; the spoken
+line follows ("two plus three equals five dollars"), and the answer on screen is
+drawn wearing its sign — `$5`, `5%`. Written either side of the number, the way
+the money egg already took `$5` or `5$` and the battery took `50%` or `%50`. See
+`modifier` in `src/features/math/utils/parseEquation.js`.
+
+**Decisions this made that the concept left open.** **The modifier is additive,
+not a replacement**: the dots still count, because the child's question is still
+"what is two plus three" — the modifier only says what the five are worth. That
+also keeps the app's standing rule that a number maps to what appears.
+**Conflicts resolve to the last one typed** (`2% + 3$` rains bills): stated by
+position in the line, so it reads left to right the way the child wrote it, and a
+modifier on the ignored `=answer` counts too, since it is the most recent thing
+they asked for. **Only the answer wears the sign** in the drawn equation; the
+operands stay bare numbers, because they are the things being counted as dots.
+**A modifier buys no new arithmetic**: `$2 - $5` is still `null`, the same
+age-safe floor subtraction always had.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the

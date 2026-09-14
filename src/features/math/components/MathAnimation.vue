@@ -59,6 +59,15 @@ const drawDot = (ctx, x, y, radius, color, alpha) => {
   ctx.stroke();
 };
 
+// The answer wears its modifier the way it is written: "$5", "5%". Only the
+// answer does — the operands are counted as dots, and the modifier is a fact
+// about what the total is worth.
+const withModifier = (value, modifier) => {
+  if (modifier === '$') return `$${value}`;
+  if (modifier === '%') return `${value}%`;
+  return `${value}`;
+};
+
 const drawEquation = (ctx, eq, w, h, showResult, ga, base) => {
   ctx.globalAlpha = ga;
   ctx.fillStyle = COLOR_TEXT;
@@ -68,7 +77,7 @@ const drawEquation = (ctx, eq, w, h, showResult, ga, base) => {
   ctx.font = `bold ${fontSize}px "Comic Sans MS", "Baloo 2", system-ui, sans-serif`;
   const sign = eq.op === '+' ? '+' : '−';
   const text = showResult
-    ? `${eq.a} ${sign} ${eq.b} = ${eq.result}`
+    ? `${eq.a} ${sign} ${eq.b} = ${withModifier(eq.result, eq.modifier)}`
     : `${eq.a} ${sign} ${eq.b}`;
   ctx.fillText(text, w / 2, h * 0.28);
 };
