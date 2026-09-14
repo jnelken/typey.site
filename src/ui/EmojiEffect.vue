@@ -1,22 +1,50 @@
 <template>
-  <div class="emoji" :class="effectClass" :style="rootStyle">
+  <div class="emoji" :class="[effectClass, { impacted }]" :style="rootStyle">
     <span class="emoji-lift">
       <span class="emoji-flair" :class="flairClass">
         <span class="emoji-glyph" :class="{ flipped: effect.flipped }">{{ effect.emoji }}</span>
       </span>
+      <Splatter
+        v-if="impacted"
+        :color="effect.splatColor"
+        :count="10"
+        :size="dropletSize"
+      />
     </span>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { TRAVELLING_PATHS, PLACED_PATHS } from '@/features/effects/utils/wordMotion';
+import Splatter from '@/ui/Splatter.vue';
 
 const props = defineProps({
   effect: {
     type: Object,
     required: true,
   },
+});
+
+const impacted = ref(false);
+let impactTimer = null;
+
+onMounted(() => {
+  // Impact is timed off the keyframe fractions in IMPACT_AT, not @animationend:
+  // bounce hits at 40%, and .emoji-lift only animates on arc/lob, so animationend
+  // fires at the wrong moment (or not at all) for two of the three paths.
+  const e = props.effect;
+  if (!e.impact) return;
+  const delay = e.delay || 0;
+  const duration = e.duration || 4000;
+  const impactAt = e.impactAt ?? 1;
+  impactTimer = setTimeout(() => {
+    impacted.value = true;
+  }, delay + duration * impactAt);
+});
+
+onUnmounted(() => {
+  if (impactTimer != null) clearTimeout(impactTimer);
 });
 
 const effectClass = computed(() => {
@@ -32,6 +60,8 @@ const flairClass = computed(() => {
   const flair = props.effect.flair;
   return flair && flair !== 'none' ? `flair-${flair}` : null;
 });
+
+const dropletSize = computed(() => Math.round((props.effect.size || 32) * 0.38));
 
 const rootStyle = computed(() => {
   const e = props.effect;
@@ -65,6 +95,13 @@ const rootStyle = computed(() => {
  * can sit on the same element without one silently winning — which is exactly
  * what went wrong when the flip was first tried as `transform: scaleX(-1)` on
  * an element whose keyframes already animated `transform: translateY`.
+ *
+ * Produce impact freezes travel + lift with `animation-play-state`, then pops
+ * the fruit via `splat-pop` on `.emoji-flair` — never on `.emoji-glyph`, whose
+ * `scale: -1 1` flip would be overwritten by any animation that touches `scale`.
+ * The droplets sit inside `.emoji-lift` so they inherit both axes of motion
+ * with no coordinate maths; that span needs `position: relative` or they
+ * anchor to the viewport instead of the fruit.
  */
 .emoji {
   position: fixed;
@@ -76,7 +113,11 @@ const rootStyle = computed(() => {
   opacity: 0;
 }
 
-.emoji-lift,
+.emoji-lift {
+  display: inline-block;
+  position: relative;
+}
+
 .emoji-flair,
 .emoji-glyph {
   display: inline-block;
@@ -85,6 +126,23 @@ const rootStyle = computed(() => {
 /* A glyph drawn facing left, sent to the right, is turned around. */
 .emoji-glyph.flipped {
   scale: -1 1;
+}
+
+/* Freeze the fruit at the impact frame, kill infinite flair, then squash it
+ * out. Pausing `.emoji` also freezes its opacity keyframes, so without the
+ * pop the glyph would hang at full opacity until unmount. */
+.emoji.impacted,
+.emoji.impacted .emoji-lift {
+  animation-play-state: paused;
+}
+
+.emoji.impacted .emoji-flair {
+  animation: splat-pop 180ms ease-in forwards;
+}
+
+@keyframes splat-pop {
+  0% { scale: 1; opacity: 1; }
+  100% { scale: 0; opacity: 0; }
 }
 
 /* --- Flourishes ------------------------------------------------------

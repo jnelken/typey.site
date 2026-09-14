@@ -1,5 +1,6 @@
 import { findWordEmoji, familyForWord } from '@/features/typing/utils/wordEmoji';
-import { motionForWord, PATH_OPTIONS } from '@/features/effects/utils/wordMotion';
+import { PRODUCE_COLORS, SPLAT_COLORS } from '@/features/effects/utils/screenColor';
+import { motionForWord, PATH_OPTIONS, IMPACT_AT } from '@/features/effects/utils/wordMotion';
 
 // Every word in the dictionary gets an animation, and the dictionary decides
 // which one — see `wordMotion.js`. This module turns that decision into the
@@ -56,6 +57,15 @@ export function effectForWord(word, emoji, text = '') {
   const options = { ...pathOptions, flair: motion.flair, facing: motion.facing, emoji };
   const family = familyForWord(word);
   if (family) options.emojiSet = [...new Set([emoji, ...family])];
+
+  // Produce on a gravity path gets an impact: lob/arc burst mid-air, bounce
+  // splats on first ground contact. Membership comes from PRODUCE_COLORS so
+  // fruit and vegetable share one source of truth — no parallel emoji group.
+  if (PRODUCE_COLORS[word] && GRAVITY_PATHS.includes(motion.path)) {
+    options.impact = motion.path === 'bounce' ? 'splat' : 'burst';
+    options.splatColor = SPLAT_COLORS[PRODUCE_COLORS[word]];
+    options.impactAt = IMPACT_AT[motion.path];
+  }
 
   const count = countForWord(text, word) ?? motion.count ?? pathCount;
 

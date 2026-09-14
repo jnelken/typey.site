@@ -51,6 +51,16 @@ export const PATH_OPTIONS = Object.freeze({
   bloom: { count: 12, minDuration: 3200, maxDuration: 5200, stagger: 1500, minSize: 22, maxSize: 34, scaleMin: 1.0, scaleMax: 1.6 },
 });
 
+// When a thrown thing is at its most hittable, as a fraction of its own
+// duration. Read straight off the keyframes in EmojiEffect.vue: lob peaks at
+// 55%, arc at 50%, and bounce makes first ground contact at 40% — its later
+// hops are smaller and read as settling, not impact.
+export const IMPACT_AT = Object.freeze({ lob: 0.55, arc: 0.50, bounce: 0.40 });
+
+// How long the droplet burst lasts. Lives here so the component that plays it
+// and the composable that decides when to unmount it read one number.
+export const SPLAT_DURATION = 900;
+
 // What each category of the dictionary does. `facing` is the direction the
 // glyphs in that category are drawn pointing; it only matters for the
 // travelling paths.

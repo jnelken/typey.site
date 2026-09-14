@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { FLAIRS, TRAVELLING_PATHS } from '@/features/effects/utils/wordMotion';
+import { FLAIRS, TRAVELLING_PATHS, SPLAT_DURATION } from '@/features/effects/utils/wordMotion';
 
 // How long one cycle of a repeating flourish takes, in ms. Grow and pulse are
 // absent because they play once, over the effect's own duration.
@@ -25,11 +25,16 @@ export function useEmojis() {
     const full = { id, duration: 4000, delay: 0, size: 32, ...effect };
     effects.value.push(full);
 
-    const total = (full.duration || 4000) + (full.delay || 0) + 500;
+    // Keep the effect mounted through its impact splat, not just its path
+    // duration — retuning IMPACT_AT later must not splice it out mid-burst.
+    const duration = full.duration || 4000;
+    const delay = full.delay || 0;
+    const impactAt = full.impactAt;
+    const life = Math.max(duration, duration * (impactAt ?? 1) + SPLAT_DURATION) + delay + 500;
     setTimeout(() => {
       const idx = effects.value.findIndex(e => e.id === id);
       if (idx !== -1) effects.value.splice(idx, 1);
-    }, total);
+    }, life);
   };
 
   const randomBetween = (min, max) => Math.random() * (max - min) + min;
@@ -49,6 +54,7 @@ export function useEmojis() {
     const max = Math.min(count, options.max || 150);
     const facing = options.facing || 'left';
     const flair = FLAIRS.includes(options.flair) ? options.flair : 'none';
+    const { impact, splatColor, impactAt } = options;
 
     const minSize = options.minSize || 24;
     const maxSize = options.maxSize || 48;
@@ -83,7 +89,10 @@ export function useEmojis() {
         : Math.floor(randomBetween(...(FLAIR_TEMPO[flair] || [duration, duration])));
       const flipped = isFlipped(type, direction, facing);
 
-      addEffect({ type, emoji, left, top, duration, delay, size, direction, flair, flairDuration, flipped });
+      addEffect({
+        type, emoji, left, top, duration, delay, size, direction, flair, flairDuration, flipped,
+        impact, splatColor, impactAt,
+      });
     }
 
     // A burst of one thing has no crowd for a finale to top, and a preview
@@ -116,8 +125,12 @@ export function useEmojis() {
     const finaleFlair = flair === 'none' ? 'pulse' : flair;
     const flairDuration = Math.floor(randomBetween(...(FLAIR_TEMPO[finaleFlair] || [duration, duration])));
     const flipped = isFlipped(type, direction, facing);
+    const { impact, splatColor, impactAt } = options;
 
-    addEffect({ type, emoji, left, top, duration, delay, size, direction, flair: finaleFlair, flairDuration, flipped });
+    addEffect({
+      type, emoji, left, top, duration, delay, size, direction, flair: finaleFlair, flairDuration, flipped,
+      impact, splatColor, impactAt,
+    });
   };
 
   const clearEmojis = () => {
