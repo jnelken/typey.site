@@ -3,10 +3,12 @@
     <div class="eaten-plate">
       <!-- The whole glyph, fading back to a faint outline: the part that just
            got eaten. Drawn underneath so the bitten edge stays crisp. -->
-      <span class="eaten-glyph eaten-gone">{{ food.emoji }}</span>
+      <span class="eaten-glyph eaten-gone" :class="{ 'eaten-all': food.remaining <= 0 }">{{
+        food.emoji
+      }}</span>
       <span class="eaten-glyph eaten-left" :style="clipStyle">{{ food.emoji }}</span>
     </div>
-    <span class="eaten-label">{{ food.percent }}%</span>
+    <span class="eaten-label">{{ food.percent }}% eaten</span>
   </div>
 </template>
 
@@ -75,6 +77,13 @@ const clipStyle = computed(() => {
   animation: eaten-bite 620ms ease-out 180ms both;
 }
 
+/* A whole thing eaten leaves no full-opacity glyph beside the ghost to read it
+ * against, so the ghost has to carry the picture on its own and fades less far.
+ * Without this, "100% cookie" is a page that looks like nothing happened. */
+.eaten-gone.eaten-all {
+  animation-name: eaten-bite-all;
+}
+
 .eaten-label {
   font-family: var(--font-family-primary);
   font-size: var(--font-size-3xl);
@@ -102,6 +111,15 @@ const clipStyle = computed(() => {
   }
 }
 
+@keyframes eaten-bite-all {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.38;
+  }
+}
+
 /* The bite has to stay visible when nothing may move, so the eaten part goes
  * straight to its faint state instead of fading there. */
 @media (prefers-reduced-motion: reduce) {
@@ -112,6 +130,10 @@ const clipStyle = computed(() => {
   .eaten-gone {
     animation: none;
     opacity: 0.14;
+  }
+
+  .eaten-gone.eaten-all {
+    opacity: 0.38;
   }
 }
 </style>

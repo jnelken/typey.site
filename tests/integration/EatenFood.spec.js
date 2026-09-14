@@ -42,12 +42,31 @@ describe('EatenFood', () => {
     expect(clipOf(little)).not.toBe(clipOf(lots));
   });
 
-  it('says how much was eaten, in the text colour the page already uses', () => {
-    // No new paint on the page: the label uses `--color-text-primary`, which is
-    // what `screenColor.spec.js` contrast-checks every wash against, and the
-    // eaten part is the same glyph at low opacity rather than a new colour.
+  it('says how much was eaten, in those words', () => {
+    // The number is the amount *gone*, while the picture shows what is *left* —
+    // the opposite of what the battery's number means. Saying "eaten" is what
+    // keeps the two from contradicting each other.
+    //
+    // No new paint on the page either: the label uses `--color-text-primary`,
+    // which is what `screenColor.spec.js` contrast-checks every wash against,
+    // and the eaten part is the same glyph at low opacity, not a new colour.
     const container = renderPlate(HALF_COOKIE);
-    expect(container.querySelector('.eaten-label').textContent).toBe('50%');
+    expect(container.querySelector('.eaten-label').textContent).toBe('50% eaten');
+  });
+
+  it('keeps a wholly eaten glyph visible, since nothing is left to read it against', () => {
+    // At the regular ghost opacity a lone glyph on a near-white page reads as
+    // "nothing happened" rather than as "you ate all of it".
+    const whole = renderPlate({ ...HALF_COOKIE, percent: 100, remaining: 0 });
+    expect(whole.querySelector('.eaten-gone').classList).toContain('eaten-all');
+    // And the clipped layer really is showing nothing at that point.
+    expect(whole.querySelector('.eaten-left').getAttribute('style')).toContain(
+      remainingWedgePath(0)
+    );
+
+    expect([...renderPlate(HALF_COOKIE).querySelector('.eaten-gone').classList]).not.toContain(
+      'eaten-all'
+    );
   });
 
   it('hides the whole thing from screen readers — the typed line is the text', () => {

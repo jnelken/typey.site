@@ -401,9 +401,15 @@ cookie*, which an area-proportional bite of the square would not be. Same
 convention a pie chart uses, for the same reason. **No new paint on the page**:
 the eaten part is the same glyph at low opacity and the label uses
 `--color-text-primary`, so the feature introduces no colour that
-`tests/unit/screenColor.spec.js` would have to start checking. **It holds rather
-than vanishing**, like the equation and unlike the battery: the plate stays up
-until the next key is pressed, so a child can look at it, and Escape clears it.
+`tests/unit/screenColor.spec.js` would have to start checking. **The number says "eaten"**: it is the
+amount *gone* while the picture is what is *left*, which is the opposite of what
+the battery's number means, so the word is what keeps the two from contradicting
+each other. **A whole thing eaten fades less far** than a bitten one — at 100%
+there is no full-opacity glyph beside the ghost to read it against, and at the
+regular ghost opacity the page would just look like nothing happened. **It holds
+rather than vanishing**, like the equation and unlike the battery: the plate
+stays up until the next key is pressed, so a child can look at it, and Escape
+clears it.
 
 **Nothing was taken away from counting.** A percent never reached `countForWord`
 in the first place — its pattern is `(\d+)\s*word` and the `%` sits between the
