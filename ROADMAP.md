@@ -371,6 +371,45 @@ what unblocked that ticket. A drift guard asserts `WORD_CATEGORIES.produce` and
 `PRODUCE_COLORS` hold the same set, so a produce word added without a colour
 fails the suite instead of silently not splattering.
 
+### 🍪 A Bite Out of It
+
+Shipped 2026-09-14. A percent written against something edible eats that much
+of it: `50% cookie` leaves half a cookie on screen, `90% pizza` leaves a sliver,
+`100% watermelon` leaves the ghost of one. The bite is a wedge out of the top,
+running clockwise from twelve o'clock — the shape a missing slice of pie makes —
+and what was eaten stays on screen faded back to an outline, so the proportion
+reads as *this much is gone* rather than as an oddly shaped glyph. It generalises
+the same way counting did: every one of the seventy-odd words in the dictionary's
+`food` and `produce` categories works, with no per-word authoring. See
+`src/features/eaten/`.
+
+**Decisions this made that the concept left open.** **Only food gets bitten**,
+which is the constraint the item said had to be stated before it could be built:
+the wedge that reads as a bite out of 🍪 reads as *broken* through 🦁, so the gate
+is the dictionary's own `food` and `produce` categories and everything else falls
+through to the animation it already had — `50% lion` is still a pride of lions.
+**The line's first picture-word decides, not its first food word**: `50% lion
+cookie` is a lion line, because "which word is this line about" is one rule the
+whole app shares (`findWordEmoji`, phrases first, plurals folded back) and a
+second rule only this feature knew would be worse than the edge case it fixes.
+**Over 100% goes back to the swarm**: there is no eating more than all of it, and
+the four-digit range belongs to the battery, where an overcharge is the joke — so
+`150% cookie` flies cookies the way it always did. **The proportion is carried by
+angle, not by area of the clipping box**: food glyphs are drawn round inside their
+square, so an angular wedge on a cookie is an area-proportional bite *of the
+cookie*, which an area-proportional bite of the square would not be. Same
+convention a pie chart uses, for the same reason. **No new paint on the page**:
+the eaten part is the same glyph at low opacity and the label uses
+`--color-text-primary`, so the feature introduces no colour that
+`tests/unit/screenColor.spec.js` would have to start checking. **It holds rather
+than vanishing**, like the equation and unlike the battery: the plate stays up
+until the next key is pressed, so a child can look at it, and Escape clears it.
+
+**Nothing was taken away from counting.** A percent never reached `countForWord`
+in the first place — its pattern is `(\d+)\s*word` and the `%` sits between the
+two — so `5 cookies` is still five cookies and `50% cookie` was previously just an
+ordinary cookie swarm with the number ignored.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
@@ -378,10 +417,9 @@ Linear is the source of truth for live scope, status, and blockers. All tickets 
 
 | Order | Ticket | Blocked by | Demonstrable outcome |
 | --- | --- | --- | --- |
-| 1 | [DEV-53: Show an eaten proportion for food emoji](https://linear.app/jnelken/issue/DEV-53) | None | Inputs such as `50% cookie` reveal an eaten fraction while non-food words fall back safely. |
-| 2 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
-| 3 | [DEV-55: Burst confetti in Party Mode](https://linear.app/jnelken/issue/DEV-55) | None | Typing `party` reuses the splatter primitive for character and edge confetti. |
-| 4 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
+| 1 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
+| 2 | [DEV-55: Burst confetti in Party Mode](https://linear.app/jnelken/issue/DEV-55) | None | Typing `party` reuses the splatter primitive for character and edge confetti. |
+| 3 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
 
 ## Cross-cutting success criteria
 

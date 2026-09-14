@@ -46,8 +46,12 @@ typey.site/
 │   │   │   └── utils/                     # dotLayout.js, parseEquation.js
 │   │   ├── percent/                       # "50%" battery charge animation
 │   │   │   ├── components/BatteryAnimation.vue
-│   │   │   ├── composables/usePercentAnimation.js
-│   │   │   └── utils/parsePercent.js
+│   │   │   ├── composables/               # usePercentAnimation.js, useZaps.js
+│   │   │   └── utils/                     # parsePercent.js, electricFrame.js
+│   │   ├── eaten/                         # "50% cookie" — a bite out of food
+│   │   │   ├── components/EatenFood.vue
+│   │   │   ├── composables/useEatenFood.js
+│   │   │   └── utils/                     # parseEatenFood.js, eatenWedge.js
 │   │   └── audio/
 │   │       └── composables/               # useSound.js, useSpeech.js
 │   ├── composables/
