@@ -224,114 +224,23 @@ travelling path, take the side-on member's orientation. `boat` was rejected as a
 family for exactly that reason — 🚤 faces left, ⛵ does not, and there is no third
 glyph to break the tie.
 
-## 📐 Planned
+## 📐 Linear roadmap
 
-### 🌸 Grow-and-Spin for Things That Don't Travel
+Linear is the source of truth for live scope, status, and blockers. All tickets use the
+`repo/typey.site` label.
 
-**Motion That Matches Meaning** (shipped, above) picks a *path* from the
-word's category — but a path is still assumed, even for words that don't
-travel in real life. A flower doesn't fly across the screen; it opens. Right
-now `flower`/`flowers` take the `float` path with a `bobble` flair, drifting
-like a balloon. Instead they should stay in place and get bigger while
-rotating — a flourish-only effect with no path, matching what the emoji
-depicts rather than picking any path its category allows.
+| Order | Ticket | Blocked by | Demonstrable outcome |
+| --- | --- | --- | --- |
+| 1 | [DEV-51: Make stationary words grow and spin](https://linear.app/jnelken/issue/DEV-51) | None | Flowers and other stationary subjects flourish in place instead of travelling. |
+| 2 | [DEV-52: Splatter produce and leave its color behind](https://linear.app/jnelken/issue/DEV-52) | None | Thrown fruit bursts into palette-aware droplets and leaves an accessible page wash. |
+| 3 | [DEV-53: Show an eaten proportion for food emoji](https://linear.app/jnelken/issue/DEV-53) | None | Inputs such as `50% cookie` reveal an eaten fraction while non-food words fall back safely. |
+| 4 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
+| 5 | [DEV-55: Burst confetti in Party Mode](https://linear.app/jnelken/issue/DEV-55) | [DEV-52](https://linear.app/jnelken/issue/DEV-52) | Typing `party` reuses the splatter primitive for character and edge confetti. |
+| 6 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
 
-Once this exists it's worth auditing other `nature`/`space` words that don't
-have inherent motion (sun, tree, star) for the same fix, not just flower.
+## Cross-cutting success criteria
 
-**Touchpoints**: `src/features/effects/utils/wordMotion.js` — the `WORD_MOTION`
-entries for `flower`/`flowers` (currently `{ paths: ['float'], flairs:
-['bobble'], count: 20 }`), and possibly a stationary option alongside `PATHS`
-if "no path, flourish only" doesn't already fall out of the existing `grow` +
-`spin` flairs.
-
-### 🍉 Produce Splatter and the Colour It Leaves Behind
-
-Designed, not yet built — the full plan is in
-[`docs/plans/produce-splatter.md`](docs/plans/produce-splatter.md).
-
-Produce is already thrown on the gravity paths and lands at the bottom of the
-screen, where it currently just fades out. It should **burst** instead: fruit on
-`lob` and `arc` splits at the top of its arc, fruit on `bounce` splats on first
-ground contact, both spraying coloured droplets. The word's colour then washes
-the page the same way typing a colour does, lasting until the next line is sent.
-
-Two decisions worth knowing without opening the plan. **No fruit-ninja library**
-— they are canvas- or Phaser-based, and everything here is CSS keyframes on DOM
-nodes, so one could not reuse the existing paths or be driven by the dictionary.
-And the produce-to-colour map holds *colour names*, not hexes, so every wash
-resolves through `SCREEN_COLORS` and the contrast test in
-`tests/unit/screenColor.spec.js` covers the feature for free.
-
-The droplet burst lands as `src/ui/Splatter.vue`, built to take a palette rather
-than a single colour so Party Mode below can reuse it as-is.
-
-### 🍪 `50% cookie`
-
-Out of scope for Percent Battery, worth building later. Eating a proportion of
-any dictionary word's emoji — `50% cookie` — would reuse `findWordEmoji` the way
-`5 lions` already does, and generalise the same way counting did. One constraint
-has to be stated before it's built: a wedge through 🍪 reads as *eaten*, and the
-same wedge through 🦁 reads as *broken*, so it would have to be restricted to the
-dictionary's food and fruit categories with a fallback for everything else.
-
-This is also what makes the percent early return genuinely load-bearing. Bare
-`50%` can't reach the counting path anyway; `50% cookie` would hit `findWordEmoji`
-and `countForWord` and claim the line first.
-
-## 🥚 Easter Egg Ideas
-
-### 🌙 Dark Theme Trigger
-
-- **Trigger**: Typing the word "goodnight"
-- **Effect**: Automatically switches to a dark theme with stars and moon
-- **Implementation**: Word detection in input, theme switching logic
-- **Decided**: Color Mode is **off while the dark theme is on**, rather than
-  growing a second palette. The seven hues in `colorMode.js` are contrast-checked
-  against the light background only (`tests/unit/colorMode.spec.js`) and would
-  fail AA on a dark ground; the same goes for the screen-colour washes in
-  `screenColor.js`.
-
-### 🎭 Additional Easter Egg Concepts
-
-- **Party Mode**: Typing "party" bursts confetti from each character as it lands,
-  and from the sides of the screen when the line is sent. Confetti and produce
-  splatter are the same primitive — a burst of small coloured particles from a
-  point — so this should be built on `Splatter.vue` from **Produce Splatter**
-  above rather than as a second particle system.
-- **`50% cookie`**: see **`50% cookie`** under Planned — the bare percent battery
-  is shipped; this is the food-restricted eaten-wedge follow-on.
-
-## 🔍 Research Needed
-
-- Accessibility considerations for all new modes
-
-## 📊 User Analytics
-
-### **Core Metrics to Track**
-
-- **Time Spent**: How long users interact with the typing page
-- **Settings Used**: Which buttons/controls at the top were clicked
-- **Easter Egg Discovery**: Which easter eggs were triggered and how oftengs
-
-### **Analytics Implementation**
-
-- **Tool**: PostHog — decided, so this no longer needs a vendor call, only an
-  account, a project key and the client wiring.
-- **Privacy-First Approach**: No personal data collection
-- **Anonymous Tracking**: Session-based analytics without user identification
-- **Performance Monitoring**: Load times, responsiveness metrics
-- **A/B Testing Framework**: Test different UI variations and features
-
-### **Dashboard & Insights**
-
-- **Simple Stats View**: Time spent, popular settings, easter egg usage
-- **Easter Egg Popularity**: See which ones users discover and enjoy most
-- **Settings Usage**: Understand which controls are most valuable to users
-
-## 🎯 Success Metrics
-
-- User engagement with easter eggs
-- Accessibility compliance
-- Performance impact of new features
-- User feedback and feature requests
+- Preserve accessibility across every new mode, including contrast and reduced-motion behavior.
+- Keep effects within the app's performance budget.
+- Measure engagement without collecting personal data.
+- Use feedback and usage data to decide which easter eggs and settings deserve more work.
