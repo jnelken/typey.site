@@ -24,6 +24,8 @@ import { parseEquation } from '@/features/math/utils/parseEquation';
 import { usePercentAnimation } from '@/features/percent/composables/usePercentAnimation';
 import { useZaps } from '@/features/percent/composables/useZaps';
 import { parsePercent } from '@/features/percent/utils/parsePercent';
+import { useEatenFood } from '@/features/eaten/composables/useEatenFood';
+import { parseEatenFood } from '@/features/eaten/utils/parseEatenFood';
 
 const TYPING_APP_KEY = Symbol('typing-app');
 
@@ -52,6 +54,7 @@ export function createTypingApp() {
   const colorSystem = useColorMode();
   const mathSystem = useMathAnimation();
   const percentSystem = usePercentAnimation();
+  const eatenSystem = useEatenFood();
   // Past 1000% the battery is dangerous: each keystroke is struck by a bolt off
   // the electrified frame, which eats the letter it hit.
   const zapSystem = useZaps({ onStrike: () => typingState.deleteLastCharacter() });
@@ -151,6 +154,23 @@ export function createTypingApp() {
         return;
       }
 
+      // A percent written against something edible eats that much of it:
+      // "50% cookie" leaves half a cookie. Sits below the percent check
+      // because a bare "50%" is the battery's, and below the equation check
+      // because both of those are anchored to the whole line and this is not.
+      // Non-food words return null here and fall through to the animation
+      // they already had, so "50% lion" is still a pride of lions.
+      const eaten = parseEatenFood(trimmedText);
+      if (eaten) {
+        eatenSystem.play(eaten);
+        await typingAPI.submitEntry(typingState.currentText.value);
+        typingState.clearCurrentText();
+        if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
+          speechSystem.speakLine(`${eaten.percent} percent ${eaten.word}`);
+        }
+        return;
+      }
+
       // Easter eggs: emoji effects based on input
       easterEggsSystem.evaluateEasterEggs(
         trimmedText,
@@ -183,6 +203,7 @@ export function createTypingApp() {
     // a point of charge — the whole point is watching it run down as you type.
     onPrintableKey: () => {
       mathSystem.clear();
+      eatenSystem.clear();
       // An overcharge spends itself a bolt at a time instead of a point at a
       // time, and each bolt costs the child the letter they just typed. It
       // stops on its own once the charge falls back under the threshold.
@@ -198,6 +219,7 @@ export function createTypingApp() {
       balloonsSystem.popAllBalloons();
       percentSystem.clear();
       zapSystem.clear();
+      eatenSystem.clear();
     },
     onShuffleWord: () => {
       if (typingSettings.isWordPromptEnabled.value) {
@@ -272,6 +294,7 @@ export function createTypingApp() {
     screenColor: screenColorSystem.screenColor,
     mathEquation: mathSystem.current,
     batteryCharge: percentSystem.current,
+    eatenFood: eatenSystem.current,
     isBatteryOvercharged: percentSystem.isOvercharged,
     zapBolts: zapSystem.bolts,
     promptWord: wordPromptSystem.promptWord,
