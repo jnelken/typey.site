@@ -327,6 +327,50 @@ sun and the moon just hang" as a decision and a spec asserts that sun, star and
 moon float, so changing them means overruling a call already made, not filling a
 gap. Raised on DEV-51 for a separate pass.
 
+### 🍉 Produce Splatters, and the Colour It Leaves Behind
+
+Shipped 2026-09-14. **Motion That Matches Meaning** already threw produce on the
+gravity paths, but a thrown apple just faded out where it landed — the one place
+the motion system promised an impact and didn't deliver one. Produce now
+**bursts**: `lob` and `arc` split at the top of the arc, `bounce` splats on first
+ground contact, both spraying coloured droplets from the glyph's own position.
+The word's colour then washes the page exactly the way typing a colour does, and
+clears on the next line sent. See `PRODUCE_COLORS` in
+`src/features/effects/utils/screenColor.js` and `src/ui/Splatter.vue`.
+
+**Decisions this made that the concept left open.** **The map holds colour
+names, not hexes**: every wash resolves through `SCREEN_COLORS`, so the contrast
+check in `tests/unit/screenColor.spec.js` covers the new feature for free and no
+value can slip past the readability bar that file exists to hold. That is also
+why `garlic` is brown rather than its literal white — `SCREEN_COLORS.white` on a
+near-white page is an invisible splatter, which reads as a bug rather than as a
+vegetable. **A named colour beats a produce word regardless of order**: "purple
+banana" and "banana purple" are both purple, because the colour loop runs to
+completion before produce gets a look in; the banana still splatters yellow.
+**The droplets are not the text palette**: `SPLAT_COLORS` is saturated where
+`COLOR_PALETTE` is AA-darkened, because droplets are `pointer-events: none`
+decoration with no text on them and carry no contrast constraint — matching them
+to the washes would only read muddy. **Which produce bursts mid-air and which
+splats on the floor falls out of the path**, with no new randomness: `motionForWord`
+is deterministic, so the watermelon always bursts in the air and the potato
+always splats on the floor, and a child can learn that rather than re-guess it.
+**Impact is timed, not event-driven**: a `bounce` impacts at 40% of its own
+duration and `.emoji-lift` only animates on `arc` and `lob`, so `animationend`
+fires at the wrong moment for two of the three paths — the component times off
+`IMPACT_AT` instead, which is also what makes it testable with fake timers.
+**No fruit-ninja library**: they are canvas- or Phaser-based, and every animation
+here is CSS keyframes on DOM nodes, so one could neither reuse the existing paths
+nor be driven by the dictionary. **The splatter fires on a guide tap but the wash
+does not** — the burst lives in the effect pipeline `previewWord` shares, while
+the wash is driven by `handleEnterKey`, which is exactly how screen colour
+already behaves.
+
+`Splatter.vue` takes a palette rather than a single colour, so Party Mode
+(DEV-55) can reuse it for multi-coloured confetti without a rewrite — which is
+what unblocked that ticket. A drift guard asserts `WORD_CATEGORIES.produce` and
+`PRODUCE_COLORS` hold the same set, so a produce word added without a colour
+fails the suite instead of silently not splattering.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
@@ -334,11 +378,10 @@ Linear is the source of truth for live scope, status, and blockers. All tickets 
 
 | Order | Ticket | Blocked by | Demonstrable outcome |
 | --- | --- | --- | --- |
-| 1 | [DEV-52: Splatter produce and leave its color behind](https://linear.app/jnelken/issue/DEV-52) | None | Thrown fruit bursts into palette-aware droplets and leaves an accessible page wash. |
-| 2 | [DEV-53: Show an eaten proportion for food emoji](https://linear.app/jnelken/issue/DEV-53) | None | Inputs such as `50% cookie` reveal an eaten fraction while non-food words fall back safely. |
-| 3 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
-| 4 | [DEV-55: Burst confetti in Party Mode](https://linear.app/jnelken/issue/DEV-55) | [DEV-52](https://linear.app/jnelken/issue/DEV-52) | Typing `party` reuses the splatter primitive for character and edge confetti. |
-| 5 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
+| 1 | [DEV-53: Show an eaten proportion for food emoji](https://linear.app/jnelken/issue/DEV-53) | None | Inputs such as `50% cookie` reveal an eaten fraction while non-food words fall back safely. |
+| 2 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
+| 3 | [DEV-55: Burst confetti in Party Mode](https://linear.app/jnelken/issue/DEV-55) | None | Typing `party` reuses the splatter primitive for character and edge confetti. |
+| 4 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
 
 ## Cross-cutting success criteria
 

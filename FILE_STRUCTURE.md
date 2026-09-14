@@ -65,6 +65,7 @@ typey.site/
 │   │   ├── EmojiEffect.vue                # One animated emoji, in four layers
 │   │   ├── Input.vue
 │   │   ├── Modal.vue
+│   │   ├── Splatter.vue                   # Droplet burst at produce impact
 │   │   ├── Text.vue
 │   │   └── ToggleButton.vue
 │   ├── utils/storage.js
