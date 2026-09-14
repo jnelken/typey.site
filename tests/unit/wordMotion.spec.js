@@ -1,6 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import {
   motionForWord, PATHS, FLAIRS, PATH_OPTIONS, PLACED_PATHS, TRAVELLING_PATHS,
+  IMPACT_AT,
 } from '@/features/effects/utils/wordMotion';
 import {
   countForWord, animationTypeForWord, resolveWordEffect, effectForWord, isHeavyWord,
@@ -223,5 +224,13 @@ describe('the dictionary knows its own categories', () => {
 
   it('has nothing to say about a word it does not hold', () => {
     expect(categoryForWord('qqq')).toBeNull();
+  });
+});
+
+describe('impact timing covers every gravity path', () => {
+  it('keys IMPACT_AT to exactly the gravity paths', () => {
+    // Derived set comparison: a new gravity path without a fraction, or a
+    // fraction for a path that is not gravity, must fail CI.
+    expect(Object.keys(IMPACT_AT).sort()).toEqual(['arc', 'bounce', 'lob']);
   });
 });

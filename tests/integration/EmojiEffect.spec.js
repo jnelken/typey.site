@@ -1,4 +1,5 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { nextTick } from 'vue';
 import { render } from '@testing-library/vue';
 import EmojiEffect from '@/ui/EmojiEffect.vue';
 import { PATHS, PLACED_PATHS } from '@/features/effects/utils/wordMotion';
@@ -55,5 +56,45 @@ describe('EmojiEffect', () => {
 
   it('shows the emoji it was handed', () => {
     expect(renderEffect({ type: 'arc' }).textContent.trim()).toBe('⚽');
+  });
+
+  describe('produce impact', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('renders no splatter before impact, and exactly one after', async () => {
+      const delay = 100;
+      const duration = 1000;
+      const impactAt = 0.4;
+      const { container } = render(EmojiEffect, {
+        props: {
+          effect: {
+            emoji: '🍎',
+            type: 'bounce',
+            delay,
+            duration,
+            impact: 'splat',
+            splatColor: '#e33e3e',
+            impactAt,
+            size: 40,
+          },
+        },
+      });
+
+      expect(container.querySelectorAll('.splatter')).toHaveLength(0);
+
+      jest.advanceTimersByTime(delay + duration * impactAt - 1);
+      await nextTick();
+      expect(container.querySelectorAll('.splatter')).toHaveLength(0);
+
+      jest.advanceTimersByTime(1);
+      await nextTick();
+      expect(container.querySelectorAll('.splatter')).toHaveLength(1);
+    });
   });
 });

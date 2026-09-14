@@ -4,7 +4,8 @@ import {
   animationTypeForWord,
   isHeavyWord,
 } from '@/features/effects/utils/wordEffect';
-import { PATHS } from '@/features/effects/utils/wordMotion';
+import { PATHS, IMPACT_AT } from '@/features/effects/utils/wordMotion';
+import { PRODUCE_COLORS, SPLAT_COLORS } from '@/features/effects/utils/screenColor';
 import { WORD_EMOJI, WORD_FAMILY, findWordEmoji } from '@/features/typing/utils/wordEmoji';
 import { useEasterEggs } from '@/features/easter-eggs/composables/useEasterEggs';
 
@@ -138,5 +139,43 @@ describe('every word in the library animates', () => {
     }
 
     expect(blanks).toEqual([]);
+  });
+});
+
+describe('produce gets an impact', () => {
+  const GRAVITY = ['lob', 'arc', 'bounce'];
+
+  it('throws every produce word on a gravity path with an impact', () => {
+    for (const word of Object.keys(PRODUCE_COLORS)) {
+      const effect = resolveWordEffect(word);
+      expect(GRAVITY).toContain(effect.type);
+      expect(effect.options.impact).toBeDefined();
+    }
+  });
+
+  it('splats bounce words and bursts lob and arc words', () => {
+    for (const word of Object.keys(PRODUCE_COLORS)) {
+      const effect = resolveWordEffect(word);
+      if (effect.type === 'bounce') {
+        expect(effect.options.impact).toBe('splat');
+      } else {
+        expect(effect.options.impact).toBe('burst');
+      }
+    }
+  });
+
+  it('colours and times the impact from the produce maps', () => {
+    for (const word of Object.keys(PRODUCE_COLORS)) {
+      const effect = resolveWordEffect(word);
+      expect(effect.options.splatColor).toBe(SPLAT_COLORS[PRODUCE_COLORS[word]]);
+      expect(effect.options.impactAt).toBe(IMPACT_AT[effect.type]);
+    }
+  });
+
+  it('gives no impact to a non-produce word', () => {
+    // lion is an animal; pizza is food, which shares produce's gravity paths,
+    // so a missing impact here proves the gate is produce-membership.
+    expect(resolveWordEffect('lion').options.impact).toBeUndefined();
+    expect(resolveWordEffect('pizza').options.impact).toBeUndefined();
   });
 });

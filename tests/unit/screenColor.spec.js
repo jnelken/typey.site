@@ -2,10 +2,11 @@ import { describe, it, expect } from '@jest/globals';
 import {
   SCREEN_COLORS,
   DEFAULT_SCREEN_COLOR,
+  PRODUCE_COLORS,
   screenColorForText,
 } from '@/features/effects/utils/screenColor';
 import { useScreenColor } from '@/features/effects/composables/useScreenColor';
-import { WORD_EMOJI } from '@/features/typing/utils/wordEmoji';
+import { WORD_EMOJI, WORD_CATEGORIES } from '@/features/typing/utils/wordEmoji';
 
 // The text the child reads their own typing in.
 const TEXT_PRIMARY = '#2f3640';
@@ -104,5 +105,40 @@ describe('useScreenColor', () => {
     expect(
       document.documentElement.style.getPropertyValue('--color-background'),
     ).toBe(DEFAULT_SCREEN_COLOR);
+  });
+});
+
+// Adding a produce word without a colour, or a colour without a word, must
+// fail CI instead of silently not splattering.
+describe('produce words and colours stay in lockstep', () => {
+  it('gives every produce dictionary word a colour, and every colour a word', () => {
+    expect(Object.keys(WORD_CATEGORIES.produce).sort()).toEqual(
+      Object.keys(PRODUCE_COLORS).sort(),
+    );
+  });
+});
+
+describe('produce washes the page', () => {
+  it('maps every produce colour name through SCREEN_COLORS', () => {
+    for (const colorName of Object.values(PRODUCE_COLORS)) {
+      expect(SCREEN_COLORS[colorName]).toBeDefined();
+    }
+  });
+
+  it('washes grapes purple', () => {
+    expect(screenColorForText('grapes')).toBe(SCREEN_COLORS.purple);
+  });
+
+  it('reads a plural produce word via the trailing-s fallback', () => {
+    expect(screenColorForText('apples')).toBe(SCREEN_COLORS.red);
+  });
+
+  it('lets a named colour beat produce regardless of order', () => {
+    expect(screenColorForText('purple banana')).toBe(SCREEN_COLORS.purple);
+    expect(screenColorForText('banana purple')).toBe(SCREEN_COLORS.purple);
+  });
+
+  it('returns null when the line names neither a colour nor produce', () => {
+    expect(screenColorForText('lion')).toBeNull();
   });
 });

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { useEmojis } from '@/features/effects/composables/useEmojis';
+import { SPLAT_DURATION } from '@/features/effects/utils/wordMotion';
 
 describe('useEmojis', () => {
   beforeEach(() => {
@@ -63,5 +64,33 @@ describe('useEmojis', () => {
     spawnEmojis('float', 5, { emoji: '🐱', finale: false });
 
     expect(effects.value).toHaveLength(5);
+  });
+
+  it('keeps an effect mounted past its impact moment', () => {
+    const { effects, spawnEmojis } = useEmojis();
+    spawnEmojis('bounce', 1, {
+      emoji: '🍎',
+      impact: 'splat',
+      splatColor: '#e33e3e',
+      impactAt: 0.4,
+      minDuration: 3000,
+      maxDuration: 3000,
+      stagger: 0,
+      finale: false,
+    });
+
+    expect(effects.value).toHaveLength(1);
+    const effect = effects.value[0];
+    const impactMoment = effect.delay + effect.duration * effect.impactAt;
+    const life = Math.max(
+      effect.duration,
+      effect.duration * effect.impactAt + SPLAT_DURATION,
+    ) + effect.delay + 500;
+
+    jest.advanceTimersByTime(impactMoment);
+    expect(effects.value).toHaveLength(1);
+
+    jest.advanceTimersByTime(life - impactMoment);
+    expect(effects.value).toHaveLength(0);
   });
 });
