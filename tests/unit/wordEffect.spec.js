@@ -4,6 +4,7 @@ import {
   animationTypeForWord,
   isHeavyWord,
 } from '@/features/effects/utils/wordEffect';
+import { PATHS } from '@/features/effects/utils/wordMotion';
 import { WORD_EMOJI, WORD_FAMILY, findWordEmoji } from '@/features/typing/utils/wordEmoji';
 import { useEasterEggs } from '@/features/easter-eggs/composables/useEasterEggs';
 
@@ -16,9 +17,7 @@ describe('resolveWordEffect', () => {
 
   it('uses an animation type the renderer knows', () => {
     for (const word of Object.keys(WORD_EMOJI)) {
-      expect(['float', 'rain', 'burst', 'run', 'arc', 'lob', 'bounce']).toContain(
-        animationTypeForWord(word),
-      );
+      expect(PATHS).toContain(animationTypeForWord(word));
     }
   });
 

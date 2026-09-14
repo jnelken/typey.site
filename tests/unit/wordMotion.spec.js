@@ -1,6 +1,10 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { motionForWord, PATHS, FLAIRS } from '@/features/effects/utils/wordMotion';
-import { countForWord, animationTypeForWord, resolveWordEffect } from '@/features/effects/utils/wordEffect';
+import {
+  motionForWord, PATHS, FLAIRS, PATH_OPTIONS, PLACED_PATHS, TRAVELLING_PATHS,
+} from '@/features/effects/utils/wordMotion';
+import {
+  countForWord, animationTypeForWord, resolveWordEffect, effectForWord, isHeavyWord,
+} from '@/features/effects/utils/wordEffect';
 import { WORD_EMOJI, categoryForWord } from '@/features/typing/utils/wordEmoji';
 import { useEasterEggs } from '@/features/easter-eggs/composables/useEasterEggs';
 
@@ -45,6 +49,73 @@ describe('motion comes from what the word is', () => {
   it('gives a heart its heartbeat and a snowflake its spin', () => {
     expect(motionForWord('heart').flair).toBe('throb');
     expect(motionForWord('snowflake').flair).toBe('spin');
+  });
+});
+
+describe('things that do not travel stay where they are planted', () => {
+  const FLOWERS = ['flower', 'flowers', 'rose', 'sunflower', 'tulip'];
+
+  it('blooms a flower in place instead of floating it away', () => {
+    for (const word of FLOWERS) {
+      expect(animationTypeForWord(word)).toBe('bloom');
+    }
+  });
+
+  it('turns it while it opens, which needs the path and the flair both', () => {
+    // The growth lives on the path and the turn on the flair, because a word
+    // gets exactly one flair and this effect wants two things at once.
+    for (const word of FLOWERS) {
+      expect(motionForWord(word).flair).toBe('spin');
+    }
+  });
+
+  it('moves a flower the same way however many were typed', () => {
+    expect(motionForWord('flowers')).toEqual(motionForWord('flower'));
+  });
+
+  it('never sends a bloom sideways, so it is given no facing to obey', () => {
+    expect(TRAVELLING_PATHS).not.toContain('bloom');
+  });
+
+  it('does not treat a flower as something thrown', () => {
+    expect(isHeavyWord('flower')).toBe(false);
+  });
+
+  it('anchors a bloom to a spot on the screen rather than an edge', () => {
+    // Without this every flower in the patch stacks into one band: the other
+    // paths get their vertical position from CSS because they animate away
+    // from an edge, and a bloom never leaves where it started.
+    expect(PLACED_PATHS).toContain('bloom');
+  });
+
+  it('runs fewer and smaller than a drifting path, so a patch does not pile up', () => {
+    expect(PATH_OPTIONS.bloom.count).toBeLessThan(PATH_OPTIONS.float.count);
+    expect(PATH_OPTIONS.bloom.maxSize).toBeLessThan(PATH_OPTIONS.float.maxSize);
+  });
+});
+
+describe('every path the table can name is one the app can draw', () => {
+  it('gives each path its own options', () => {
+    // `effectForWord` destructures `PATH_OPTIONS[path]` unguarded, so a path
+    // added to the table without options throws the moment a word takes it.
+    for (const path of PATHS) {
+      expect(PATH_OPTIONS[path]).toBeDefined();
+    }
+  });
+
+  it('spawns an effect for every word without reaching for missing options', () => {
+    for (const word of Object.keys(WORD_EMOJI)) {
+      const effect = effectForWord(word, '✨');
+      expect(PATHS).toContain(effect.type);
+      expect(effect.count).toBeGreaterThan(0);
+    }
+  });
+
+  it('only ever places a path that stays put', () => {
+    for (const path of PLACED_PATHS) {
+      expect(PATHS).toContain(path);
+      expect(TRAVELLING_PATHS).not.toContain(path);
+    }
   });
 });
 

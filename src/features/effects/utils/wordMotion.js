@@ -9,9 +9,12 @@ import { categoryForWord } from '@/features/typing/utils/wordEmoji';
 // what a category allows, so a word still always moves the same way while the
 // library as a whole stays varied.
 
-// The paths an effect can take across the screen.
+// The paths an effect can take across the screen. `bloom` is the odd one out:
+// it goes nowhere. Some words name things that don't travel — a flower doesn't
+// fly across the screen, it opens — so the path layer swells them in place and
+// leaves the turning to a flair.
 export const PATHS = Object.freeze([
-  'float', 'rain', 'burst', 'run', 'arc', 'lob', 'bounce',
+  'float', 'rain', 'burst', 'run', 'arc', 'lob', 'bounce', 'bloom',
 ]);
 
 // Flourishes layered on top of a path. These are modifiers, not paths: any
@@ -22,6 +25,12 @@ export const FLAIRS = Object.freeze([
 
 // Paths that travel sideways, and so care which way the glyph is facing.
 export const TRAVELLING_PATHS = Object.freeze(['run', 'arc']);
+
+// Paths that stay where they were put, and so need a vertical position of their
+// own. Every other path is anchored to an edge in CSS and animates away from it,
+// so handing one a `top` would fight the keyframes; these two never move off
+// their spawn point, and without a `top` the whole burst stacks in one band.
+export const PLACED_PATHS = Object.freeze(['burst', 'bloom']);
 
 // Per-path feel. Bursts are short and punchy; rain and float drift longer. The
 // paths that obey gravity run fewer and larger, so each throw reads as one
@@ -34,6 +43,12 @@ export const PATH_OPTIONS = Object.freeze({
   arc: { count: 8, minDuration: 2600, maxDuration: 4200, stagger: 1400, minSize: 34, maxSize: 52, scaleMin: 1.1, scaleMax: 1.9 },
   lob: { count: 8, minDuration: 2400, maxDuration: 3800, stagger: 1500, minSize: 34, maxSize: 52, scaleMin: 1.1, scaleMax: 1.9 },
   bounce: { count: 10, minDuration: 3000, maxDuration: 4600, stagger: 1600, minSize: 32, maxSize: 50, scaleMin: 1.1, scaleMax: 1.9 },
+  // Blooms run fewer and smaller than the drifting paths. A travelling glyph
+  // only shares the screen with its crowd for a moment; a stationary one sits
+  // in its patch for the whole effect, and its own keyframes swell it further,
+  // so the same twenty would pile on top of each other rather than read as a
+  // patch of flowers.
+  bloom: { count: 12, minDuration: 3200, maxDuration: 5200, stagger: 1500, minSize: 22, maxSize: 34, scaleMin: 1.0, scaleMax: 1.6 },
 });
 
 // What each category of the dictionary does. `facing` is the direction the
@@ -103,8 +118,15 @@ const WORD_MOTION = Object.freeze({
   ...fill(['stars'], { paths: ['float'], flairs: ['spin'], count: 24 }),
   ...fill(['sun', 'sunny', 'moon', 'rainbow', 'fire', 'lightning'],
     { paths: ['float'], flairs: ['pulse'], count: 8 }),
-  ...fill(['flower'], { paths: ['float'], flairs: ['bobble'], count: 20 }),
-  ...fill(['flowers'], { paths: ['float'], flairs: ['bobble'], count: 20 }),
+  // A flower is rooted. It opens where it stands and turns to the light, so it
+  // takes no path at all — `bloom` swells it and `spin` turns it. Singular and
+  // plural share the entry: which way a thing moves is a fact about the thing,
+  // not about how many of them were typed. The named flowers come along because
+  // they are the same thing said more precisely — and because `flower`'s own
+  // family already spawns 🌷, so a tulip that drifts away when typed by name
+  // would contradict the tulip blooming beside it.
+  ...fill(['flower', 'flowers', 'rose', 'sunflower', 'tulip'],
+    { paths: ['bloom'], flairs: ['spin'] }),
   ...fill(['tornado'], { paths: ['run'], flairs: ['spin'], facing: 'any' }),
   ...fill(['wind'], { paths: ['run'], flairs: ['none'], facing: 'right' }),
 

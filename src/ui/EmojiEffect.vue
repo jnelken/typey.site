@@ -10,7 +10,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { TRAVELLING_PATHS } from '@/features/effects/utils/wordMotion';
+import { TRAVELLING_PATHS, PLACED_PATHS } from '@/features/effects/utils/wordMotion';
 
 const props = defineProps({
   effect: {
@@ -42,9 +42,10 @@ const rootStyle = computed(() => {
     '--delay': `${e.delay || 0}ms`,
     '--flair-dur': `${e.flairDuration || e.duration || 4000}ms`,
   };
-  // Only set top for burst effects; the rest are anchored top/bottom in CSS
+  // Only the paths that stay put get a top; the rest are anchored to an edge in
+  // CSS and animate away from it.
   const type = e.type || 'float';
-  if (type === 'burst' && e.top) {
+  if (PLACED_PATHS.includes(type) && e.top) {
     style.top = e.top;
   }
   return style;
@@ -210,6 +211,30 @@ const rootStyle = computed(() => {
   0% { transform: scale(0.6); opacity: 0; }
   30% { transform: scale(1); opacity: 1; }
   100% { transform: scale(1.1); opacity: 0; }
+}
+
+/* Bloom: opens where it was planted and keeps opening.
+ *
+ * The one path that goes nowhere, for words naming things that don't travel.
+ * The growth lives here on the path layer rather than in the `grow` flair,
+ * because a word gets exactly one flair and this effect needs two things at
+ * once — swelling and turning. Growing here leaves the flair slot free for
+ * `spin`, which animates `rotate` on an inner element and so composes with
+ * this without either overwriting the other.
+ *
+ * Unlike `burst` it opens slowly and holds, rather than popping and dropping
+ * straight back: a burst is an event, a bloom is a thing that is there.
+ */
+.effect-bloom {
+  animation-name: emoji-bloom;
+  animation-timing-function: ease-out;
+}
+
+@keyframes emoji-bloom {
+  0% { transform: scale(0.25); opacity: 0; }
+  20% { opacity: 0.9; }
+  80% { transform: scale(1.45); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
 /* --- Paths that obey gravity ------------------------------------------
