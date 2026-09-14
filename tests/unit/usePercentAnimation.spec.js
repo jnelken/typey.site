@@ -1,9 +1,13 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import {
   usePercentAnimation,
   ZAP_COST,
   ZAP_THRESHOLD,
+  BLACKOUT_MS,
+  POWER_OFF,
+  POWER_DEAD,
 } from '@/features/percent/composables/usePercentAnimation';
+import { MAX_CHARGE } from '@/features/percent/utils/parsePercent';
 
 describe('usePercentAnimation', () => {
   it('starts with no active percent', () => {
@@ -101,18 +105,123 @@ describe('usePercentAnimation', () => {
 
     it('stops firing once the charge falls back under the threshold', () => {
       const { current, play, zap, isOvercharged } = usePercentAnimation();
-      play({ percent: 2500 });
-      expect(zap()).toBe(true);  // 1500
-      expect(zap()).toBe(true);  // 500
+      play({ percent: 1100 });
+      expect(zap()).toBe(true); // 1000 — still at the line, no longer over
       expect(zap()).toBe(false);
       expect(isOvercharged.value).toBe(false);
-      expect(current.value).toMatchObject({ percent: 500 });
+      expect(current.value).toMatchObject({ percent: 1000 });
+    });
+
+    it('keeps zapping while still above the threshold after cheap bolts', () => {
+      const { current, play, zap, isOvercharged } = usePercentAnimation();
+      play({ percent: 2500 });
+      expect(zap()).toBe(true); // 2400
+      expect(zap()).toBe(true); // 2300
+      expect(isOvercharged.value).toBe(true);
+      expect(current.value).toMatchObject({ percent: 2300 });
     });
 
     it('zap() with no battery is a no-op', () => {
       const { current, zap } = usePercentAnimation();
       expect(zap()).toBe(false);
       expect(current.value).toBeNull();
+    });
+  });
+
+  describe('overflow past a million', () => {
+    it('clamps the battery at max and locks it with the typed overflow', () => {
+      const { current, play } = usePercentAnimation();
+      play({ percent: 2500000 });
+      expect(current.value).toMatchObject({
+        percent: MAX_CHARGE,
+        locked: true,
+        overflow: 2500000,
+      });
+    });
+
+    it('refuses to drain, zap, or clear a locked overflow charge', () => {
+      const { current, play, drain, zap, clear } = usePercentAnimation();
+      play({ percent: 1000001 });
+      const snapshot = { ...current.value };
+
+      expect(zap()).toBe(false);
+      drain();
+      clear();
+
+      expect(current.value).toEqual(snapshot);
+      expect(current.value.percent).toBe(MAX_CHARGE);
+    });
+
+    it('does not lock an exact million', () => {
+      const { current, play, drain } = usePercentAnimation();
+      play({ percent: MAX_CHARGE });
+      expect(current.value).toEqual({ percent: MAX_CHARGE, id: current.value.id });
+      drain();
+      expect(current.value.percent).toBe(MAX_CHARGE - 1);
+    });
+  });
+
+  describe('blackout at zero', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => {
+      document.documentElement.className = '';
+      jest.useRealTimers();
+    });
+
+    it('flickers when drain crosses to zero, then goes dead after a second', () => {
+      const { current, play, drain, powerState } = usePercentAnimation();
+      play({ percent: 1 });
+      drain();
+
+      expect(current.value).toMatchObject({ percent: 0 });
+      expect(powerState.value).toBe(POWER_OFF);
+      expect(document.documentElement.classList.contains('battery-flickering')).toBe(true);
+
+      jest.advanceTimersByTime(BLACKOUT_MS);
+      expect(powerState.value).toBe(POWER_DEAD);
+      expect(document.documentElement.classList.contains('battery-dead')).toBe(true);
+      expect(document.documentElement.classList.contains('battery-blackout')).toBe(true);
+    });
+
+    it('does not restart blackout while already dark', () => {
+      const { play, drain, powerState } = usePercentAnimation();
+      play({ percent: 1 });
+      drain();
+      jest.advanceTimersByTime(BLACKOUT_MS);
+      expect(powerState.value).toBe(POWER_DEAD);
+
+      drain();
+      expect(powerState.value).toBe(POWER_DEAD);
+    });
+
+    it('clear() ends the blackout and restores the page', () => {
+      const { play, drain, clear, powerState, current } = usePercentAnimation();
+      play({ percent: 1 });
+      drain();
+      jest.advanceTimersByTime(BLACKOUT_MS);
+      clear();
+
+      expect(current.value).toBeNull();
+      expect(powerState.value).toBeNull();
+      expect(document.documentElement.classList.contains('battery-blackout')).toBe(false);
+    });
+
+    it('play() ends the blackout for a fresh charge', () => {
+      const { play, drain, powerState, current } = usePercentAnimation();
+      play({ percent: 1 });
+      drain();
+      jest.advanceTimersByTime(BLACKOUT_MS);
+      play({ percent: 50 });
+
+      expect(current.value).toMatchObject({ percent: 50 });
+      expect(powerState.value).toBeNull();
+      expect(document.documentElement.classList.contains('battery-blackout')).toBe(false);
+    });
+
+    it('typing 0% does not black the room out by itself', () => {
+      const { play, powerState } = usePercentAnimation();
+      play({ percent: 0 });
+      expect(powerState.value).toBeNull();
     });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parsePercent } from '@/features/percent/utils/parsePercent';
+import { parsePercent, MAX_CHARGE } from '@/features/percent/utils/parsePercent';
 
 describe('parsePercent', () => {
   it('parses number-then-percent', () => {
@@ -47,14 +47,22 @@ describe('parsePercent', () => {
     expect(parsePercent('5 + 5')).toBeNull();
   });
 
-  it('parses a four-digit overcharge (the zapping range)', () => {
+  it('parses four- and seven-digit overcharges up to the million cap', () => {
     expect(parsePercent('1000%')).toEqual({ percent: 1000 });
     expect(parsePercent('%3000')).toEqual({ percent: 3000 });
     expect(parsePercent('9999%')).toEqual({ percent: 9999 });
+    expect(parsePercent('1000000%')).toEqual({ percent: MAX_CHARGE });
+    expect(parsePercent('%1000000')).toEqual({ percent: MAX_CHARGE });
   });
 
-  it('returns null for five-digit percents (four-digit cap)', () => {
-    expect(parsePercent('10000%')).toBeNull();
+  it('keeps values above a million as typed (the overflow gag)', () => {
+    expect(parsePercent('1000001%')).toEqual({ percent: 1000001 });
+    expect(parsePercent('9999999%')).toEqual({ percent: 9999999 });
+    expect(parsePercent('%2000000')).toEqual({ percent: 2000000 });
+  });
+
+  it('returns null past fifteen digits', () => {
+    expect(parsePercent('1000000000000000%')).toBeNull();
   });
 
   it('returns null for non-string / empty input', () => {

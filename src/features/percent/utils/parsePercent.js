@@ -2,13 +2,15 @@
 // (and with optional space). Returns { percent } for an exact match, otherwise
 // null. Intentionally strict: the whole (trimmed) string must be the percent,
 // so sentences and "50% cookie" fall through to other behaviors. Values above
-// 100 are kept as typed — an overcharged battery is the joke — and the
-// four-digit cap means the range is 0–9999. Four digits rather than three
-// because the charge is spendable now: past 1000% the battery zaps the letters
-// being typed at 1000% a shot, so a child needs room to type a charge worth
-// several zaps.
+// 100 are kept as typed — an overcharged battery is the joke. Values above
+// MAX_CHARGE are also kept: the animation clamps the battery at a million and
+// lets the oversized number fall off the screen.
 
-const PERCENT_PATTERN = /^(\d{1,4})\s*%$|^%\s*(\d{1,4})$/;
+export const MAX_CHARGE = 1_000_000;
+
+// Up to fifteen digits leaves room for a ridiculous over-a-million gag without
+// inviting Number.MAX_SAFE_INTEGER overflow from a pasted wall of digits.
+const PERCENT_PATTERN = /^(\d{1,15})\s*%$|^%\s*(\d{1,15})$/;
 
 export function parsePercent(input) {
   if (typeof input !== 'string') return null;

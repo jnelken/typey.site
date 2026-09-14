@@ -658,11 +658,48 @@ describe('useTypingApp', () => {
       expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
     });
 
+    it('blacks out when the charge hits zero, then shows a dead battery', async () => {
+      jest.useFakeTimers();
+      typingApp.currentText.value = '1%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      await typeCharacter('a');
+
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
+      expect(typingApp.batteryPowerState.value).toBe('flickering');
+
+      jest.advanceTimersByTime(1000);
+      expect(typingApp.batteryPowerState.value).toBe('dead');
+
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toBeNull();
+      expect(typingApp.batteryPowerState.value).toBeNull();
+      jest.useRealTimers();
+    });
+
     it('clears the battery on Escape', async () => {
       typingApp.currentText.value = '50%';
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
       await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
       expect(typingApp.batteryCharge.value).toBeNull();
+    });
+
+    it('locks at a million when typed past max and survives Escape', async () => {
+      typingApp.currentText.value = '2500000%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toMatchObject({
+        percent: 1_000_000,
+        locked: true,
+        overflow: 2500000,
+      });
+
+      await typeCharacter('a');
+      expect(typingApp.batteryCharge.value.percent).toBe(1_000_000);
+
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toMatchObject({
+        percent: 1_000_000,
+        locked: true,
+      });
     });
   });
 
@@ -684,8 +721,15 @@ describe('useTypingApp', () => {
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
     };
 
-    beforeEach(() => jest.useFakeTimers());
-    afterEach(() => jest.useRealTimers());
+    beforeEach(() => {
+      jest.useFakeTimers();
+      // Force hits so letter-eating cases stay deterministic; miss cases override.
+      jest.spyOn(Math, 'random').mockReturnValue(0);
+    });
+    afterEach(() => {
+      Math.random.mockRestore();
+      jest.useRealTimers();
+    });
 
     it('reports an overcharge above 1000% and not at it', async () => {
       await charge(1000);
@@ -694,37 +738,49 @@ describe('useTypingApp', () => {
       expect(typingApp.isBatteryOvercharged.value).toBe(true);
     });
 
-    it('eats the letter just typed and spends 1000% doing it', async () => {
+    it('eats the letter just typed and spends 100% doing it', async () => {
       await charge(3000);
       await typeCharacter('a');
 
       // The letter lands first — the bolt has to have something to hit.
       expect(typingApp.currentText.value).toBe('A');
-      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2000 });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2900 });
       expect(typingApp.zapBolts.value).toHaveLength(1);
 
       jest.advanceTimersByTime(STRIKE_MS);
       expect(typingApp.currentText.value).toBe('');
     });
 
+    it('usually misses: a non-hit bolt spends charge but leaves the letter', async () => {
+      Math.random.mockReturnValue(1 / 5);
+      await charge(3000);
+      await typeCharacter('a');
+
+      expect(typingApp.currentText.value).toBe('A');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2900 });
+      expect(typingApp.zapBolts.value).toHaveLength(1);
+
+      jest.advanceTimersByTime(BOLT_MS);
+      expect(typingApp.currentText.value).toBe('A');
+      expect(typingApp.zapBolts.value).toEqual([]);
+    });
+
     it('keeps the same battery rather than replaying its arrival', async () => {
       await charge(3000);
       const { id } = typingApp.batteryCharge.value;
       await typeCharacter('a');
-      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2000, id });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2900, id });
     });
 
     it('goes back to draining a point once the charge falls under the line', async () => {
-      await charge(2500);
-      await typeCharacter('a');  // 1500
-      jest.advanceTimersByTime(STRIKE_MS);
-      await typeCharacter('b');  // 500 — the last zap
+      await charge(1100);
+      await typeCharacter('a'); // 1000 — last zap
       jest.advanceTimersByTime(STRIKE_MS);
       expect(typingApp.currentText.value).toBe('');
 
       await typeCharacter('c');
       expect(typingApp.currentText.value).toBe('C');
-      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 499 });
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 999 });
       jest.advanceTimersByTime(BOLT_MS);
       expect(typingApp.currentText.value).toBe('C');
     });
@@ -736,14 +792,14 @@ describe('useTypingApp', () => {
       expect(typingApp.zapBolts.value).toEqual([]);
     });
 
-    it('Escape takes the bolt off screen but the letter it paid for still goes', async () => {
+    it('Escape takes the bolt off screen but a hit letter still goes', async () => {
       await charge(3000);
       await typeCharacter('a');
       await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
 
       expect(typingApp.batteryCharge.value).toBeNull();
       expect(typingApp.zapBolts.value).toEqual([]);
-      // The 1000% was spent on the keystroke, so the letter cannot survive it.
+      // A hit was rolled on the keystroke, so the letter cannot survive Escape.
       expect(typingApp.currentText.value).toBe('');
 
       jest.advanceTimersByTime(BOLT_MS * 2);

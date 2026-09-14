@@ -7,10 +7,13 @@ let boltIdCounter = 0;
 export const STRIKE_MS = 260;
 // How long the bolt itself stays on screen, fading after the strike.
 export const BOLT_MS = 520;
+// Chance a bolt actually eats the letter it was aimed at. Most bolts miss —
+// the charge is still spent either way, but the letter usually survives.
+export const HIT_CHANCE = 1 / 5;
 
 // The bolts thrown by an overcharged battery. Each one is fired at the letter
-// just typed; `onStrike` deletes it a beat later, and BatteryAnimation draws
-// the bolt on the canvas it already owns.
+// just typed; a hit calls `onStrike` a beat later to delete it, and
+// BatteryAnimation draws the bolt on the canvas it already owns.
 export function useZaps({ onStrike } = {}) {
   const bolts = ref([]);
   // Pending timers, each remembering whether it is the one that eats a letter.
@@ -29,13 +32,18 @@ export function useZaps({ onStrike } = {}) {
     const bolt = { id: ++boltIdCounter, firedAt: Date.now() };
     bolts.value = [...bolts.value, bolt];
 
-    later(
-      () => {
-        if (typeof onStrike === 'function') onStrike();
-      },
-      STRIKE_MS,
-      true
-    );
+    // Roll once at fire time so Escape/clear knows whether this bolt owed a
+    // letter — a miss never deletes, even if the bolt is wiped mid-flight.
+    const hits = Math.random() < HIT_CHANCE;
+    if (hits) {
+      later(
+        () => {
+          if (typeof onStrike === 'function') onStrike();
+        },
+        STRIKE_MS,
+        true
+      );
+    }
     later(() => {
       bolts.value = bolts.value.filter(active => active.id !== bolt.id);
     }, BOLT_MS);
@@ -43,11 +51,9 @@ export function useZaps({ onStrike } = {}) {
     return bolt;
   };
 
-  // Escape wipes the battery and the bolts in the air — but a bolt in the air
-  // has already been paid for at the keystroke that fired it, so it still eats
-  // its letter on the way out. Cancelling the bite instead would charge the
-  // child 1000% and hand the letter back, the one place in this feature where
-  // the accounting would visibly not add up.
+  // Escape wipes the battery and the bolts in the air — but a bolt that already
+  // rolled a hit has claimed its letter, so it still eats on the way out.
+  // Cancelling a hit instead would spend the charge and hand the letter back.
   const clear = () => {
     pending.forEach(entry => {
       clearTimeout(entry.timer);
