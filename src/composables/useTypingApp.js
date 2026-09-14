@@ -22,6 +22,7 @@ import { isColorTrigger } from '@/features/easter-eggs/utils/colorMode';
 import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
 import { parseEquation } from '@/features/math/utils/parseEquation';
 import { usePercentAnimation } from '@/features/percent/composables/usePercentAnimation';
+import { useZaps } from '@/features/percent/composables/useZaps';
 import { parsePercent } from '@/features/percent/utils/parsePercent';
 
 const TYPING_APP_KEY = Symbol('typing-app');
@@ -51,6 +52,9 @@ export function createTypingApp() {
   const colorSystem = useColorMode();
   const mathSystem = useMathAnimation();
   const percentSystem = usePercentAnimation();
+  // Past 1000% the battery is dangerous: each keystroke is struck by a bolt off
+  // the electrified frame, which eats the letter it hit.
+  const zapSystem = useZaps({ onStrike: () => typingState.deleteLastCharacter() });
 
   // An equation's modifier plays on the answer: "2 + 3$" rains five bills,
   // "2 + 3%" charges the battery to five percent. The dot animation still runs
@@ -179,12 +183,21 @@ export function createTypingApp() {
     // a point of charge — the whole point is watching it run down as you type.
     onPrintableKey: () => {
       mathSystem.clear();
-      percentSystem.drain();
+      // An overcharge spends itself a bolt at a time instead of a point at a
+      // time, and each bolt costs the child the letter they just typed. It
+      // stops on its own once the charge falls back under the threshold.
+      if (percentSystem.zap()) {
+        zapSystem.strike();
+        soundSystem.playZapSound();
+      } else {
+        percentSystem.drain();
+      }
     },
     onEscapePressed: () => {
       sillySystem.stop();
       balloonsSystem.popAllBalloons();
       percentSystem.clear();
+      zapSystem.clear();
     },
     onShuffleWord: () => {
       if (typingSettings.isWordPromptEnabled.value) {
@@ -259,6 +272,8 @@ export function createTypingApp() {
     screenColor: screenColorSystem.screenColor,
     mathEquation: mathSystem.current,
     batteryCharge: percentSystem.current,
+    isBatteryOvercharged: percentSystem.isOvercharged,
+    zapBolts: zapSystem.bolts,
     promptWord: wordPromptSystem.promptWord,
     promptEmoji: wordPromptSystem.promptEmoji,
     promptType: wordPromptSystem.promptType,

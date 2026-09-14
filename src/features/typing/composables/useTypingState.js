@@ -19,6 +19,16 @@ export function useTypingState() {
     return completedLines.value.pop();
   };
 
+  // Take the last character back off the line — what an overcharged battery's
+  // bolt does to the letter it hits. Returns the character it ate, or null if
+  // the line was already empty.
+  const deleteLastCharacter = () => {
+    if (!currentText.value) return null;
+    const last = currentText.value.slice(-1);
+    currentText.value = currentText.value.slice(0, -1);
+    return last;
+  };
+
   const clearCurrentText = () => {
     currentText.value = '';
   };
@@ -36,6 +46,7 @@ export function useTypingState() {
     // Actions
     addCompletedLine,
     popCompletedLine,
+    deleteLastCharacter,
     clearCurrentText,
     setInputFocus,
   };

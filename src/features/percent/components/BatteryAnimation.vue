@@ -10,6 +10,13 @@
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { useTypingApp } from '@/composables/useTypingApp';
 import { GROUP_COLORS } from '@/constants/palette';
+import {
+  framePoints,
+  boltPoints,
+  boltOrigin,
+  seededRandom,
+} from '@/features/percent/utils/electricFrame';
+import { STRIKE_MS, BOLT_MS } from '@/features/percent/composables/useZaps';
 
 const COLOR_TEXT = '#2b2d42';
 const COLOR_LOW = GROUP_COLORS[0];   // vermillion — ≤20%
@@ -34,7 +41,18 @@ const DOCK_TOP_NARROW = 215;
 const DOCK_BODY_W = 104;
 const NARROW_W = 640;
 
-// An overcharge can read up to 999%, which would run bars off both edges — the
+// Past ZAP_THRESHOLD the screen's own edge runs with current. One lap of the
+// perimeter takes FRAME_LAP_MS, and the arcs are spaced evenly around it so
+// there is always one in sight.
+const FRAME_INSET = 9;
+const FRAME_RADIUS = 20;
+const FRAME_ARCS = 4;
+const FRAME_ARC_SPAN = 0.13;
+const FRAME_LAP_MS = 3200;
+// New jitter this often, so the frame crackles rather than seethes.
+const CRACKLE_MS = 110;
+
+// An overcharge can read up to 9999%, which would run bars off both edges — the
 // spill is capped at this multiple of the battery's inner width instead.
 const MAX_SPILL = 1.6;
 // How far past the spill's body the bursting point reaches.
@@ -47,17 +65,13 @@ let startTime = 0;
 let stormStart = 0;
 // Follows the live charge with a short ease, so a drain slides rather than jumps.
 let displayed = 0;
+// Where each bolt was aimed, measured once on the frame it first appears —
+// after that the letter it hit is gone, so the aim has to be remembered.
+const boltTargets = new Map();
 
 const clamp01 = t => Math.max(0, Math.min(1, t));
 const smoothstep = t => { const x = clamp01(t); return x * x * (3 - 2 * x); };
 const lerp = (a, b, t) => a + (b - a) * t;
-
-// Stable pseudo-random: the same seed gives the same bolt, so a bolt holds
-// still for its bucket of frames instead of seething every frame.
-const rand = seed => {
-  const x = Math.sin(seed * 127.1) * 43758.5453;
-  return x - Math.floor(x);
-};
 
 const prefersReducedMotion = () =>
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -223,22 +237,22 @@ const drawStorm = (ctx, w, h, cx, cy, elapsed) => {
   ctx.lineCap = 'round';
   for (let b = 0; b < 9; b += 1) {
     const seed = bucket * 31 + b;
-    const angle = (b / 9) * Math.PI * 2 + rand(seed) * 0.7;
-    const len = reach * (0.45 + rand(seed + 7) * 0.55);
+    const angle = (b / 9) * Math.PI * 2 + seededRandom(seed) * 0.7;
+    const len = reach * (0.45 + seededRandom(seed + 7) * 0.55);
     const segments = 7;
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     for (let s = 1; s <= segments; s += 1) {
       const along = (len * s) / segments;
-      const spread = (rand(seed + s * 13) - 0.5) * len * 0.16;
+      const spread = (seededRandom(seed + s * 13) - 0.5) * len * 0.16;
       ctx.lineTo(
         cx + Math.cos(angle) * along - Math.sin(angle) * spread,
         cy + Math.sin(angle) * along + Math.cos(angle) * spread,
       );
     }
 
-    ctx.globalAlpha = envelope * (0.35 + rand(seed + 3) * 0.4);
+    ctx.globalAlpha = envelope * (0.35 + seededRandom(seed + 3) * 0.4);
     ctx.strokeStyle = COLOR_OVER;
     ctx.lineWidth = 9 * envelope + 2;
     ctx.stroke();
@@ -255,6 +269,129 @@ const drawStorm = (ctx, w, h, cx, cy, elapsed) => {
   ctx.globalAlpha = flash * envelope * 0.45;
   ctx.fillStyle = bucket % 2 === 0 ? '#ffffff' : COLOR_OVER;
   ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+};
+
+const tracePath = (ctx, points) => {
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
+  ctx.stroke();
+};
+
+// A jagged line, drawn as three layers: a dark casing, the charge's yellow, and
+// a white core. The casing is what makes it legible — yellow alone all but
+// disappears on this near-white page, the same wall the battery's fill hit
+// (WCAG 1.4.11), and it is what the fill's COLOR_TEXT outline solved.
+const strokeBolt = (ctx, points, width, alpha) => {
+  if (points.length < 2) return;
+  ctx.globalAlpha = alpha * 0.85;
+  ctx.strokeStyle = COLOR_TEXT;
+  ctx.lineWidth = width * 1.55;
+  tracePath(ctx, points);
+
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = COLOR_OVER;
+  ctx.lineWidth = width;
+  tracePath(ctx, points);
+
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = Math.max(1, width * 0.32);
+  tracePath(ctx, points);
+};
+
+// Past the zapping threshold the screen's own frame runs with current: a steady
+// rail around the edge with arcs travelling along it. Under reduced motion the
+// rail stays and the travelling stops — the state still has to be visible, it
+// just doesn't move.
+const drawElectricFrame = (ctx, w, h, elapsed, reduced) => {
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // A slow swell, well under any flash rate — the rail breathes, never strobes.
+  const railAlpha = reduced ? 0.55 : 0.42 + Math.sin(elapsed / 260) * 0.12;
+  const frame = () =>
+    roundRect(ctx, FRAME_INSET, FRAME_INSET, w - FRAME_INSET * 2, h - FRAME_INSET * 2, FRAME_RADIUS);
+
+  ctx.globalAlpha = railAlpha * 0.7;
+  ctx.strokeStyle = COLOR_TEXT;
+  ctx.lineWidth = 8;
+  frame();
+  ctx.stroke();
+
+  ctx.globalAlpha = railAlpha;
+  ctx.strokeStyle = COLOR_OVER;
+  ctx.lineWidth = 5;
+  frame();
+  ctx.stroke();
+
+  if (!reduced) {
+    const lap = (elapsed % FRAME_LAP_MS) / FRAME_LAP_MS;
+    const crackle = Math.floor(elapsed / CRACKLE_MS);
+    for (let i = 0; i < FRAME_ARCS; i += 1) {
+      const points = framePoints(w, h, FRAME_INSET, lap + i / FRAME_ARCS, FRAME_ARC_SPAN, {
+        seed: crackle * 17 + i * 101,
+        jitter: 18,
+      });
+      strokeBolt(ctx, points, 9, 0.85);
+    }
+  }
+
+  ctx.restore();
+};
+
+// Where the letter just typed is sitting, so a bolt can be aimed at it. Falls
+// back to the middle of the line it was typed on if the glyph has already gone.
+const letterTarget = (w, h) => {
+  const letters = document.querySelectorAll('.current-line-display span.character');
+  const last = letters[letters.length - 1];
+  const rect = last?.getBoundingClientRect();
+  if (rect && (rect.width || rect.height)) {
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  }
+  const line = document.querySelector('.current-line-display')?.getBoundingClientRect();
+  if (line) return { x: line.left + line.width / 2, y: line.top + line.height / 2 };
+  return { x: w / 2, y: h * 0.8 };
+};
+
+// Each bolt leaves the frame and lands on the letter, holds while the letter is
+// still there, then fades once it has eaten it — with a ring at the impact so
+// the letter is plainly taken rather than merely missing.
+const drawZapBolt = (ctx, w, h, bolt, target, elapsed, reduced) => {
+  const envelope =
+    elapsed <= STRIKE_MS
+      ? 1
+      : 1 - clamp01((elapsed - STRIKE_MS) / Math.max(1, BOLT_MS - STRIKE_MS));
+  if (envelope <= 0) return;
+
+  const origin = boltOrigin(w, h, FRAME_INSET, target, bolt.id);
+  // A still bolt under reduced motion; otherwise it re-frays as it burns.
+  const crackle = reduced ? 0 : Math.floor(elapsed / 60);
+  const points = boltPoints(origin, target, { seed: bolt.id * 977 + crackle * 31 });
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  strokeBolt(ctx, points, 10 * envelope + 3, envelope);
+
+  if (elapsed > STRIKE_MS) {
+    const burst = clamp01((elapsed - STRIKE_MS) / Math.max(1, BOLT_MS - STRIKE_MS));
+    const radius = 12 + burst * 34;
+    ctx.globalAlpha = (1 - burst) * 0.7;
+    ctx.strokeStyle = COLOR_TEXT;
+    ctx.lineWidth = 7 * (1 - burst) + 2;
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = (1 - burst) * 0.95;
+    ctx.strokeStyle = COLOR_OVER;
+    ctx.lineWidth = 4 * (1 - burst) + 1;
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   ctx.restore();
 };
 
@@ -335,10 +472,30 @@ const draw = () => {
     ctx.restore();
   }
 
+  const reduced = prefersReducedMotion();
+  // The frame runs with current for as long as the charge is dangerous; it
+  // stops by itself as soon as a zap spends the charge back under the line.
+  if (typingApp.isBatteryOvercharged.value) drawElectricFrame(ctx, w, h, elapsed, reduced);
+
   drawShell(ctx, geo, bodyX, bodyY);
   const inner = drawFill(ctx, geo, bodyX, bodyY, percent, displayed);
   drawSpill(ctx, geo, inner, bodyY, displayed, now / 90);
   drawLabel(ctx, geo, labelRight, cy, `${percent}%`);
+
+  // Bolts last, over everything: they are what the child is watching.
+  const bolts = typingApp.zapBolts.value;
+  if (bolts.length) {
+    const wallClock = Date.now();
+    for (const bolt of bolts) {
+      if (!boltTargets.has(bolt.id)) boltTargets.set(bolt.id, letterTarget(w, h));
+      drawZapBolt(ctx, w, h, bolt, boltTargets.get(bolt.id), wallClock - bolt.firedAt, reduced);
+    }
+  }
+  // Forget the aim of bolts that have burned out, so the map can't grow.
+  if (boltTargets.size > bolts.length) {
+    const live = new Set(bolts.map(bolt => bolt.id));
+    for (const id of boltTargets.keys()) if (!live.has(id)) boltTargets.delete(id);
+  }
 
   rafId = requestAnimationFrame(draw);
 };

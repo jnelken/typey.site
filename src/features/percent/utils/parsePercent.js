@@ -3,9 +3,12 @@
 // null. Intentionally strict: the whole (trimmed) string must be the percent,
 // so sentences and "50% cookie" fall through to other behaviors. Values above
 // 100 are kept as typed — an overcharged battery is the joke — and the
-// three-digit cap means the range is 0–999 and "1000%" doesn't match at all.
+// four-digit cap means the range is 0–9999. Four digits rather than three
+// because the charge is spendable now: past 1000% the battery zaps the letters
+// being typed at 1000% a shot, so a child needs room to type a charge worth
+// several zaps.
 
-const PERCENT_PATTERN = /^(\d{1,3})\s*%$|^%\s*(\d{1,3})$/;
+const PERCENT_PATTERN = /^(\d{1,4})\s*%$|^%\s*(\d{1,4})$/;
 
 export function parsePercent(input) {
   if (typeof input !== 'string') return null;

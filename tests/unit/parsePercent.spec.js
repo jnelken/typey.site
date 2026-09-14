@@ -47,8 +47,14 @@ describe('parsePercent', () => {
     expect(parsePercent('5 + 5')).toBeNull();
   });
 
-  it('returns null for four-digit percents (three-digit cap)', () => {
-    expect(parsePercent('1000%')).toBeNull();
+  it('parses a four-digit overcharge (the zapping range)', () => {
+    expect(parsePercent('1000%')).toEqual({ percent: 1000 });
+    expect(parsePercent('%3000')).toEqual({ percent: 3000 });
+    expect(parsePercent('9999%')).toEqual({ percent: 9999 });
+  });
+
+  it('returns null for five-digit percents (four-digit cap)', () => {
+    expect(parsePercent('10000%')).toBeNull();
   });
 
   it('returns null for non-string / empty input', () => {

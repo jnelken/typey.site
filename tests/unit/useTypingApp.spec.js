@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTypingApp } from '@/composables/useTypingApp';
 import { SILLY_WORDS } from '@/features/easter-eggs/utils/sillyMode';
+import { STRIKE_MS, BOLT_MS } from '@/features/percent/composables/useZaps';
 
 describe('useTypingApp', () => {
   let typingApp;
@@ -662,6 +663,91 @@ describe('useTypingApp', () => {
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
       await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
       expect(typingApp.batteryCharge.value).toBeNull();
+    });
+  });
+
+  describe('overcharged battery zaps letters', () => {
+    const typeCharacter = key =>
+      typingApp.onKeyDown({
+        key,
+        preventDefault: jest.fn(),
+        target: {
+          get selectionStart() {
+            return typingApp.currentText.value.length;
+          },
+          setSelectionRange: jest.fn(),
+        },
+      });
+
+    const charge = async percent => {
+      typingApp.currentText.value = `${percent}%`;
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+    };
+
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    it('reports an overcharge above 1000% and not at it', async () => {
+      await charge(1000);
+      expect(typingApp.isBatteryOvercharged.value).toBe(false);
+      await charge(1001);
+      expect(typingApp.isBatteryOvercharged.value).toBe(true);
+    });
+
+    it('eats the letter just typed and spends 1000% doing it', async () => {
+      await charge(3000);
+      await typeCharacter('a');
+
+      // The letter lands first — the bolt has to have something to hit.
+      expect(typingApp.currentText.value).toBe('A');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2000 });
+      expect(typingApp.zapBolts.value).toHaveLength(1);
+
+      jest.advanceTimersByTime(STRIKE_MS);
+      expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('keeps the same battery rather than replaying its arrival', async () => {
+      await charge(3000);
+      const { id } = typingApp.batteryCharge.value;
+      await typeCharacter('a');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2000, id });
+    });
+
+    it('goes back to draining a point once the charge falls under the line', async () => {
+      await charge(2500);
+      await typeCharacter('a');  // 1500
+      jest.advanceTimersByTime(STRIKE_MS);
+      await typeCharacter('b');  // 500 — the last zap
+      jest.advanceTimersByTime(STRIKE_MS);
+      expect(typingApp.currentText.value).toBe('');
+
+      await typeCharacter('c');
+      expect(typingApp.currentText.value).toBe('C');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 499 });
+      jest.advanceTimersByTime(BOLT_MS);
+      expect(typingApp.currentText.value).toBe('C');
+    });
+
+    it('leaves letters alone with no battery at all', async () => {
+      await typeCharacter('a');
+      jest.advanceTimersByTime(BOLT_MS);
+      expect(typingApp.currentText.value).toBe('A');
+      expect(typingApp.zapBolts.value).toEqual([]);
+    });
+
+    it('Escape takes the bolt off screen but the letter it paid for still goes', async () => {
+      await charge(3000);
+      await typeCharacter('a');
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+
+      expect(typingApp.batteryCharge.value).toBeNull();
+      expect(typingApp.zapBolts.value).toEqual([]);
+      // The 1000% was spent on the keystroke, so the letter cannot survive it.
+      expect(typingApp.currentText.value).toBe('');
+
+      jest.advanceTimersByTime(BOLT_MS * 2);
+      expect(typingApp.currentText.value).toBe('');
     });
   });
 

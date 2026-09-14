@@ -1,5 +1,9 @@
 import { describe, it, expect } from '@jest/globals';
-import { usePercentAnimation } from '@/features/percent/composables/usePercentAnimation';
+import {
+  usePercentAnimation,
+  ZAP_COST,
+  ZAP_THRESHOLD,
+} from '@/features/percent/composables/usePercentAnimation';
 
 describe('usePercentAnimation', () => {
   it('starts with no active percent', () => {
@@ -72,5 +76,43 @@ describe('usePercentAnimation', () => {
     play({ percent: 0 });
     expect(current.value).not.toBeNull();
     expect(current.value.percent).toBe(0);
+  });
+
+  describe('zapping past the threshold', () => {
+    it('is not overcharged at or below the threshold', () => {
+      const { play, isOvercharged } = usePercentAnimation();
+      play({ percent: ZAP_THRESHOLD });
+      expect(isOvercharged.value).toBe(false);
+    });
+
+    it('is overcharged above it', () => {
+      const { play, isOvercharged } = usePercentAnimation();
+      play({ percent: ZAP_THRESHOLD + 1 });
+      expect(isOvercharged.value).toBe(true);
+    });
+
+    it('zap() spends a bolt\'s worth of charge and keeps the same battery', () => {
+      const { current, play, zap } = usePercentAnimation();
+      play({ percent: 3500 });
+      const { id } = current.value;
+      expect(zap()).toBe(true);
+      expect(current.value).toEqual({ percent: 3500 - ZAP_COST, id });
+    });
+
+    it('stops firing once the charge falls back under the threshold', () => {
+      const { current, play, zap, isOvercharged } = usePercentAnimation();
+      play({ percent: 2500 });
+      expect(zap()).toBe(true);  // 1500
+      expect(zap()).toBe(true);  // 500
+      expect(zap()).toBe(false);
+      expect(isOvercharged.value).toBe(false);
+      expect(current.value).toMatchObject({ percent: 500 });
+    });
+
+    it('zap() with no battery is a no-op', () => {
+      const { current, zap } = usePercentAnimation();
+      expect(zap()).toBe(false);
+      expect(current.value).toBeNull();
+    });
   });
 });

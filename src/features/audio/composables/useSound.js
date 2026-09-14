@@ -52,6 +52,28 @@ export function useSound() {
     oscillator.stop(audioContext.value.currentTime + 0.3)
   }
 
+  // The zap an overcharged battery fires at a letter: a hard buzz falling fast,
+  // so it reads as electricity rather than as another key click.
+  const createZapSound = () => {
+    if (!audioContext.value || !isAudioEnabled.value) return
+
+    const oscillator = audioContext.value.createOscillator()
+    const gainNode = audioContext.value.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.value.destination)
+
+    oscillator.type = 'sawtooth'
+    oscillator.frequency.setValueAtTime(1400, audioContext.value.currentTime)
+    oscillator.frequency.exponentialRampToValueAtTime(90, audioContext.value.currentTime + 0.22)
+
+    gainNode.gain.setValueAtTime(0.12, audioContext.value.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.value.currentTime + 0.22)
+
+    oscillator.start(audioContext.value.currentTime)
+    oscillator.stop(audioContext.value.currentTime + 0.22)
+  }
+
   const playKeySound = (key) => {
     initAudio()
     
@@ -65,6 +87,11 @@ export function useSound() {
     createSuccessSound()
   }
 
+  const playZapSound = () => {
+    initAudio()
+    createZapSound()
+  }
+
   const toggleAudio = () => {
     isAudioEnabled.value = !isAudioEnabled.value
   }
@@ -73,6 +100,7 @@ export function useSound() {
     isAudioEnabled,
     playKeySound,
     playEnterSound,
+    playZapSound,
     toggleAudio,
     initAudio
   }

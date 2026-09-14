@@ -143,12 +143,14 @@ in `src/features/easter-eggs/utils/sillyMode.js` is the library minus that set.
 
 ### 🔋 Percent Battery
 
-Shipped 2026-09-09, extended 2026-09-11. Typing `50%` charges a battery to half:
-it fills big in the middle of the screen, then flies up and parks in the corner
-as a menubar-style indicator — percent on the left, battery on the right — and
-stays there, losing a point of charge with every key pressed until it reads 0%
-or Escape clears it. Values run 0–999; anything over 100% bursts a jagged jet of
-charge out past the terminal and sets off a screen-filling electrical storm.
+Shipped 2026-09-09, extended 2026-09-11 and 2026-09-13. Typing `50%` charges a
+battery to half: it fills big in the middle of the screen, then flies up and
+parks in the corner as a menubar-style indicator — percent on the left, battery
+on the right — and stays there, losing a point of charge with every key pressed
+until it reads 0% or Escape clears it. Values run 0–9999; anything over 100%
+bursts a jagged jet of charge out past the terminal and sets off a
+screen-filling electrical storm, and anything over 1000% is dangerous to type
+against — see **Overcharged, the screen bites back** below.
 Percent joins the practice prompts across 1–100. Built as a sibling of
 `src/features/math/` rather than another emoji spawn. See `src/features/percent/`.
 
@@ -188,6 +190,44 @@ and the whole storm is skipped under `prefers-reduced-motion`. **The spill is
 capped at `MAX_SPILL`**: at 999% an honest `percent / 100` bar would be ten
 screens wide, so the jet caps its reach and the parked indicator shifts left by
 however far it currently extends, sliding back as the charge drains.
+
+### ⚡ Overcharged, the Screen Bites Back
+
+Shipped 2026-09-13. Past 1000% the battery stops being an indicator and becomes
+a hazard: the screen's own frame runs with electricity — a rail around the edge
+with arcs travelling round it — and every letter typed is struck by a bolt off
+that frame, which eats the letter and 1000% of charge with it. So a 3000% charge
+is three letters the child will not get to keep, and the typing goes back to
+normal (and the frame goes dark) the moment a zap drops the charge under the
+line. Escape still clears everything. The typed range grows to four digits to
+make the charge worth spending, and `900 + 900%` is the other way in. See
+`src/features/percent/utils/electricFrame.js` and `useZaps.js`.
+
+**Decisions this made that the concept left open.** **The letter lands before it
+is eaten**: the bolt is fired on the keystroke but the line is cut ~260ms later,
+because a letter that never appears is a dead key, not a joke — the child has to
+watch it get hit. **1000% a zap, which is also the threshold**: charge is spent
+in whole bolts rather than a percentage, so the indicator reads as "three shots
+left" and a child can predict the next one. **The bolt aims at the last glyph on
+the line**, measured once on the frame it is fired and remembered after that,
+since by the time it lands the letter is gone; typing faster than the bolt is
+harmless, each bolt just eats whatever is last when it arrives. **The frame is
+travel, not flashing**: arcs move round the perimeter and the rail swells at
+about 0.6Hz, nowhere near a flash rate (WCAG 2.3.1), and under
+`prefers-reduced-motion` the rail stays lit while the travelling stops — the
+state has to remain visible even when nothing may move. **Bolts wear a dark
+casing**: yellow on a near-white page is the wall the battery's fill already hit,
+so every jagged line is drawn `COLOR_TEXT` → yellow → white core. **Every
+printable key is fair game, space included**: a keystroke always costs the
+battery something, and charging 1000% for a letter but a single point for a
+space would be both inconsistent and gameable. **Escape still eats the letter a
+bolt already paid for**: the charge is spent at the keystroke, so cancelling the
+bite would be the one place the accounting visibly failed.
+
+**A known trade.** A wide equation and a docked battery share the top band, so
+something like `900 + 900%` draws its `= 1800` under the indicator's own pill.
+The pill keeps the charge legible and the dots still carry the answer; nudging
+either one only moves the collision, so it stays as it is.
 
 ### 🎨 Emoji Families
 

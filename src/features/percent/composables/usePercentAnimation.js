@@ -1,6 +1,14 @@
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 let percentIdCounter = 0;
+
+// Past this much charge the battery stops being an indicator and starts being a
+// hazard: the screen's frame runs with electricity and every letter typed is
+// zapped off the line. Strictly above, so an even 1000% is still calm.
+export const ZAP_THRESHOLD = 1000;
+// What one zap costs. Same number as the threshold, so the charge is spent in
+// whole "lightning bolts" and a child can count how many they have left.
+export const ZAP_COST = 1000;
 
 // Holds the battery's charge. The BatteryAnimation component watches `current`
 // and draws it: a new `id` plays the big arrival animation, after which the
@@ -27,10 +35,23 @@ export function usePercentAnimation() {
     current.value = { ...charge, percent: Math.max(0, charge.percent - amount) };
   };
 
+  const isOvercharged = computed(() => (current.value?.percent ?? 0) > ZAP_THRESHOLD);
+
+  // Spend one bolt's worth of charge. Returns whether it fired, so the caller
+  // can zap a letter instead of draining the usual single point — and stops
+  // zapping by itself once the charge falls back under the threshold.
+  const zap = () => {
+    if (!isOvercharged.value) return false;
+    drain(ZAP_COST);
+    return true;
+  };
+
   return {
     current,
+    isOvercharged,
     play,
     drain,
+    zap,
     clear,
   };
 }
