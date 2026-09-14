@@ -294,6 +294,7 @@ export function createTypingApp() {
     screenColor: screenColorSystem.screenColor,
     mathEquation: mathSystem.current,
     batteryCharge: percentSystem.current,
+    batteryPowerState: percentSystem.powerState,
     eatenFood: eatenSystem.current,
     isBatteryOvercharged: percentSystem.isOvercharged,
     zapBolts: zapSystem.bolts,

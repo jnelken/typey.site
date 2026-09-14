@@ -102,20 +102,20 @@ const geometryFor = (ctx, bodyW, label) => {
   return { bodyW, bodyH, nubW, gap, fontSize, labelW, groupW: labelW + gap + bodyW + nubW };
 };
 
-const drawShell = (ctx, geo, bodyX, bodyY) => {
+const drawShell = (ctx, geo, bodyX, bodyY, strokeColor = COLOR_TEXT) => {
   const { bodyW, bodyH, nubW } = geo;
-  ctx.strokeStyle = COLOR_TEXT;
+  ctx.strokeStyle = strokeColor;
   ctx.lineWidth = bodyH * 0.09;
   roundRect(ctx, bodyX, bodyY, bodyW, bodyH, bodyH * 0.22);
   ctx.stroke();
 
   const nubH = bodyH * 0.34;
-  ctx.fillStyle = COLOR_TEXT;
+  ctx.fillStyle = strokeColor;
   roundRect(ctx, bodyX + bodyW, bodyY + (bodyH - nubH) / 2, nubW, nubH, nubW * 0.4);
   ctx.fill();
 };
 
-const drawFill = (ctx, geo, bodyX, bodyY, shown, fillColor) => {
+const drawFill = (ctx, geo, bodyX, bodyY, shown, fillColor, strokeColor = COLOR_TEXT) => {
   const { bodyW, bodyH } = geo;
   const inset = bodyH * 0.14;
   const innerW = bodyW - inset * 2;
@@ -131,14 +131,14 @@ const drawFill = (ctx, geo, bodyX, bodyY, shown, fillColor) => {
     roundRect(ctx, x, y, insideW, innerH, radius);
     ctx.fill();
     // Outline carries WCAG 1.4.11; skip only when there is no rect (0%).
-    ctx.strokeStyle = COLOR_TEXT;
+    ctx.strokeStyle = strokeColor;
     ctx.lineWidth = bodyH * 0.05;
     roundRect(ctx, x, y, insideW, innerH, radius);
     ctx.stroke();
   }
 
   // Scale ticks at 25 / 50 / 75, over the fill but under any spill.
-  ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+  ctx.strokeStyle = strokeColor === COLOR_TEXT ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.25)';
   ctx.lineWidth = Math.max(1, bodyH * 0.025);
   for (const tick of [0.25, 0.5, 0.75]) {
     const tx = x + innerW * tick;
@@ -210,8 +210,8 @@ const drawSpill = (ctx, geo, inner, bodyY, shown, wobble, fillColor) => {
   ctx.restore();
 };
 
-const drawLabel = (ctx, geo, labelRight, cy, label) => {
-  ctx.fillStyle = COLOR_TEXT;
+const drawLabel = (ctx, geo, labelRight, cy, label, fillColor = COLOR_TEXT) => {
+  ctx.fillStyle = fillColor;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   ctx.font = `bold ${geo.fontSize}px "Comic Sans MS", "Baloo 2", system-ui, sans-serif`;
@@ -450,26 +450,39 @@ const draw = () => {
   const elapsed = now - startTime;
   const { percent, overflow } = charge;
   const reduced = prefersReducedMotion();
+  const powerState = typingApp.batteryPowerState.value;
+  // Lights-out flicker: blank the canvas so the room goes dark.
+  if (powerState === 'flickering') {
+    rafId = requestAnimationFrame(draw);
+    return;
+  }
+  const dead = powerState === 'dead';
+  const ink = dead ? '#ffffff' : COLOR_TEXT;
 
   // Oversized typed value tumbles away while the battery keeps the million cap.
-  if (overflow != null) drawFallingOverflow(ctx, w, h, overflow, elapsed, reduced);
+  if (overflow != null && !dead) drawFallingOverflow(ctx, w, h, overflow, elapsed, reduced);
 
   // Arrival fills 0 → charge once; after that the bar simply follows the live
   // value, easing toward it so each keystroke's point slides off.
   const arriving = elapsed < ARRIVE_MS;
-  if (arriving) {
+  if (arriving && !dead) {
     displayed = lerp(0, percent, smoothstep(elapsed / ARRIVE_MS));
+  } else if (dead) {
+    // Dead battery shows a full white fill — the empty shell glowing in the dark.
+    displayed = 100;
   } else {
     displayed += (percent - displayed) * 0.18;
     if (Math.abs(percent - displayed) < 0.05) displayed = percent;
   }
 
   // Hero geometry shrinks and flies to the corner once the charge has landed.
-  const dockT = smoothstep((elapsed - ARRIVE_MS) / DOCK_MS);
+  // A dead battery stays centred — the room is dark and that is the only light.
+  const dockT = dead ? 0 : smoothstep((elapsed - ARRIVE_MS) / DOCK_MS);
   const narrow = w < NARROW_W;
   const heroBodyW = Math.min(w * 0.34, 420);
   const dockBodyW = narrow ? Math.max(60, w * 0.16) : DOCK_BODY_W;
-  const geo = geometryFor(ctx, lerp(heroBodyW, dockBodyW, dockT), `${percent}%`);
+  const label = dead ? '0%' : `${percent}%`;
+  const geo = geometryFor(ctx, lerp(heroBodyW, dockBodyW, dockT), label);
 
   const heroCx = w / 2;
   const heroCy = h * 0.42;
@@ -487,10 +500,10 @@ const draw = () => {
   const bodyY = cy - geo.bodyH / 2;
 
   // The storm starts the instant the charge blows past full, not before.
-  if (percent > 100 && displayed >= 100 && !stormStart && !reduced) {
+  if (!dead && percent > 100 && displayed >= 100 && !stormStart && !reduced) {
     stormStart = now;
   }
-  if (stormStart) drawStorm(ctx, w, h, bodyX + geo.bodyW, cy, now - stormStart);
+  if (stormStart && !dead) drawStorm(ctx, w, h, bodyX + geo.bodyW, cy, now - stormStart);
 
   // Parked, it gets a soft pill behind it so it stays legible over the app.
   if (dockT > 0) {
@@ -512,13 +525,15 @@ const draw = () => {
 
   // The frame runs with current for as long as the charge is dangerous; it
   // stops by itself as soon as a zap spends the charge back under the line.
-  if (typingApp.isBatteryOvercharged.value) drawElectricFrame(ctx, w, h, elapsed, reduced);
+  if (!dead && typingApp.isBatteryOvercharged.value) {
+    drawElectricFrame(ctx, w, h, elapsed, reduced);
+  }
 
-  const fillColor = batteryFillColor(percent, elapsed, reduced);
-  drawShell(ctx, geo, bodyX, bodyY);
-  const inner = drawFill(ctx, geo, bodyX, bodyY, displayed, fillColor);
-  drawSpill(ctx, geo, inner, bodyY, displayed, now / 90, fillColor);
-  drawLabel(ctx, geo, labelRight, cy, `${percent}%`);
+  const fillColor = dead ? '#ffffff' : batteryFillColor(percent, elapsed, reduced);
+  drawShell(ctx, geo, bodyX, bodyY, ink);
+  const inner = drawFill(ctx, geo, bodyX, bodyY, displayed, fillColor, ink);
+  if (!dead) drawSpill(ctx, geo, inner, bodyY, displayed, now / 90, fillColor);
+  drawLabel(ctx, geo, labelRight, cy, label, ink);
 
   // Bolts last, over everything: they are what the child is watching.
   const bolts = typingApp.zapBolts.value;

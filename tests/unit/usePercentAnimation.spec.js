@@ -1,8 +1,11 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import {
   usePercentAnimation,
   ZAP_COST,
   ZAP_THRESHOLD,
+  BLACKOUT_MS,
+  POWER_OFF,
+  POWER_DEAD,
 } from '@/features/percent/composables/usePercentAnimation';
 import { MAX_CHARGE } from '@/features/percent/utils/parsePercent';
 
@@ -155,6 +158,70 @@ describe('usePercentAnimation', () => {
       expect(current.value).toEqual({ percent: MAX_CHARGE, id: current.value.id });
       drain();
       expect(current.value.percent).toBe(MAX_CHARGE - 1);
+    });
+  });
+
+  describe('blackout at zero', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => {
+      document.documentElement.className = '';
+      jest.useRealTimers();
+    });
+
+    it('flickers when drain crosses to zero, then goes dead after a second', () => {
+      const { current, play, drain, powerState } = usePercentAnimation();
+      play({ percent: 1 });
+      drain();
+
+      expect(current.value).toMatchObject({ percent: 0 });
+      expect(powerState.value).toBe(POWER_OFF);
+      expect(document.documentElement.classList.contains('battery-flickering')).toBe(true);
+
+      jest.advanceTimersByTime(BLACKOUT_MS);
+      expect(powerState.value).toBe(POWER_DEAD);
+      expect(document.documentElement.classList.contains('battery-dead')).toBe(true);
+      expect(document.documentElement.classList.contains('battery-blackout')).toBe(true);
+    });
+
+    it('does not restart blackout while already dark', () => {
+      const { play, drain, powerState } = usePercentAnimation();
+      play({ percent: 1 });
+      drain();
+      jest.advanceTimersByTime(BLACKOUT_MS);
+      expect(powerState.value).toBe(POWER_DEAD);
+
+      drain();
+      expect(powerState.value).toBe(POWER_DEAD);
+    });
+
+    it('clear() ends the blackout and restores the page', () => {
+      const { play, drain, clear, powerState, current } = usePercentAnimation();
+      play({ percent: 1 });
+      drain();
+      jest.advanceTimersByTime(BLACKOUT_MS);
+      clear();
+
+      expect(current.value).toBeNull();
+      expect(powerState.value).toBeNull();
+      expect(document.documentElement.classList.contains('battery-blackout')).toBe(false);
+    });
+
+    it('play() ends the blackout for a fresh charge', () => {
+      const { play, drain, powerState, current } = usePercentAnimation();
+      play({ percent: 1 });
+      drain();
+      jest.advanceTimersByTime(BLACKOUT_MS);
+      play({ percent: 50 });
+
+      expect(current.value).toMatchObject({ percent: 50 });
+      expect(powerState.value).toBeNull();
+      expect(document.documentElement.classList.contains('battery-blackout')).toBe(false);
+    });
+
+    it('typing 0% does not black the room out by itself', () => {
+      const { play, powerState } = usePercentAnimation();
+      play({ percent: 0 });
+      expect(powerState.value).toBeNull();
     });
   });
 });

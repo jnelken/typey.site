@@ -658,6 +658,24 @@ describe('useTypingApp', () => {
       expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
     });
 
+    it('blacks out when the charge hits zero, then shows a dead battery', async () => {
+      jest.useFakeTimers();
+      typingApp.currentText.value = '1%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      await typeCharacter('a');
+
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
+      expect(typingApp.batteryPowerState.value).toBe('flickering');
+
+      jest.advanceTimersByTime(1000);
+      expect(typingApp.batteryPowerState.value).toBe('dead');
+
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+      expect(typingApp.batteryCharge.value).toBeNull();
+      expect(typingApp.batteryPowerState.value).toBeNull();
+      jest.useRealTimers();
+    });
+
     it('clears the battery on Escape', async () => {
       typingApp.currentText.value = '50%';
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
