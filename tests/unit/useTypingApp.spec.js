@@ -942,6 +942,119 @@ describe('useTypingApp', () => {
     });
   });
 
+  describe('party mode', () => {
+    const pressEnter = () =>
+      typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+    const pressKey = key =>
+      typingApp.onKeyDown({
+        key,
+        preventDefault: jest.fn(),
+        target: { selectionStart: 0, setSelectionRange: jest.fn() },
+      });
+
+    it('is off until the word is typed', () => {
+      expect(typingApp.isPartyModeActive.value).toBe(false);
+    });
+
+    it('turns on for "party" and clears the line it was typed on', async () => {
+      typingApp.currentText.value = 'party';
+      await pressEnter();
+
+      expect(typingApp.isPartyModeActive.value).toBe(true);
+      expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('turns back off when the word is typed again', async () => {
+      typingApp.currentText.value = 'party';
+      await pressEnter();
+      typingApp.currentText.value = 'PARTY';
+      await pressEnter();
+
+      expect(typingApp.isPartyModeActive.value).toBe(false);
+    });
+
+    it('ignores the word inside a longer line', async () => {
+      typingApp.currentText.value = 'we had a party';
+      await pressEnter();
+
+      expect(typingApp.isPartyModeActive.value).toBe(false);
+    });
+
+    it('takes the word over from the emoji swarm it used to spawn', async () => {
+      // "party" is a real dictionary word (🎉🎊). Making it a trigger changes
+      // what it does rather than adding to it: a trigger returns early, so the
+      // line never reaches the easter-egg spawn.
+      const spawned = [];
+      const original = typingApp.spawnEmojis;
+      typingApp.spawnEmojis = (...args) => spawned.push(args);
+
+      typingApp.currentText.value = 'party';
+      await pressEnter();
+      typingApp.spawnEmojis = original;
+
+      expect(spawned).toEqual([]);
+      expect(typingApp.emojiEffects.value).toEqual([]);
+    });
+
+    it('sprays confetti off the edges the moment the party starts', async () => {
+      typingApp.currentText.value = 'party';
+      await pressEnter();
+
+      expect(typingApp.partyBursts.value.length).toBeGreaterThan(0);
+    });
+
+    it('sprays again for every line sent during a party', async () => {
+      typingApp.currentText.value = 'party';
+      await pressEnter();
+      const opening = typingApp.partyBursts.value.length;
+
+      typingApp.currentText.value = 'cat';
+      await pressEnter();
+
+      expect(typingApp.partyBursts.value.length).toBeGreaterThan(opening);
+    });
+
+    it('sends no confetti for a line typed with the party off', async () => {
+      typingApp.currentText.value = 'cat';
+      await pressEnter();
+
+      expect(typingApp.partyBursts.value).toEqual([]);
+    });
+
+    it('stops on Escape, and takes the confetti in the air with it', async () => {
+      typingApp.currentText.value = 'party';
+      await pressEnter();
+      typingApp.currentText.value = 'cat';
+      await pressEnter();
+
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+
+      expect(typingApp.isPartyModeActive.value).toBe(false);
+      expect(typingApp.partyBursts.value).toEqual([]);
+    });
+
+    it('still records the trigger line in history so it can be spoken', async () => {
+      typingApp.currentText.value = 'party';
+      await pressEnter();
+
+      expect(typingApp.completedLines.value).toContain('party');
+    });
+
+    it('reaches for a letter on every keystroke only while it is on', async () => {
+      // jsdom lays nothing out, so no burst can actually be placed here — what
+      // this pins is that the keystroke path is wired and stays quiet when off.
+      await pressKey('a');
+      expect(typingApp.partyBursts.value).toEqual([]);
+
+      typingApp.currentText.value = 'party';
+      await pressEnter();
+      await pressKey('b');
+
+      expect(typingApp.isPartyModeActive.value).toBe(true);
+    });
+  });
+
   describe('number detection and balloon spawning', () => {
     let appUnderTest;
     let mockSpawnBalloons;
