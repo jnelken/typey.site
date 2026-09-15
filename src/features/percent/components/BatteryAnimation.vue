@@ -21,6 +21,7 @@ import {
   seededRandom,
 } from '@/features/percent/utils/electricFrame';
 import { STRIKE_MS, BOLT_MS } from '@/features/percent/composables/useZaps';
+import { lastGlyphPoint, currentLinePoint } from '@/features/effects/utils/glyphTarget';
 
 // Two phases. ARRIVE plays the charge big in the middle of the screen; DOCK
 // flies it up to the corner, where it parks for good as a menubar-style
@@ -376,18 +377,10 @@ const drawElectricFrame = (ctx, w, h, elapsed, reduced) => {
 };
 
 // Where the letter just typed is sitting, so a bolt can be aimed at it. Falls
-// back to the middle of the line it was typed on if the glyph has already gone.
-const letterTarget = (w, h) => {
-  const letters = document.querySelectorAll('.current-line-display span.character');
-  const last = letters[letters.length - 1];
-  const rect = last?.getBoundingClientRect();
-  if (rect && (rect.width || rect.height)) {
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-  }
-  const line = document.querySelector('.current-line-display')?.getBoundingClientRect();
-  if (line) return { x: line.left + line.width / 2, y: line.top + line.height / 2 };
-  return { x: w / 2, y: h * 0.8 };
-};
+// back to the middle of the line it was typed on if the glyph has already gone,
+// and to the bottom of the canvas if there is no line laid out at all.
+const letterTarget = (w, h) =>
+  lastGlyphPoint() ?? currentLinePoint() ?? { x: w / 2, y: h * 0.8 };
 
 // Each bolt leaves the frame and lands on the letter, holds while the letter is
 // still there, then fades once it has eaten it — with a ring at the impact so
