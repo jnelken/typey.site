@@ -1041,17 +1041,64 @@ describe('useTypingApp', () => {
       expect(typingApp.completedLines.value).toContain('party');
     });
 
-    it('reaches for a letter on every keystroke only while it is on', async () => {
-      // jsdom lays nothing out, so no burst can actually be placed here — what
-      // this pins is that the keystroke path is wired and stays quiet when off.
-      await pressKey('a');
-      expect(typingApp.partyBursts.value).toEqual([]);
-
+    it('leaves a mode switch uncelebrated — those are not lines worth spraying', async () => {
       typingApp.currentText.value = 'party';
       await pressEnter();
-      await pressKey('b');
+      const opening = typingApp.partyBursts.value.length;
 
-      expect(typingApp.isPartyModeActive.value).toBe(true);
+      typingApp.currentText.value = 'color';
+      await pressEnter();
+
+      expect(typingApp.partyBursts.value).toHaveLength(opening);
+    });
+  });
+
+  describe('party mode keystroke wiring', () => {
+    // jsdom lays nothing out, so `burstAtLetter` can never place a burst here —
+    // asserting on `partyBursts` would pass whether or not the call exists.
+    // Mocking the composable is the only way to see the keystroke path at all.
+    let appUnderTest;
+    let burstAtLetter;
+
+    beforeEach(async () => {
+      jest.resetModules();
+      burstAtLetter = jest.fn();
+
+      jest.doMock('@/features/party/composables/useParty', () => ({
+        useParty: () => ({
+          isActive: { value: false },
+          bursts: { value: [] },
+          burstAtLetter,
+          burstFromEdges: jest.fn(),
+          start: jest.fn(),
+          stop: jest.fn(),
+          toggle: jest.fn(),
+        }),
+      }));
+
+      const mod = await import('@/composables/useTypingApp.js');
+      appUnderTest = mod.createTypingApp();
+    });
+
+    afterEach(() => {
+      jest.dontMock('@/features/party/composables/useParty');
+    });
+
+    it('reaches for the letter on every printable keystroke', async () => {
+      await appUnderTest.onKeyDown({
+        key: 'a',
+        preventDefault: jest.fn(),
+        target: { selectionStart: 0, setSelectionRange: jest.fn() },
+      });
+
+      expect(burstAtLetter).toHaveBeenCalled();
+    });
+
+    it('does not reach for one on Enter or Escape', async () => {
+      await appUnderTest.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      await appUnderTest.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+
+      expect(burstAtLetter).not.toHaveBeenCalled();
     });
   });
 

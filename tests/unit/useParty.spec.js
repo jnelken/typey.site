@@ -153,8 +153,10 @@ describe('useParty', () => {
       const xs = new Set(party.bursts.value.map(burst => burst.x));
       expect([...xs].sort((a, b) => a - b)).toEqual([EDGE_INSET_PX, 1000 - EDGE_INSET_PX]);
 
-      // Inset far enough that the largest fleck it can throw still lands on
-      // screen rather than half of the burst firing into the void.
+      // Inset past the largest fleck, so the cluster reads as coming in off
+      // the edge rather than being cut in half by it. Individual droplets
+      // travel further than this and some still leave the screen — that is the
+      // look, not a miss.
       expect(EDGE_INSET_PX).toBeGreaterThan(EDGE_BURST_SIZE);
       party.bursts.value.forEach(burst => {
         expect(burst.count).toBe(EDGE_BURST_COUNT);

@@ -136,8 +136,11 @@ export function createTypingApp() {
       }
 
       // Finishing a line during a party sprays confetti in off both edges.
-      // Decided here rather than inside one of the branches below so it holds
-      // for every kind of line, the way the screen colour does.
+      // Sits below the mode triggers and above everything else, so it holds for
+      // every line that actually says something — unlike the screen colour,
+      // which is set above the triggers and so holds for those too. A mode
+      // switch is not a line worth celebrating, and `party` itself already
+      // sprays on the way in.
       partySystem.burstFromEdges();
 
       // Math: an "a + b" equation plays the count-up animation and speaks the
