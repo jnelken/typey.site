@@ -1,5 +1,6 @@
 import { EMOJI_WORDS } from '@/features/typing/utils/wordEmoji';
 import { COLOR_TRIGGERS } from '@/features/easter-eggs/utils/colorMode';
+import { PARTY_TRIGGERS } from '@/features/party/utils/partyMode';
 
 // Silly mode sends a random word every few seconds, so each one gets the usual
 // animation. Three seconds is about how long a word takes to cross the screen
@@ -16,9 +17,10 @@ export const SILLY_TRIGGER = 'silly';
 
 // A word typed on its own line that is itself a mode trigger returns early from
 // the send handler, so it plays no animation — and "silly" would stop the run
-// mid-flight while "rainbow" would switch Color Mode on. They are all real
-// dictionary words with pictures; the run just never reaches for one.
-const MODE_TRIGGERS = new Set([SILLY_TRIGGER, ...COLOR_TRIGGERS]);
+// mid-flight, "rainbow" would switch Color Mode on and "party" would start a
+// party. They are all real dictionary words with pictures; the run just never
+// reaches for one.
+const MODE_TRIGGERS = new Set([SILLY_TRIGGER, ...COLOR_TRIGGERS, ...PARTY_TRIGGERS]);
 
 /** The words a run can send: the emoji library minus the mode triggers. */
 export const SILLY_WORDS = Object.freeze(EMOJI_WORDS.filter(word => !MODE_TRIGGERS.has(word)));

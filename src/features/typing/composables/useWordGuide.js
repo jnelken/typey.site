@@ -15,6 +15,7 @@ export const SECRET_WORDS = Object.freeze([
   { word: 'silly', emoji: '🤪', description: 'Sends five random words for you' },
   { word: 'color', emoji: '🌈', description: 'Paints every letter a colour' },
   { word: 'rainbow', emoji: '🌈', description: 'Another way to say color' },
+  { word: 'party', emoji: '🎉', description: 'Confetti on every letter you type' },
   { word: 'red', emoji: '🟥', description: 'Any colour name washes the screen' },
   { word: 'qwerty', emoji: '✨', description: 'Opens this list' },
 ]);

@@ -19,6 +19,8 @@ import { useSillyMode } from '@/features/easter-eggs/composables/useSillyMode';
 import { isSillyTrigger } from '@/features/easter-eggs/utils/sillyMode';
 import { useColorMode } from '@/features/easter-eggs/composables/useColorMode';
 import { isColorTrigger } from '@/features/easter-eggs/utils/colorMode';
+import { useParty } from '@/features/party/composables/useParty';
+import { isPartyTrigger } from '@/features/party/utils/partyMode';
 import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
 import { parseEquation } from '@/features/math/utils/parseEquation';
 import { usePercentAnimation } from '@/features/percent/composables/usePercentAnimation';
@@ -52,6 +54,7 @@ export function createTypingApp() {
     sendLine: () => handleEnterKey(),
   });
   const colorSystem = useColorMode();
+  const partySystem = useParty();
   const mathSystem = useMathAnimation();
   const percentSystem = usePercentAnimation();
   const eatenSystem = useEatenFood();
@@ -121,6 +124,21 @@ export function createTypingApp() {
         typingState.clearCurrentText();
         return;
       }
+
+      // Party mode: "party" turns every keystroke into confetti, and typing it
+      // again turns it back off. The word is a real dictionary entry (🎉🎊), so
+      // this *changes* what it does rather than adding to it — the same trade
+      // "% 50" made when it stopped floating fifty balloons.
+      if (isPartyTrigger(trimmedText)) {
+        partySystem.toggle();
+        typingState.clearCurrentText();
+        return;
+      }
+
+      // Finishing a line during a party sprays confetti in off both edges.
+      // Decided here rather than inside one of the branches below so it holds
+      // for every kind of line, the way the screen colour does.
+      partySystem.burstFromEdges();
 
       // Math: an "a + b" equation plays the count-up animation and speaks the
       // answer instead of running the usual emoji/balloon effects. A "$" or "%"
@@ -204,6 +222,7 @@ export function createTypingApp() {
     onPrintableKey: () => {
       mathSystem.clear();
       eatenSystem.clear();
+      partySystem.burstAtLetter();
       // An overcharge spends itself a bolt at a time instead of a point at a
       // time. Bolts miss often — only about one in five eats the letter just
       // typed. It stops on its own once the charge falls back under the line.
@@ -216,6 +235,7 @@ export function createTypingApp() {
     },
     onEscapePressed: () => {
       sillySystem.stop();
+      partySystem.stop();
       balloonsSystem.popAllBalloons();
       percentSystem.clear();
       zapSystem.clear();
@@ -305,6 +325,8 @@ export function createTypingApp() {
 
     isSillyModeActive: sillySystem.isActive,
     isColorModeActive: colorSystem.isActive,
+    isPartyModeActive: partySystem.isActive,
+    partyBursts: partySystem.bursts,
 
     // Word guide
     guideVisible: guideSystem.guideVisible,

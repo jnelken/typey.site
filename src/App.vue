@@ -39,6 +39,7 @@
     <MathAnimation />
     <BatteryAnimation />
     <EatenFood :food="typingApp.eatenFood.value" />
+    <PartyConfetti :bursts="typingApp.partyBursts.value" />
     <WordGuide />
 
     <pre v-if="showSpeechDebug" class="speech-debug">{{ typingApp.speechDebug.value }}</pre>
@@ -58,6 +59,7 @@ import Emojis from './features/effects/components/Emojis.vue';
 import MathAnimation from './features/math/components/MathAnimation.vue';
 import BatteryAnimation from './features/percent/components/BatteryAnimation.vue';
 import EatenFood from './features/eaten/components/EatenFood.vue';
+import PartyConfetti from './features/party/components/PartyConfetti.vue';
 import WordGuide from './features/typing/components/WordGuide.vue';
 import { createTypingApp, provideTypingApp } from './composables/useTypingApp';
 
