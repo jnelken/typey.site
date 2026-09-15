@@ -416,6 +416,45 @@ in the first place — its pattern is `(\d+)\s*word` and the `%` sits between th
 two — so `5 cookies` is still five cookies and `50% cookie` was previously just an
 ordinary cookie swarm with the number ignored.
 
+### 🎉 Party Mode
+
+Shipped 2026-09-14. Typing `party` turns the page into a celebration: every
+letter typed throws a small burst of confetti off the letter itself, and every
+line sent sprays a bigger one in off both edges of the screen. Typing `party`
+again stops it, and so does Escape — both take the confetti still in the air
+with them. See `src/features/party/`.
+
+**Decisions this made that the concept left open.** **No second particle
+system**: `Splatter.vue` already took a palette rather than a single colour,
+which is what **Produce Splatters** left behind for this, so Party Mode is the
+same droplets with a different list of colours. **The palette is named out of
+`SPLAT_COLORS`, not written as hexes**: every value is therefore already covered
+by `tests/unit/screenColor.spec.js` and the feature introduces no colour that
+file would have to start checking — minus `white`, the invisible-splatter
+problem that made `garlic` brown, and `black`, which reads as grit rather than
+celebration. A drift guard asserts the two stay in step. **The rate is capped at
+three bursts a second**, which the ticket did not ask for: a burst per keystroke
+is a new photosensitivity surface and a child hammering the keyboard would
+otherwise fire six or eight, so it takes the same ceiling the overcharge storm
+already holds itself to (WCAG 2.3.1) — which doubles as the guard that a
+held-down key can never outrun the droplets it spawns. **A keystroke burst is
+measured once, synchronously, on the frame it fires**, the same rule the zap
+bolt lives by; at typing speed it can land on the letter before the one just
+pressed, which is half a character from where the child is looking, and waiting
+a tick would trade that for a burst arriving after the *next* keystroke.
+**The edge spray is inset rather than fired from x=0**: droplets fly out
+radially, so a burst exactly on the edge throws half of itself off-screen.
+**The trigger line bursts on its way in**, because a trigger returns early and
+plays no animation of its own — without it, the line that starts the party would
+be the only line of the session that visibly does nothing.
+
+**The word already meant something, and now means something else.** `party` is a
+real dictionary entry (🎉🎊), so this *changes* what typing it does rather than
+adding to it — the same trade `% 50` made when it stopped floating fifty
+balloons and charged a battery instead. A silly run never sends it, for the
+reason `rainbow` is already excluded: a trigger returns early from the send
+handler, so it would both waste a word and start a party mid-run.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
@@ -424,8 +463,7 @@ Linear is the source of truth for live scope, status, and blockers. All tickets 
 | Order | Ticket | Blocked by | Demonstrable outcome |
 | --- | --- | --- | --- |
 | 1 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
-| 2 | [DEV-55: Burst confetti in Party Mode](https://linear.app/jnelken/issue/DEV-55) | None | Typing `party` reuses the splatter primitive for character and edge confetti. |
-| 3 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
+| 2 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
 
 ## Cross-cutting success criteria
 

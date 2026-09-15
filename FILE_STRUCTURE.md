@@ -36,7 +36,8 @@ typey.site/
 │   │   │   └── utils/
 │   │   │       ├── wordMotion.js          # How each word moves: path, flair, facing
 │   │   │       ├── wordEffect.js          # Turns that into spawn arguments
-│   │   │       └── screenColor.js         # A colour word washes the whole page
+│   │   │       ├── screenColor.js         # A colour word washes the whole page
+│   │   │       └── glyphTarget.js         # Where the letter just typed is on screen
 │   │   ├── easter-eggs/                   # Hidden modes and their triggers
 │   │   │   ├── composables/               # useEasterEggs, useColorMode, useSillyMode
 │   │   │   └── utils/                     # colorMode.js, sillyMode.js, typeahead.js
@@ -52,6 +53,10 @@ typey.site/
 │   │   │   ├── components/EatenFood.vue
 │   │   │   ├── composables/useEatenFood.js
 │   │   │   └── utils/                     # parseEatenFood.js, eatenWedge.js
+│   │   ├── party/                         # "party" — confetti on every keystroke
+│   │   │   ├── components/PartyConfetti.vue
+│   │   │   ├── composables/useParty.js
+│   │   │   └── utils/partyMode.js
 │   │   └── audio/
 │   │       └── composables/               # useSound.js, useSpeech.js
 │   ├── composables/
@@ -97,7 +102,8 @@ typey.site/
 | A word a child can type | `src/features/typing/utils/wordEmoji.js`, in the right category |
 | A different way a word should move | `src/features/effects/utils/wordMotion.js` |
 | A new animation path or flourish | `src/ui/EmojiEffect.vue`, then name it in `wordMotion.js` |
-| A hidden mode with its own trigger word | `src/features/easter-eggs/` |
+| A hidden mode that only re-skins the text | `src/features/easter-eggs/` |
+| A hidden mode that draws its own layer | its own feature slice, like `src/features/party/` |
 | A punctuation-triggered canvas animation (like `%` or `+`) | `src/features/percent/` or `src/features/math/`, sibling feature slices |
 | A component two features both need | `src/ui/` |
 
