@@ -1,5 +1,7 @@
 # Percent Battery — what `%` does
 
+> **Status:** Implemented before 2026-09-17; archived by advance-roadmap. Evidence: `src/features/percent/utils/parsePercent.js`, `src/features/percent/composables/usePercentAnimation.js` and `src/features/percent/components/BatteryAnimation.vue` all exist; the component is mounted in `src/App.vue` and the composable is wired in `src/composables/useTypingApp.js`, with `tests/unit/parsePercent.spec.js`, `tests/unit/usePercentAnimation.spec.js` and `tests/unit/batteryColor.spec.js` in place. `ROADMAP.md` carries it under `## ✅ Shipped` as “🔋 Percent Battery”.
+
 > **Suggested execution:** Sonnet 5 with medium reasoning — the slice is a near-copy of `src/features/math/`, so most of the work is mechanical, and the two decisions that needed judgment (battery over pizza, two colour bands) are already made and measured below. Step up to Opus 5 only if the battery needs real visual iteration once it's on screen. Don't step down: the `0%` guard and the `% 50` interception are both easy to get subtly wrong.
 
 ## ⚠️ Delegate the implementation to the Cursor CLI

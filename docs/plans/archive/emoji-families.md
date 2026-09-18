@@ -1,5 +1,7 @@
 # Emoji Families: Related Glyphs in One Animation
 
+> **Status:** Implemented before 2026-09-17; archived by advance-roadmap. Evidence: `WORD_FAMILY` in `src/features/typing/utils/wordEmoji.js`, the family-aware paths in `src/features/effects/utils/wordMotion.js` and `src/features/effects/utils/wordEffect.js`, and the three named spec files (`tests/unit/wordEmoji.spec.js`, `tests/unit/wordMotion.spec.js`, `tests/unit/wordEffect.spec.js`) all exist. `ROADMAP.md` carries it under `## ✅ Shipped` as “🎨 Emoji Families”.
+
 > **Suggested execution:** Sonnet 5 with medium reasoning — the design is settled and the work is a large, well-specified data table plus a small mechanical refactor across three files. Step up to Opus 5 if the `facing` audit turns up more mixed-orientation families than the two recorded here; don't step down, because the family table is a judgment call on every row and Haiku will pad it with members that aren't pictures of the word.
 
 ## ⚠️ Delegate the implementation to the Cursor CLI

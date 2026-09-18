@@ -1,5 +1,7 @@
 # Produce Splatter and the Colour It Leaves Behind
 
+> **Status:** Implemented before 2026-09-17; archived by advance-roadmap. Evidence: `src/ui/Splatter.vue` exists and is imported by both `src/ui/EmojiEffect.vue` and `src/features/party/components/PartyConfetti.vue`; `PRODUCE_COLORS` and `SPLAT_COLORS` are exported from `src/features/effects/utils/screenColor.js` and covered by `tests/unit/screenColor.spec.js`. `ROADMAP.md` carries it under `## ✅ Shipped` as “🍉 Produce Splatters, and the Colour It Leaves Behind”.
+
 > **Suggested execution:** Sonnet 5 with medium reasoning — the plan is detailed and the blast radius is small (one new component, five edited files, CSS keyframe work with the timing fractions already derived from the existing keyframes). Step up to Opus 5 if the impact timing reads wrong on real hardware and the fractions need re-deriving from feel rather than from the keyframes. Don't step down: the four-layer transform rules in `EmojiEffect.vue` punish a careless edit.
 
 ## How to run this: delegate to the Cursor CLI
