@@ -34,6 +34,9 @@
       </div>
     </div>
 
+    <NightSky
+      :active="typingApp.isNightModeActive.value"
+      :stars="typingApp.nightStars.value" />
     <Balloons :balloons="typingApp.balloons.value" />
     <Emojis :effects="typingApp.emojiEffects.value" />
     <MathAnimation />
@@ -54,6 +57,7 @@ import Toolbar from './features/typing/components/Toolbar.vue';
 import WordPrompt from './features/typing/components/WordPrompt.vue';
 import TypingArea from './features/typing/components/TypingArea.vue';
 import InputSection from './features/typing/components/InputSection.vue';
+import NightSky from './features/night/components/NightSky.vue';
 import Balloons from './features/effects/components/Balloons.vue';
 import Emojis from './features/effects/components/Emojis.vue';
 import MathAnimation from './features/math/components/MathAnimation.vue';

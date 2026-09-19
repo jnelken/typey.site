@@ -21,6 +21,8 @@ import { useColorMode } from '@/features/easter-eggs/composables/useColorMode';
 import { isColorTrigger } from '@/features/easter-eggs/utils/colorMode';
 import { useParty } from '@/features/party/composables/useParty';
 import { isPartyTrigger } from '@/features/party/utils/partyMode';
+import { useNight } from '@/features/night/composables/useNight';
+import { isNightTrigger } from '@/features/night/utils/nightMode';
 import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
 import { parseEquation } from '@/features/math/utils/parseEquation';
 import { usePercentAnimation } from '@/features/percent/composables/usePercentAnimation';
@@ -55,6 +57,7 @@ export function createTypingApp() {
   });
   const colorSystem = useColorMode();
   const partySystem = useParty();
+  const nightSystem = useNight();
   const mathSystem = useMathAnimation();
   const percentSystem = usePercentAnimation();
   const eatenSystem = useEatenFood();
@@ -91,7 +94,15 @@ export function createTypingApp() {
       // The screen takes its colour from the line just sent, and keeps it until
       // the next one. Decided up here so it holds for every kind of line — the
       // ones below that handle themselves and return early included.
-      screenColorSystem.setScreenColorFromText(trimmedText);
+      //
+      // Except at night. The washes in `screenColor.js` are pale grounds chosen
+      // to keep near-black text readable; on the night sky they would be the
+      // brightest thing on screen, and the dark text tokens they were checked
+      // against are not the ones in use. Same call as Color Mode's, and made
+      // for the same reason — DEV-54 settled both.
+      if (!nightSystem.isActive.value) {
+        screenColorSystem.setScreenColorFromText(trimmedText);
+      }
 
       // The prompt only moves on once the word has actually been spelled
       // right — a wrong try leaves it up for another go.
@@ -119,8 +130,31 @@ export function createTypingApp() {
 
       // Color mode: "color" (or "colour") paints every character a different
       // color, and typing it again puts the text back.
+      //
+      // It stays off while the night is on. The seven hues are contrast-checked
+      // against the light page only (`tests/unit/colorMode.spec.js`) and every
+      // one of them fails AA on the indigo ground, so the line still clears —
+      // it just doesn't light the palette up.
       if (isColorTrigger(trimmedText)) {
-        colorSystem.toggle();
+        if (!nightSystem.isActive.value) colorSystem.toggle();
+        typingState.clearCurrentText();
+        return;
+      }
+
+      // Goodnight: the page goes to bed — indigo ground, a moon, and a sky full
+      // of stars. Typing it again wakes it up. Color Mode goes off on the way
+      // in rather than being left on over a palette it can't be read against.
+      if (isNightTrigger(trimmedText)) {
+        nightSystem.toggle();
+        if (nightSystem.isActive.value) {
+          colorSystem.stop();
+          // Hands `--color-background` back to the stylesheet so the night
+          // class governs it. `resetScreenColor` would not do: it writes the
+          // daylight hex inline, and inline beats a class.
+          screenColorSystem.clearScreenColor();
+        } else {
+          screenColorSystem.resetScreenColor();
+        }
         typingState.clearCurrentText();
         return;
       }
@@ -239,6 +273,10 @@ export function createTypingApp() {
     onEscapePressed: () => {
       sillySystem.stop();
       partySystem.stop();
+      if (nightSystem.isActive.value) {
+        nightSystem.stop();
+        screenColorSystem.resetScreenColor();
+      }
       balloonsSystem.popAllBalloons();
       percentSystem.clear();
       zapSystem.clear();
@@ -330,6 +368,8 @@ export function createTypingApp() {
     isColorModeActive: colorSystem.isActive,
     isPartyModeActive: partySystem.isActive,
     partyBursts: partySystem.bursts,
+    isNightModeActive: nightSystem.isActive,
+    nightStars: nightSystem.stars,
 
     // Word guide
     guideVisible: guideSystem.guideVisible,
@@ -366,6 +406,7 @@ export function createTypingApp() {
     spawnEmojis: emojisSystem.spawnEmojis,
     clearEmojis: emojisSystem.clearEmojis,
     resetScreenColor: screenColorSystem.resetScreenColor,
+    clearScreenColor: screenColorSystem.clearScreenColor,
     initApp,
   };
 

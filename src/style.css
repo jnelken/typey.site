@@ -118,6 +118,39 @@ body {
   border: 0;
 }
 
+/* Goodnight: the page goes to bed. A deep indigo ground, pale text, and a
+   moon-gold heading — see `src/features/night/utils/nightMode.js`, which owns
+   these values and holds every foreground here to 4.5:1 against the ground.
+
+   Deliberately placed ABOVE the battery blocks below. Both hang off a class on
+   <html> and both re-point the same properties at the same specificity, so
+   source order decides a collision: running the battery flat during the night
+   is a power cut, and a power cut wins. */
+html.goodnight {
+  --color-background: #0b1026;
+  --color-surface: #141a35;
+  --color-text-primary: #f4f6ff;
+  --color-text-secondary: #d8ddf5;
+  --color-text-light: #a7b0d8;
+  --color-primary: #ffd88a;
+
+  /* Read by NightSky.vue, so the crescent's cut-out is the same ground the
+     page is painted in and the moon can never show a seam. */
+  --night-background: #0b1026;
+  --night-moon: #fdf6d8;
+  --night-star: #ffffff;
+}
+
+html.goodnight body {
+  background-color: var(--color-background);
+}
+
+/* The help pill is a white lozenge, which on a night sky reads as a hole cut
+   in it. Given the night's own surface instead. */
+html.goodnight .help-text {
+  background: rgba(20, 26, 53, 0.85);
+}
+
 /* Battery ran dry: the room goes dark. Typed text inverts to white once the
    dead battery appears (after the flicker), so it stays readable on black. */
 html.battery-blackout body {

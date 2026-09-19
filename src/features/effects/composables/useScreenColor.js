@@ -34,5 +34,26 @@ export function useScreenColor() {
 
   const reset = () => apply(DEFAULT_SCREEN_COLOR);
 
-  return { screenColor: current, setScreenColorFromText: setFromText, resetScreenColor: reset };
+  /**
+   * Hand `--color-background` back to the stylesheet.
+   *
+   * `reset` is not the same thing and cannot stand in for it: it writes the
+   * daylight hex *inline* on the root, and an inline custom property beats any
+   * class rule. A theme that re-points the ground from a class on <html> —
+   * Goodnight does — would be silently overridden by a page that had ever been
+   * washed a colour. Removing the property is the only way the class wins.
+   */
+  const clear = () => {
+    current.value = DEFAULT_SCREEN_COLOR;
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.removeProperty('--color-background');
+    }
+  };
+
+  return {
+    screenColor: current,
+    setScreenColorFromText: setFromText,
+    resetScreenColor: reset,
+    clearScreenColor: clear,
+  };
 }
