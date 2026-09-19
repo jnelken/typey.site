@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import { createTypingApp } from '@/composables/useTypingApp';
 import { SILLY_WORDS } from '@/features/easter-eggs/utils/sillyMode';
 import { STRIKE_MS, BOLT_MS } from '@/features/percent/composables/useZaps';
+import { NIGHT_CLASS } from '@/features/night/composables/useNight';
 
 describe('useTypingApp', () => {
   let typingApp;
@@ -939,6 +940,149 @@ describe('useTypingApp', () => {
       await pressEnter();
 
       expect(typingApp.completedLines.value).toContain('color');
+    });
+  });
+
+  describe('goodnight', () => {
+    const pressEnter = () =>
+      typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+    const pressEscape = () =>
+      typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+
+    const rootBackground = () =>
+      document.documentElement.style.getPropertyValue('--color-background');
+
+    afterEach(() => {
+      document.documentElement.classList.remove(NIGHT_CLASS);
+      document.documentElement.style.removeProperty('--color-background');
+    });
+
+    it('is off until the word is typed', () => {
+      expect(typingApp.isNightModeActive.value).toBe(false);
+      expect(typingApp.nightStars.value).toEqual([]);
+    });
+
+    it('turns on for "goodnight" and clears the line it was typed on', async () => {
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+
+      expect(typingApp.isNightModeActive.value).toBe(true);
+      expect(typingApp.nightStars.value.length).toBeGreaterThan(0);
+      expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('turns on for the two-word spelling too', async () => {
+      typingApp.currentText.value = 'GOOD NIGHT';
+      await pressEnter();
+
+      expect(typingApp.isNightModeActive.value).toBe(true);
+    });
+
+    it('turns back off when the word is typed again', async () => {
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+      typingApp.currentText.value = 'Goodnight';
+      await pressEnter();
+
+      expect(typingApp.isNightModeActive.value).toBe(false);
+      expect(typingApp.nightStars.value).toEqual([]);
+    });
+
+    it('ignores the word inside a longer line', async () => {
+      typingApp.currentText.value = 'goodnight moon';
+      await pressEnter();
+
+      expect(typingApp.isNightModeActive.value).toBe(false);
+    });
+
+    it('wakes up on Escape', async () => {
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+      pressEscape();
+
+      expect(typingApp.isNightModeActive.value).toBe(false);
+    });
+
+    it('spawns no emoji swarm for the line that starts it', async () => {
+      const spawned = [];
+      const original = typingApp.spawnEmojis;
+      typingApp.spawnEmojis = (...args) => spawned.push(args);
+
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+      typingApp.spawnEmojis = original;
+
+      expect(spawned).toEqual([]);
+      expect(typingApp.emojiEffects.value).toEqual([]);
+    });
+
+    it('hands the ground back to the stylesheet, so the night class governs it', async () => {
+      // The wash writes `--color-background` inline on the root, and an inline
+      // custom property beats a class rule. Leaving it set is what would make
+      // the night theme silently not apply on any page that had been washed.
+      typingApp.currentText.value = 'blue';
+      await pressEnter();
+      expect(rootBackground()).not.toBe('');
+
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+
+      expect(rootBackground()).toBe('');
+      expect(document.documentElement.classList.contains(NIGHT_CLASS)).toBe(true);
+    });
+
+    it('does not wash the screen for lines typed during the night', async () => {
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+
+      typingApp.currentText.value = 'blue';
+      await pressEnter();
+
+      expect(rootBackground()).toBe('');
+    });
+
+    it('washes again once the night ends', async () => {
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+
+      typingApp.currentText.value = 'blue';
+      await pressEnter();
+
+      expect(rootBackground()).not.toBe('');
+    });
+
+    it('turns Color Mode off on the way in', async () => {
+      typingApp.currentText.value = 'color';
+      await pressEnter();
+      expect(typingApp.isColorModeActive.value).toBe(true);
+
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+
+      expect(typingApp.isColorModeActive.value).toBe(false);
+    });
+
+    it('refuses to switch Color Mode on during the night', async () => {
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+
+      typingApp.currentText.value = 'rainbow';
+      await pressEnter();
+
+      expect(typingApp.isColorModeActive.value).toBe(false);
+      // The line is still consumed, so it doesn't fall through and spawn a
+      // rainbow's emoji swarm instead.
+      expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('still records the line it was typed on, like every other mode switch', async () => {
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+
+      expect(typingApp.completedLines.value).toContain('goodnight');
     });
   });
 
