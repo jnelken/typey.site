@@ -455,6 +455,46 @@ balloons and charged a battery instead. A silly run never sends it, for the
 reason `rainbow` is already excluded: a trigger returns early from the send
 handler, so it would both waste a word and start a party mid-run.
 
+### 🌙 Goodnight
+
+Shipped 2026-09-19. Typing `goodnight` (or `good night`) puts the page to bed:
+the ground goes to a deep indigo, the text turns pale, a moon rises in the
+top-right and the sky fills with slowly twinkling stars. Typing it again wakes
+it up, and so does Escape — both take the sky down with them. See
+`src/features/night/`.
+
+**Decisions this made that the concept left open.** **The night is blue, not the
+blackout's black**: `html.battery-dead` already owns `#000000`, and that black
+means a power cut — sharing a ground would make going to bed and running the
+battery flat look like the same event. **Every foreground is held to 4.5:1
+against the indigo** by `tests/unit/nightMode.spec.js`, the same bar Color Mode
+holds its palette to, so the aesthetic call costs no accessibility. **Color Mode
+goes off on the way in and refuses to come on during the night** — the ticket
+decided this, and the spec now carries the evidence for it: all seven hues clear
+AA on the light page and every one of them fails on the indigo. **The screen
+colour washes go off too**, for the same reason: they are pale grounds chosen to
+keep near-black text readable, and at night they would be the brightest thing on
+screen. **The sky is generated once per night from a seed**, so the stars stay
+where they were put instead of jumping on every re-render, and two nights are
+two different skies. **Stars keep out of the reading band and off the moon** —
+they are squeezed into the strips above and below the column the child is
+actually reading, rather than being dropped, so the count asked for is always
+the count returned. **Each star twinkles on its own period and starts on a
+negative delay**, because forty-eight dots fading in lockstep is a flashing
+screen rather than a sky; reduced motion keeps the stars and simply stops them
+moving (WCAG 2.3.3).
+
+**The trap this turned up.** The screen wash writes `--color-background`
+*inline* on `<html>`, and an inline custom property beats any class rule — so a
+theme that re-points the ground from a class on `<html>`, as this one does,
+would have silently failed to apply on any page that had ever been washed a
+colour. `resetScreenColor` could not fix it: it writes the daylight hex inline
+too. `useScreenColor` gained a `clearScreenColor` that *removes* the property
+and hands the ground back to the stylesheet. `html.goodnight` also sits above
+the battery blocks in `src/style.css` on purpose: both hang off a class on
+`<html>` at the same specificity, so source order decides a collision, and
+running the battery flat during the night is a power cut — a power cut wins.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
@@ -462,8 +502,7 @@ Linear is the source of truth for live scope, status, and blockers. All tickets 
 
 | Order | Ticket | Blocked by | Demonstrable outcome |
 | --- | --- | --- | --- |
-| 1 | [DEV-54: Add the goodnight dark-theme trigger](https://linear.app/jnelken/issue/DEV-54) | None | Typing `goodnight` activates an accessible moon-and-stars theme with Color Mode disabled. |
-| 2 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
+| 1 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
 
 ## Cross-cutting success criteria
 
