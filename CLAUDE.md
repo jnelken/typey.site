@@ -52,9 +52,9 @@ Located in `src/ui/`, provides reusable components:
 
 #### API Integration
 - **Netlify Functions**: Two serverless functions in `netlify/functions/`
-  - `submit-entry.js`: Stores typing entries for external companion app
+  - `submit-entry.js`: Accepts externally submitted typing entries
   - `latest-entry.js`: Retrieves most recent entry
-- **Tidbyt Integration**: Companion app in `tidbyt-companion/` displays recent typing on Tidbyt displays
+- **Tidbyt Integration**: The local Vite bridge in `server/tidbytDevPlugin.js` renders completed lines and pushes them to a configured Tidbyt
 
 ### Code Patterns
 

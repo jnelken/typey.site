@@ -91,6 +91,11 @@ export function createTypingApp() {
 
       const trimmedText = typingState.currentText.value.trim();
 
+      // Every completed line goes to the local Tidbyt bridge exactly once,
+      // including commands and special effects that return early below. This
+      // stays fire-and-forget so a slow device never delays Typey's effects.
+      void typingAPI.submitEntry(lineToSpeak);
+
       // The screen takes its colour from the line just sent, and keeps it until
       // the next one. Decided up here so it holds for every kind of line — the
       // ones below that handle themselves and return early included.
@@ -185,7 +190,6 @@ export function createTypingApp() {
       if (equation) {
         mathSystem.play(equation);
         playModifierEffect(equation);
-        await typingAPI.submitEntry(typingState.currentText.value);
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
           const word = equation.op === '+' ? 'plus' : 'minus';
@@ -201,7 +205,6 @@ export function createTypingApp() {
       const percent = parsePercent(trimmedText);
       if (percent) {
         percentSystem.play(percent);
-        await typingAPI.submitEntry(typingState.currentText.value);
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
           speechSystem.speakLine(`${percent.percent} percent`);
@@ -218,7 +221,6 @@ export function createTypingApp() {
       const eaten = parseEatenFood(trimmedText);
       if (eaten) {
         eatenSystem.play(eaten);
-        await typingAPI.submitEntry(typingState.currentText.value);
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
           speechSystem.speakLine(`${eaten.percent} percent ${eaten.word}`);
@@ -232,9 +234,6 @@ export function createTypingApp() {
         emojisSystem.spawnEmojis,
         word => guideSystem.revealForWord(word)
       );
-
-      // Submit to API for Tidbyt companion app
-      await typingAPI.submitEntry(typingState.currentText.value);
 
       typingState.clearCurrentText();
 
@@ -293,7 +292,7 @@ export function createTypingApp() {
       }
     },
     // The line has already had its animation and has already gone to the
-    // Tidbyt companion; editing it sends a second entry rather than undoing
+    // Tidbyt display; editing it sends a second entry rather than undoing
     // the first. That's the honest trade for letting a typo be fixed.
     onEditLastEntry: () => {
       const line = typingState.popCompletedLine();

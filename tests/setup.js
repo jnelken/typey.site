@@ -8,6 +8,10 @@ beforeEach(() => {
   }
 });
 
+// Network integrations are best-effort and are exercised separately. Keep
+// unit tests deterministic while composables submit completed lines.
+global.fetch = jest.fn(() => Promise.resolve({ ok: true }));
+
 // Mock Web Speech API
 global.speechSynthesis = {
   speak: jest.fn(),

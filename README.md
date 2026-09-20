@@ -13,6 +13,33 @@ A fun, interactive typing application designed for kids with sound effects, text
 3. **Press Enter** to complete a line and hear it spoken
 4. **View your history** in the scrolling area above
 
+### Local Tidbyt display
+
+When Typey is running locally, every completed line can also take over a
+Tidbyt for ten seconds. The API key stays in the Vite dev server and is never
+sent to the browser.
+
+1. Install ImageMagick so the local bridge can render 64×32 WebP frames.
+2. Create `.env.local` in the project root:
+
+   ```dotenv
+   TIDBYT_DEVICE_ID=your-device-id
+   TIDBYT_API_KEY=your-api-key
+   # Optional when a system font cannot be found automatically:
+   # TIDBYT_FONT_PATH=/absolute/path/to/a/font.ttf
+   ```
+
+3. Run `npm run dev`, open the local URL, type a line, and press Enter.
+
+Prompts are queued and shown in order. Each frame is refreshed during its
+ten-second turn so the Tidbyt does not fall back to its normal rotation early.
+
+To use the deployed site with the same bridge, keep the local dev server
+running and open `https://typey.site/?tidbyt=local`. The query parameter is an
+explicit opt-in: without it, the production site never contacts localhost.
+Chrome and other Chromium browsers support this HTTPS-to-loopback flow. Safari
+may block the plain-HTTP loopback request as mixed content.
+
 ### Controls
 
 - **✨ Words** - browse the whole typing dictionary, search it, tap any word to watch what it does

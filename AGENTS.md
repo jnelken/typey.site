@@ -6,7 +6,7 @@
 - Tests: `tests/unit/`, `tests/integration/`, with `tests/setup.js` for jsdom and Web API mocks.
 - Static/Build: `public/`, output in `dist/`.
 - Serverless: `netlify/functions/` (e.g., `latest-entry.js`, `submit-entry.js`).
-- Companion: `tidbyt-companion/` (Pixlet app). See `FILE_STRUCTURE.md` for a tree view.
+- Local integrations: `server/` (e.g., the Vite-only Tidbyt bridge). See `FILE_STRUCTURE.md` for a tree view.
 
 ## Build, Test, and Development Commands
 
@@ -36,7 +36,7 @@
 ## Commit & Pull Request Guidelines
 
 - Commits: Imperative mood, concise (“Add”, “Fix”, “Update …”), scope optional; keep < 72 chars when possible.
-- PRs: Clear description, linked issues, steps to test, and screenshots/GIFs for UI changes. Note any Netlify Function or `tidbyt-companion` impacts. Ensure `npm run build` and tests pass.
+- PRs: Clear description, linked issues, steps to test, and screenshots/GIFs for UI changes. Note any Netlify Function or local integration impacts. Ensure `npm run build` and tests pass.
 
 ## Security & Configuration Tips
 

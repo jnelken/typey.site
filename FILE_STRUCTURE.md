@@ -18,7 +18,7 @@ typey.site/
 │   │   │   │   ├── WordGuide.vue          # The whole dictionary, browsable
 │   │   │   │   └── WordPrompt.vue         # The word to copy, lit letter by letter
 │   │   │   ├── composables/
-│   │   │   │   ├── useTypingAPI.js        # Submits lines to the Tidbyt companion
+│   │   │   │   ├── useTypingAPI.js        # Submits local lines to the Tidbyt bridge
 │   │   │   │   ├── useTypingEvents.js     # Keyboard handling
 │   │   │   │   ├── useTypingSettings.js   # Persisted toggles
 │   │   │   │   ├── useTypingState.js      # Current line and history
@@ -83,7 +83,8 @@ typey.site/
 │   └── style.css
 ├── docs/plans/                            # Design docs for in-flight work
 ├── netlify/functions/                     # submit-entry.js, latest-entry.js
-├── tidbyt-companion/                      # Tidbyt display app
+├── server/                                # Local Vite integrations
+│   └── tidbytDevPlugin.js                 # Renders and pushes prompts to Tidbyt
 ├── tests/
 │   ├── unit/
 │   ├── integration/
