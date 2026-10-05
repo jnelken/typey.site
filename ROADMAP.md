@@ -495,14 +495,40 @@ the battery blocks in `src/style.css` on purpose: both hang off a class on
 `<html>` at the same specificity, so source order decides a collision, and
 running the battery flat during the night is a power cut — a power cut wins.
 
+### 📊 Privacy-First Analytics
+
+Shipped 2026-10-04 ([DEV-56](https://linear.app/jnelken/issue/DEV-56)). PostHog
+now reports, anonymously, how long the typing page is actually looked at, which
+toolbar controls and settings get used, which easter eggs are found and how
+often, and how fast the page loads. The insights live in PostHog's own UI; the
+app has no dashboard of its own. See `src/features/analytics/` and the
+*Analytics and privacy* section of the README.
+
+**Decisions this made that the ticket left open.** **Nothing a child typed ever
+leaves the page**: events carry only names the app chose (`egg: 'math'`,
+`setting: 'sound'`), an equation is reported by its operator and modifier but
+never its numbers, and a percent never by its amount. That is enforced in one
+place — a property allowlist in `properties.js` — rather than trusted to each
+call site. **Identity lasts one page load**: memory persistence, no person
+profiles, no `identify()`, Do-Not-Track respected, no autocapture (it reads
+element text, which here means the typed lines), no session replay. **posthog-js
+loads on demand**, so a build without keys never downloads it, and a missing
+key is a quiet no-op rather than the setup wizard's dev-mode `throw`. **Errors
+report their class name only**, because messages and stacks can quote typed
+values; Vue's console logging is kept. **The wizard's Tidbyt submission logs
+were dropped**: they measured device delivery, not anything this ticket asked
+about. **A word's ordinary animation is not an easter egg** — it fires on nearly
+every line — so the counted-word, balloon and money-rain variants are reported
+and plain words are not. **A/B testing stays possible**: feature flags are left
+on, but each page load is its own anonymous visitor, so any experiment would be
+per visit.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
 `repo/typey.site` label.
 
-| Order | Ticket | Blocked by | Demonstrable outcome |
-| --- | --- | --- | --- |
-| 1 | [DEV-56: Add privacy-first product analytics](https://linear.app/jnelken/issue/DEV-56) | PostHog account and project key | Anonymous analytics report time spent, settings use, easter-egg discovery, and performance. |
+No tickets are open.
 
 ## Cross-cutting success criteria
 

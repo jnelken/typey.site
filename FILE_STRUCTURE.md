@@ -107,6 +107,8 @@ typey.site/
 | A hidden mode that draws its own layer | its own feature slice, like `src/features/party/` |
 | A punctuation-triggered canvas animation (like `%` or `+`) | `src/features/percent/` or `src/features/math/`, sibling feature slices |
 | A component two features both need | `src/ui/` |
+| A new easter egg | its name in `EASTER_EGGS` (`src/features/analytics/easterEggs.js`), reported with `trackEgg` where it plays |
+| An analytics event property | `ALLOWED_PROPERTIES` in `src/features/analytics/properties.js` — never anything a child typed |
 
 The dictionary is the source of truth. Adding a word there puts it into the
 practice prompts, the word guide, ghost-text spelling help and the typeahead

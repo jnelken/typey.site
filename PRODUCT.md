@@ -34,7 +34,7 @@ Typey Site turns the act of typing into the interaction: letters are spoken, com
 
 - The product provides large live typing, word prompts, spelling feedback, line history, keystroke sounds, browser speech synthesis, ghost-word completion, and word-driven visual effects.
 - The experience includes playful modes and typed interactions for emoji, color, night, parties, arithmetic, percentages, and food.
-- The product is privacy-first and has no user accounts, behavioral analytics, or learning-progress tracking.
+- The product is privacy-first and has no user accounts or learning-progress tracking. Its only analytics are anonymous, per-page-load PostHog events about which easter eggs, settings, and controls are used, visible time on the page, and load performance; they never include what a child typed or any identifier that persists between visits.
 - Browser speech support varies by platform and can require user interaction, especially on mobile browsers and Safari.
 - The local Tidbyt bridge must keep its device ID and API key on the development server rather than exposing them to the browser.
 - The current production submission endpoint receives completed text and derives a request IP even though it has no persistent database. This is an implementation gap against the privacy-first product commitment and must not become durable storage or tracking without an explicit product decision.
@@ -58,7 +58,7 @@ Typey Site turns the act of typing into the interaction: letters are spoken, com
 1. **Learning happens through active typing.** Every major reward should follow from the child pressing keys, spelling, correcting, or completing a line.
 2. **Give immediate, understandable feedback.** Large text, speech, sound, and visual reactions should make the relationship between input and result obvious to a five-year-old.
 3. **Use discovery to sustain practice.** Prompts offer a clear starting point while free typing, word effects, and secret behaviors reward curiosity.
-4. **Keep the experience simple and private.** A child should be able to begin immediately without an account, analytics, or progress-tracking machinery.
+4. **Keep the experience simple and private.** A child should be able to begin immediately without an account, consent prompt, or progress-tracking machinery, and nothing measured about play should identify the child or carry their words.
 5. **Let play support legibility.** Effects may be surprising and expressive, but they must preserve the child's ability to read and understand what they typed.
 
 ## Accessibility & Inclusion

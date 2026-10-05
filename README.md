@@ -40,6 +40,29 @@ explicit opt-in: without it, the production site never contacts localhost.
 Chrome and other Chromium browsers support this HTTPS-to-loopback flow. Safari
 may block the plain-HTTP loopback request as mixed content.
 
+### Analytics and privacy
+
+Typey reports a handful of anonymous events to PostHog so it is possible to see
+which easter eggs and settings children actually use. It is off unless
+`VITE_POSTHOG_PROJECT_TOKEN` and `VITE_POSTHOG_HOST` are set (see
+`.env.example`); without them nothing is loaded or sent, locally or in
+production.
+
+When it is on:
+
+- **Never what was typed.** Events carry only names chosen by the app — which
+  easter egg played, which setting changed, which control was pressed — plus
+  visible time on the page, load timing, and an error's class name. A property
+  allowlist in `src/features/analytics/properties.js` drops anything else.
+- **No identity.** No cookies or local storage, no person profiles, no
+  `identify()`. Each page load is a new anonymous visitor. Do-Not-Track is
+  respected.
+- **No recording.** Autocapture, session replay, heatmaps, surveys and
+  PostHog's extra scripts are all off.
+
+Turn on **Discard client IP data** in the PostHog project settings too; IP
+handling happens on PostHog's side and the browser SDK cannot switch it off.
+
 ### Controls
 
 - **✨ Words** - browse the whole typing dictionary, search it, tap any word to watch what it does
