@@ -160,8 +160,13 @@ defineExpose({
 .input-typing {
   background: transparent;
   border: none;
+  /* Match the visible AnimatedText layer exactly so the native caret sits
+     between the typed letters and any ghost completion. The containing
+     InputSection owns the shared outer inset. */
+  padding: 0;
   font-size: var(--font-size-typing);
   font-family: var(--font-family-mono);
+  line-height: 1.2;
   caret-color: var(--color-primary);
   color: transparent;
   position: absolute;

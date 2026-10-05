@@ -1,0 +1,381 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T00:00:35.000Z",
+  "title": "Design System: Typey Site",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Strawberry Coral",
+        "canonical": "#ff6b6b",
+        "tonalRamp": ["oklch(15% 0.181 22.8)", "oklch(27% 0.181 22.8)", "oklch(39% 0.181 22.8)", "oklch(51% 0.181 22.8)", "oklch(63% 0.181 22.8)", "oklch(75% 0.181 22.8)", "oklch(87% 0.181 22.8)", "oklch(95% 0.181 22.8)"]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Mint Teal",
+        "canonical": "#4ecdc4",
+        "tonalRamp": ["oklch(15% 0.112 188.5)", "oklch(27% 0.112 188.5)", "oklch(39% 0.112 188.5)", "oklch(51% 0.112 188.5)", "oklch(63% 0.112 188.5)", "oklch(75% 0.112 188.5)", "oklch(87% 0.112 188.5)", "oklch(95% 0.112 188.5)"]
+      },
+      "tertiary": {
+        "role": "tertiary",
+        "displayName": "Sunny Yellow",
+        "canonical": "#feca57",
+        "tonalRamp": ["oklch(15% 0.143 84.4)", "oklch(27% 0.143 84.4)", "oklch(39% 0.143 84.4)", "oklch(51% 0.143 84.4)", "oklch(63% 0.143 84.4)", "oklch(75% 0.143 84.4)", "oklch(87% 0.143 84.4)", "oklch(95% 0.143 84.4)"]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Success Mint",
+        "canonical": "#48e5a3",
+        "tonalRamp": ["oklch(15% 0.161 161.1)", "oklch(27% 0.161 161.1)", "oklch(39% 0.161 161.1)", "oklch(51% 0.161 161.1)", "oklch(63% 0.161 161.1)", "oklch(75% 0.161 161.1)", "oklch(87% 0.161 161.1)", "oklch(95% 0.161 161.1)"]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Cloud White",
+        "canonical": "#f8f9fa",
+        "tonalRamp": ["oklch(15% 0.002 247.8)", "oklch(27% 0.002 247.8)", "oklch(39% 0.002 247.8)", "oklch(51% 0.002 247.8)", "oklch(63% 0.002 247.8)", "oklch(75% 0.002 247.8)", "oklch(87% 0.002 247.8)", "oklch(95% 0.002 247.8)"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["oklch(15% 0.000 89.9)", "oklch(27% 0.000 89.9)", "oklch(39% 0.000 89.9)", "oklch(51% 0.000 89.9)", "oklch(63% 0.000 89.9)", "oklch(75% 0.000 89.9)", "oklch(87% 0.000 89.9)", "oklch(95% 0.000 89.9)"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Pencil Graphite",
+        "canonical": "#2f3640",
+        "tonalRamp": ["oklch(15% 0.020 257.3)", "oklch(27% 0.020 257.3)", "oklch(39% 0.020 257.3)", "oklch(51% 0.020 257.3)", "oklch(63% 0.020 257.3)", "oklch(75% 0.020 257.3)", "oklch(87% 0.020 257.3)", "oklch(95% 0.020 257.3)"]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Slate Pencil",
+        "canonical": "#57606f",
+        "tonalRamp": ["oklch(15% 0.027 260.7)", "oklch(27% 0.027 260.7)", "oklch(39% 0.027 260.7)", "oklch(51% 0.027 260.7)", "oklch(63% 0.027 260.7)", "oklch(75% 0.027 260.7)", "oklch(87% 0.027 260.7)", "oklch(95% 0.027 260.7)"]
+      },
+      "text-light": {
+        "role": "neutral",
+        "displayName": "Mist Gray",
+        "canonical": "#a4b0be",
+        "tonalRamp": ["oklch(15% 0.024 252.2)", "oklch(27% 0.024 252.2)", "oklch(39% 0.024 252.2)", "oklch(51% 0.024 252.2)", "oklch(63% 0.024 252.2)", "oklch(75% 0.024 252.2)", "oklch(87% 0.024 252.2)", "oklch(95% 0.024 252.2)"]
+      },
+      "mistake": {
+        "role": "secondary",
+        "displayName": "Mistake Blue",
+        "canonical": "#2f6fed",
+        "tonalRamp": ["oklch(15% 0.202 262.0)", "oklch(27% 0.202 262.0)", "oklch(39% 0.202 262.0)", "oklch(51% 0.202 262.0)", "oklch(63% 0.202 262.0)", "oklch(75% 0.202 262.0)", "oklch(87% 0.202 262.0)", "oklch(95% 0.202 262.0)"]
+      },
+      "night-background": {
+        "role": "neutral",
+        "displayName": "Bedtime Indigo",
+        "canonical": "#0b1026",
+        "tonalRamp": ["oklch(15% 0.046 271.6)", "oklch(27% 0.046 271.6)", "oklch(39% 0.046 271.6)", "oklch(51% 0.046 271.6)", "oklch(63% 0.046 271.6)", "oklch(75% 0.046 271.6)", "oklch(87% 0.046 271.6)", "oklch(95% 0.046 271.6)"]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "#141a35",
+        "tonalRamp": ["oklch(15% 0.053 272.1)", "oklch(27% 0.053 272.1)", "oklch(39% 0.053 272.1)", "oklch(51% 0.053 272.1)", "oklch(63% 0.053 272.1)", "oklch(75% 0.053 272.1)", "oklch(87% 0.053 272.1)", "oklch(95% 0.053 272.1)"]
+      },
+      "night-text-primary": {
+        "role": "neutral",
+        "displayName": "Moonlit White",
+        "canonical": "#f4f6ff",
+        "tonalRamp": ["oklch(15% 0.012 276.1)", "oklch(27% 0.012 276.1)", "oklch(39% 0.012 276.1)", "oklch(51% 0.012 276.1)", "oklch(63% 0.012 276.1)", "oklch(75% 0.012 276.1)", "oklch(87% 0.012 276.1)", "oklch(95% 0.012 276.1)"]
+      },
+      "night-text-secondary": {
+        "role": "neutral",
+        "displayName": "Lavender Mist",
+        "canonical": "#d8ddf5",
+        "tonalRamp": ["oklch(15% 0.033 276.4)", "oklch(27% 0.033 276.4)", "oklch(39% 0.033 276.4)", "oklch(51% 0.033 276.4)", "oklch(63% 0.033 276.4)", "oklch(75% 0.033 276.4)", "oklch(87% 0.033 276.4)", "oklch(95% 0.033 276.4)"]
+      },
+      "night-text-light": {
+        "role": "neutral",
+        "displayName": "Night Slate",
+        "canonical": "#a7b0d8",
+        "tonalRamp": ["oklch(15% 0.058 275.0)", "oklch(27% 0.058 275.0)", "oklch(39% 0.058 275.0)", "oklch(51% 0.058 275.0)", "oklch(63% 0.058 275.0)", "oklch(75% 0.058 275.0)", "oklch(87% 0.058 275.0)", "oklch(95% 0.058 275.0)"]
+      },
+      "night-primary": {
+        "role": "primary",
+        "displayName": "Moon Gold",
+        "canonical": "#ffd88a",
+        "tonalRamp": ["oklch(15% 0.106 83.8)", "oklch(27% 0.106 83.8)", "oklch(39% 0.106 83.8)", "oklch(51% 0.106 83.8)", "oklch(63% 0.106 83.8)", "oklch(75% 0.106 83.8)", "oklch(87% 0.106 83.8)", "oklch(95% 0.106 83.8)"]
+      },
+      "night-moon": {
+        "role": "tertiary",
+        "displayName": "Moon Cream",
+        "canonical": "#fdf6d8",
+        "tonalRamp": ["oklch(15% 0.040 96.2)", "oklch(27% 0.040 96.2)", "oklch(39% 0.040 96.2)", "oklch(51% 0.040 96.2)", "oklch(63% 0.040 96.2)", "oklch(75% 0.040 96.2)", "oklch(87% 0.040 96.2)", "oklch(95% 0.040 96.2)"]
+      },
+      "blackout": {
+        "role": "neutral",
+        "displayName": "Blackout",
+        "canonical": "#000000",
+        "tonalRamp": ["oklch(15% 0.000 0.0)", "oklch(27% 0.000 0.0)", "oklch(39% 0.000 0.0)", "oklch(51% 0.000 0.0)", "oklch(63% 0.000 0.0)", "oklch(75% 0.000 0.0)", "oklch(87% 0.000 0.0)", "oklch(95% 0.000 0.0)"]
+      },
+      "group-vermillion": {
+        "role": "tertiary",
+        "displayName": "Counting Vermillion",
+        "canonical": "#D55E00",
+        "tonalRamp": ["oklch(15% 0.170 47.5)", "oklch(27% 0.170 47.5)", "oklch(39% 0.170 47.5)", "oklch(51% 0.170 47.5)", "oklch(63% 0.170 47.5)", "oklch(75% 0.170 47.5)", "oklch(87% 0.170 47.5)", "oklch(95% 0.170 47.5)"]
+      },
+      "group-orange": {
+        "role": "tertiary",
+        "displayName": "Counting Orange",
+        "canonical": "#E69F00",
+        "tonalRamp": ["oklch(15% 0.158 76.8)", "oklch(27% 0.158 76.8)", "oklch(39% 0.158 76.8)", "oklch(51% 0.158 76.8)", "oklch(63% 0.158 76.8)", "oklch(75% 0.158 76.8)", "oklch(87% 0.158 76.8)", "oklch(95% 0.158 76.8)"]
+      },
+      "group-yellow": {
+        "role": "tertiary",
+        "displayName": "Counting Yellow",
+        "canonical": "#F0E442",
+        "tonalRamp": ["oklch(15% 0.172 105.0)", "oklch(27% 0.172 105.0)", "oklch(39% 0.172 105.0)", "oklch(51% 0.172 105.0)", "oklch(63% 0.172 105.0)", "oklch(75% 0.172 105.0)", "oklch(87% 0.172 105.0)", "oklch(95% 0.172 105.0)"]
+      },
+      "group-green": {
+        "role": "tertiary",
+        "displayName": "Counting Green",
+        "canonical": "#009E73",
+        "tonalRamp": ["oklch(15% 0.130 165.5)", "oklch(27% 0.130 165.5)", "oklch(39% 0.130 165.5)", "oklch(51% 0.130 165.5)", "oklch(63% 0.130 165.5)", "oklch(75% 0.130 165.5)", "oklch(87% 0.130 165.5)", "oklch(95% 0.130 165.5)"]
+      },
+      "group-blue": {
+        "role": "tertiary",
+        "displayName": "Counting Blue",
+        "canonical": "#0072B2",
+        "tonalRamp": ["oklch(15% 0.131 244.0)", "oklch(27% 0.131 244.0)", "oklch(39% 0.131 244.0)", "oklch(51% 0.131 244.0)", "oklch(63% 0.131 244.0)", "oklch(75% 0.131 244.0)", "oklch(87% 0.131 244.0)", "oklch(95% 0.131 244.0)"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Practice Prompt",
+        "purpose": "The centered word, amount, or number the child is copying."
+      },
+      "headline": {
+        "displayName": "Live Typing",
+        "purpose": "The active input and completed-line history at the fixed beginner-reading scale."
+      },
+      "title": {
+        "displayName": "Panel Title",
+        "purpose": "Modal headings and strong supporting titles."
+      },
+      "body": {
+        "displayName": "Friendly Instruction",
+        "purpose": "Supporting prose, descriptions, and parent-readable guidance."
+      },
+      "label": {
+        "displayName": "Typed Label",
+        "purpose": "Compact child-facing controls and prompt labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "ambient-low",
+        "value": "0 1px 2px rgba(0, 0, 0, 0.05)",
+        "purpose": "Quiet separation when tonal contrast is insufficient."
+      },
+      {
+        "name": "ambient-medium",
+        "value": "0 4px 6px rgba(0, 0, 0, 0.1)",
+        "purpose": "Modest raised regions."
+      },
+      {
+        "name": "interactive-lift",
+        "value": "0 10px 15px rgba(0, 0, 0, 0.1)",
+        "purpose": "Hovered buttons and toolbar actions."
+      },
+      {
+        "name": "ambient-high",
+        "value": "0 20px 25px rgba(0, 0, 0, 0.1)",
+        "purpose": "Highest reusable ambient layer."
+      },
+      {
+        "name": "modal-float",
+        "value": "0 10px 30px rgba(0, 0, 0, 0.2)",
+        "purpose": "Dialog separation above the darkened stage."
+      },
+      {
+        "name": "typing-dock-edge",
+        "value": "0 -4px 12px rgba(0, 0, 0, 0.1)",
+        "purpose": "Upward separation for the fixed input region."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px rgba(255, 107, 107, 0.1)",
+        "purpose": "Subtle reinforcement around a focused field."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transition-fast",
+        "value": "0.15s ease-in-out",
+        "purpose": "Immediate letter-state and compact-control feedback."
+      },
+      {
+        "name": "transition-normal",
+        "value": "0.3s ease-in-out",
+        "purpose": "Default control hover, focus, and lift behavior."
+      },
+      {
+        "name": "transition-slow",
+        "value": "0.5s ease-in-out",
+        "purpose": "Background washes, completed-line movement, and larger state changes."
+      },
+      {
+        "name": "word-card-response",
+        "value": "0.12s ease",
+        "purpose": "Quick card lift, border, and shadow response in the word guide."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-title",
+        "value": "480px"
+      },
+      {
+        "name": "icon-only-toolbar",
+        "value": "560px"
+      },
+      {
+        "name": "narrow-input",
+        "value": "768px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The filled Strawberry Coral action with a gentle physical lift.",
+      "html": "<button class=\"ds-btn-primary\">TRY IT</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; padding:16px 24px; border:2px solid var(--color-primary); border-radius:var(--radius-lg); background:var(--color-primary); color:#fff; font-family:var(--font-family-primary); font-size:var(--font-size-base); font-weight:600; cursor:pointer; transition:transform var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal); } .ds-btn-primary:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg); background:color-mix(in srgb, var(--color-primary) 90%, black); } .ds-btn-primary:active { transform:translateY(0); } .ds-btn-primary:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }"
+    },
+    {
+      "name": "Ghost Toggle",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "The full-width outlined control used for settings and persistent feature toggles.",
+      "html": "<button class=\"ds-btn-ghost\"><span class=\"ds-toggle-icon\">🔊</span><span class=\"ds-toggle-label\">SOUND</span></button>",
+      "css": ".ds-btn-ghost { display:flex; width:100%; align-items:center; justify-content:center; gap:4px; padding:8px 16px; border:2px solid var(--color-primary); border-radius:var(--radius-lg); background:transparent; color:var(--color-primary); font-family:var(--font-family-primary); font-size:var(--font-size-sm); font-weight:600; cursor:pointer; transition:transform var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal), color var(--transition-normal); } .ds-toggle-icon { font-size:2em; line-height:1; } .ds-toggle-label { min-width:120px; font-family:var(--font-family-mono); font-weight:700; } .ds-btn-ghost:hover { transform:translateY(-2px); background:var(--color-primary); color:#fff; box-shadow:var(--shadow-lg); } .ds-btn-ghost:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }"
+    },
+    {
+      "name": "Toolbar Action",
+      "kind": "nav",
+      "refersTo": "toolbar-action",
+      "description": "A compact pill action whose emoji can carry the control on narrow screens.",
+      "html": "<button class=\"ds-toolbar-action\"><span>✨</span><span class=\"ds-toolbar-label\">WORDS</span></button>",
+      "css": ".ds-toolbar-action { display:inline-flex; align-items:center; gap:4px; padding:4px 16px; border:2px solid var(--color-primary); border-radius:var(--radius-full); background:transparent; color:var(--color-primary); font-family:var(--font-family-mono); font-size:var(--font-size-sm); font-weight:700; cursor:pointer; transition:transform var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal), color var(--transition-normal); } .ds-toolbar-action:hover { transform:translateY(-2px); background:var(--color-primary); color:#fff; box-shadow:var(--shadow-lg); } .ds-toolbar-action:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; } @media (max-width:560px) { .ds-toolbar-label { display:none; } .ds-toolbar-action { padding:4px 8px; } }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "The rounded white field used to search the word guide.",
+      "html": "<input class=\"ds-input-search\" type=\"search\" placeholder=\"Find a word…\" aria-label=\"Find a word\">",
+      "css": ".ds-input-search { width:100%; padding:10px 14px; border:2px solid var(--color-text-light); border-radius:var(--radius-lg); background:var(--color-surface); color:var(--color-text-primary); font-family:var(--font-family-mono); font-size:var(--font-size-lg); outline:none; transition:border-color var(--transition-normal), box-shadow var(--transition-normal); } .ds-input-search:hover { border-color:var(--color-secondary); } .ds-input-search:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(255,107,107,0.1); } .ds-input-search:disabled { opacity:.6; cursor:not-allowed; background:var(--color-background); }"
+    },
+    {
+      "name": "Modal Panel",
+      "kind": "custom",
+      "refersTo": "modal-panel",
+      "description": "The softly layered settings and word-guide dialog.",
+      "html": "<section class=\"ds-modal-panel\"><header class=\"ds-modal-header\"><h2>⚙️ Settings</h2><button aria-label=\"Close\">✕</button></header><p>Choose how Typey Site responds.</p></section>",
+      "css": ".ds-modal-panel { width:min(720px,92vw); max-height:80vh; overflow:auto; padding:16px 20px 24px; border-radius:var(--radius-lg); background:rgba(255,255,255,.97); color:var(--color-text-primary); font-family:var(--font-family-primary); box-shadow:0 10px 30px rgba(0,0,0,.2); } .ds-modal-header { display:flex; align-items:center; justify-content:space-between; } .ds-modal-header h2 { margin:0; font-size:24px; } .ds-modal-header button { border:0; background:transparent; font-size:20px; line-height:1; cursor:pointer; } .ds-modal-header button:hover { color:var(--color-primary); } .ds-modal-header button:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }"
+    },
+    {
+      "name": "Word Guide Card",
+      "kind": "card",
+      "refersTo": "word-card",
+      "description": "A tappable emoji-and-word tile from the browsable vocabulary.",
+      "html": "<button class=\"ds-word-card\"><span class=\"ds-word-emoji\">😊</span><span class=\"ds-word-label\">HAPPY</span></button>",
+      "css": ".ds-word-card { display:flex; min-width:110px; flex-direction:column; align-items:center; gap:6px; padding:12px 8px; border:2px solid transparent; border-radius:12px; background:#f4f7fb; color:var(--color-text-primary); cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; } .ds-word-card:hover { transform:translateY(-2px); border-color:#4f9cf9; box-shadow:0 6px 16px rgba(0,0,0,.12); } .ds-word-card:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; } .ds-word-emoji { font-size:30px; line-height:1; } .ds-word-label { font-family:var(--font-family-mono); font-size:16px; font-weight:700; }"
+    },
+    {
+      "name": "Word Prompt",
+      "kind": "custom",
+      "description": "The dominant copy target with per-letter spelling feedback and one meaning-bearing emoji.",
+      "html": "<button class=\"ds-word-prompt\"><span class=\"ds-prompt-label\">TYPE THIS WORD:</span><span class=\"ds-prompt-row\"><span class=\"ds-prompt-word\"><span class=\"is-right\">C</span><span class=\"is-right\">A</span><span class=\"is-untyped\">T</span></span><span class=\"ds-prompt-emoji\">🐱</span></span></button>",
+      "css": ".ds-word-prompt { display:flex; width:100%; flex-direction:column; align-items:center; gap:0; border:0; background:transparent; color:var(--color-text-primary); cursor:pointer; } .ds-prompt-label { color:var(--color-text-light); font-family:var(--font-family-mono); font-size:var(--font-size-sm); line-height:1.2; } .ds-prompt-row { display:flex; align-items:center; justify-content:center; gap:var(--spacing-md); flex-wrap:wrap; } .ds-prompt-word { font-family:var(--font-family-mono); font-size:clamp(2.25rem,11vw,5rem); font-weight:700; line-height:1.1; letter-spacing:.02em; } .ds-prompt-emoji { font-size:clamp(2rem,8vw,3.5rem); line-height:1; } .ds-prompt-word .is-right { color:var(--color-primary); } .ds-prompt-word .is-untyped { color:var(--color-text-light); } .ds-word-prompt:hover .ds-prompt-emoji { transform:scale(1.08); } .ds-word-prompt:focus-visible { outline:2px solid var(--color-primary); outline-offset:4px; }"
+    },
+    {
+      "name": "Typing Dock",
+      "kind": "custom",
+      "refersTo": "typing-dock",
+      "description": "The fixed, stable work surface that keeps 4rem typed letters readable beneath every reward effect.",
+      "html": "<div class=\"ds-typing-dock\"><span class=\"ds-typed-text\">HELLO</span><span class=\"ds-caret\" aria-hidden=\"true\"></span></div>",
+      "css": ".ds-typing-dock { width:100%; padding:24px; border-top:2px solid var(--color-primary); background:var(--color-background); color:var(--color-text-primary); box-shadow:0 -4px 12px rgba(0,0,0,.1); font-family:var(--font-family-mono); font-size:4rem; line-height:1.2; } .ds-typed-text { overflow-wrap:anywhere; } .ds-caret { display:inline-block; width:2px; height:1em; margin-left:2px; vertical-align:-.12em; background:var(--color-primary); animation:ds-caret-blink 1s steps(1,end) infinite; } @keyframes ds-caret-blink { 50% { opacity:0; } } @media (prefers-reduced-motion:reduce) { .ds-caret { animation:none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Word Playground",
+    "overview": "Typey Site is a bright, spacious, and gently playful environment where language becomes action. The default stage is calm enough for a five-year-old to understand immediately: a pale open canvas, one enormous line of type, a single practice prompt, and rounded controls that feel welcoming rather than technical. Emoji and expressive motion supply the surprise; the learning surface itself stays direct and legible.\n\nThe system is softly layered throughout. Tonal changes establish the page, cards, dock, and modal; shadows reinforce those layers and respond to interaction without making every surface float. Rounded silhouettes and large type keep the interface approachable, while Courier New gives typed letters the steady rhythm of a friendly typewriter.\n\nEnergy is responsive rather than constant. Slow or tentative input receives a quiet environment with ample negative space. As speed and accuracy increase, reward effects may accumulate into a denser, more thrilling scene. Worksheet, nursery, and arcade references are all available when a specific moment earns them; none is a permanent costume for the product chrome.",
+    "keyCharacteristics": [
+      "A calm, open baseline that protects the live typing task.",
+      "Oversized monospaced letters for prompts, input, history, and child-facing labels.",
+      "Strawberry Coral controls and feedback against Cloud White surfaces.",
+      "Rounded, approachable controls supported by soft tonal and shadow layers.",
+      "Emoji, sound, speech, and motion that make typed meaning visible.",
+      "Reward density that grows with demonstrated speed and accuracy."
+    ],
+    "rules": [
+      {
+        "name": "The Responsive Energy Rule",
+        "body": "Keep the interface calm for slower input; increase the density and thrill of reward effects as speed and accuracy rise, without covering or destabilizing the letters being learned.",
+        "section": "overview"
+      },
+      {
+        "name": "The Feedback Color Rule",
+        "body": "Strawberry Coral marks correct or primary states and Mistake Blue marks incorrect letters; essential feedback must also remain understandable from position, copy, or behavior rather than color alone.",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic Night Rule",
+        "body": "Special modes repoint semantic color roles together. Do not place daytime rainbow text or pale screen-color washes on the night palette when their contrast has not been verified there.",
+        "section": "colors"
+      },
+      {
+        "name": "The Letters Lead Rule",
+        "body": "Anything the child copies, types, or recognizes as a word uses the monospaced voice; the rounded primary voice explains and supports.",
+        "section": "typography"
+      },
+      {
+        "name": "The Beginner Scale Rule",
+        "body": "Preserve the 4rem live typing scale. Adapt the container, wrapping, or surrounding density before shrinking the letters.",
+        "section": "typography"
+      },
+      {
+        "name": "The Calm Baseline Rule",
+        "body": "Empty space is functional: it gives a beginning typist one obvious place to look and leaves room for meaning-driven effects.",
+        "section": "layout"
+      },
+      {
+        "name": "The Earned Density Rule",
+        "body": "Increase animation count, overlap, and environmental activity in response to fast, accurate input; do not increase permanent control density or reduce reading space as a reward.",
+        "section": "layout"
+      },
+      {
+        "name": "The Soft Layer Rule",
+        "body": "Establish hierarchy with surface tone first, then use ambient shadows to confirm a floating, fixed, or interactive relationship.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Approachable Edge Rule",
+        "body": "Interactive chrome uses generous curves and clear outlines; content effects may use circles or organic silhouettes when they depict a recognizable thing.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do keep the default stage spacious enough that the prompt and live input are immediately obvious.",
+      "Do use Courier New for words the child copies, types, or revisits.",
+      "Do preserve 4rem live typing and solve fit through layout or wrapping.",
+      "Do scale reward density with speed and accuracy while leaving core controls stable.",
+      "Do use semantic color roles so Goodnight and blackout modes can repoint the full system safely.",
+      "Do pair essential color feedback with position, text, motion, or another non-color cue."
+    ],
+    "donts": [
+      "Don't let animations, emoji, or accumulated rewards cover the active letters or caret.",
+      "Don't make sustained arcade density the baseline chrome; reserve that intensity for earned effects and special moments.",
+      "Don't use ornamental script fallbacks for beginner-facing text.",
+      "Don't mix daytime rainbow or screen-wash colors into the night palette without verifying contrast.",
+      "Don't add account, progress, or analytics visuals that imply product capabilities Typey Site does not have."
+    ]
+  }
+}

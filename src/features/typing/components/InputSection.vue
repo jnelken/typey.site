@@ -23,7 +23,6 @@
         ref="typingInput"
         v-model="currentText"
         variant="typing"
-        size="xl"
         placeholder="Start typing..."
         autofocus
         @keydown="onKeyDown"
@@ -146,9 +145,9 @@ defineExpose({
 
 .input-container {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: var(--spacing-lg);
+  left: var(--spacing-lg);
+  right: var(--spacing-lg);
   z-index: 10;
 }
 
