@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { createAnalytics, isAnalyticsConfigured } from '@/features/analytics/analytics';
-import { POSTHOG_OPTIONS } from '@/features/analytics/posthogOptions';
+import { POSTHOG_OPTIONS, scrubPostHogEvent } from '@/features/analytics/posthogOptions';
 
 const config = { token: 'phc_test', host: 'https://eu.i.posthog.com' };
 
@@ -116,6 +116,46 @@ describe('createAnalytics', () => {
   });
 });
 
+describe('scrubPostHogEvent', () => {
+  const pageview = {
+    uuid: 'u1',
+    event: '$pageview',
+    properties: {
+      $current_url: 'https://typey.site/?tidbyt=local#top',
+      $session_entry_url: 'https://typey.site/?name=sam',
+      $pathname: '/',
+      $browser: 'Chrome',
+      $raw_user_agent: 'Mozilla/5.0 (Macintosh) Chrome/141',
+      egg: 'party',
+    },
+    $set: { $current_url: 'https://typey.site/?tidbyt=local' },
+    $set_once: { $initial_current_url: 'https://typey.site/?name=sam' },
+  };
+
+  it('strips query strings and hashes from every URL property', () => {
+    const { properties } = scrubPostHogEvent(pageview);
+    expect(properties.$current_url).toBe('https://typey.site/');
+    expect(properties.$session_entry_url).toBe('https://typey.site/');
+  });
+
+  it('drops the raw user agent but keeps the parsed browser and app properties', () => {
+    const { properties } = scrubPostHogEvent(pageview);
+    expect(properties).not.toHaveProperty('$raw_user_agent');
+    expect(properties).toMatchObject({ $browser: 'Chrome', $pathname: '/', egg: 'party' });
+  });
+
+  it('never sets person properties', () => {
+    const scrubbed = scrubPostHogEvent(pageview);
+    expect(scrubbed).not.toHaveProperty('$set');
+    expect(scrubbed).not.toHaveProperty('$set_once');
+    expect(scrubbed).toMatchObject({ uuid: 'u1', event: '$pageview' });
+  });
+
+  it('passes a dropped event through as dropped', () => {
+    expect(scrubPostHogEvent(null)).toBeNull();
+  });
+});
+
 describe('POSTHOG_OPTIONS', () => {
   it('keeps identity anonymous and per page load', () => {
     expect(POSTHOG_OPTIONS.persistence).toBe('memory');
@@ -137,6 +177,10 @@ describe('POSTHOG_OPTIONS', () => {
     expect(POSTHOG_OPTIONS.property_denylist).toEqual(
       expect.arrayContaining(['$referrer', '$initial_referrer', '$session_entry_referrer']),
     );
+  });
+
+  it('scrubs every outgoing event, the SDK’s own included', () => {
+    expect(POSTHOG_OPTIONS.before_send).toBe(scrubPostHogEvent);
   });
 
   it('loads nothing from PostHog beyond the core SDK', () => {

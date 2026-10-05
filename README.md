@@ -53,7 +53,13 @@ When it is on:
 - **Never what was typed.** Events carry only names chosen by the app — which
   easter egg played, which setting changed, which control was pressed — plus
   visible time on the page, load timing, and an error's class name. A property
-  allowlist in `src/features/analytics/properties.js` drops anything else.
+  allowlist in `src/features/analytics/properties.js` drops anything else the
+  app tries to send.
+- **Only PostHog's standard context on top.** The SDK adds the page path,
+  parsed browser and OS, screen size, timezone and per-page-load IDs, plus its
+  own pageview. A `before_send` hook strips query strings from every URL, drops
+  the raw user-agent string and full referrer URLs, and never sets person
+  properties.
 - **No identity.** No cookies or local storage, no person profiles, no
   `identify()`. Each page load is a new anonymous visitor. Do-Not-Track is
   respected.

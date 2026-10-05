@@ -99,6 +99,21 @@ describe('trackEngagement', () => {
     expect(capture).not.toHaveBeenCalled();
   });
 
+  it('carries part-seconds forward instead of rounding each stretch up', () => {
+    const flick = ms => {
+      setVisibility('visible');
+      time += ms;
+      setVisibility('hidden');
+    };
+    time = 600;
+    setVisibility('hidden');
+    flick(600);
+    flick(600);
+    flick(600);
+
+    expect(capture.mock.calls.map(([, props]) => props.visible_seconds)).toEqual([1, 1]);
+  });
+
   it('does not start counting for a page that loads in the background', () => {
     stop();
     doc.visibilityState = 'hidden';

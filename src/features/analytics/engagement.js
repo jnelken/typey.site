@@ -32,9 +32,14 @@ export function createVisibleTimer(now = () => Date.now()) {
 export function trackEngagement({ capture, doc = document, win = window, now } = {}) {
   const timer = createVisibleTimer(now);
   if (doc.visibilityState === 'visible') timer.start();
+  // Whole seconds are reported; the leftover milliseconds carry into the next
+  // report, so a child flicking between tabs isn't rounded up each time.
+  let carriedMs = 0;
 
   const report = reason => {
-    const seconds = Math.round(timer.take() / 1000);
+    const ms = carriedMs + timer.take();
+    const seconds = Math.floor(ms / 1000);
+    carriedMs = ms - seconds * 1000;
     if (seconds < 1) return;
     capture('page_engagement', { visible_seconds: seconds, reason }, { transport: 'sendBeacon' });
   };
