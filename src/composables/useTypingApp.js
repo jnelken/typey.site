@@ -1,4 +1,5 @@
 import { provide, inject } from 'vue';
+import posthog from 'posthog-js';
 import { useTypingState } from '@/features/typing/composables/useTypingState';
 import { useTypingSettings } from '@/features/typing/composables/useTypingSettings';
 import { useTypingEvents } from '@/features/typing/composables/useTypingEvents';
@@ -32,6 +33,13 @@ import { useEatenFood } from '@/features/eaten/composables/useEatenFood';
 import { parseEatenFood } from '@/features/eaten/utils/parseEatenFood';
 
 const TYPING_APP_KEY = Symbol('typing-app');
+const posthogConfigured = Boolean(
+  import.meta.env.VITE_POSTHOG_PROJECT_TOKEN && import.meta.env.VITE_POSTHOG_HOST
+);
+
+const captureAnalytics = (event, properties) => {
+  if (posthogConfigured) posthog.capture(event, properties);
+};
 
 export function createTypingApp() {
   // Initialize sub-composables
@@ -115,6 +123,7 @@ export function createTypingApp() {
         typingSettings.isWordPromptEnabled.value &&
         wordPromptSystem.matchesPromptWord(trimmedText)
       ) {
+        captureAnalytics('word_prompt_completed');
         wordPromptSystem.nextPromptWord();
       }
 
@@ -129,6 +138,10 @@ export function createTypingApp() {
       // its own so it animates, and typing it again stops them.
       if (isSillyTrigger(trimmedText)) {
         sillySystem.toggle();
+        captureAnalytics('typing_mode_toggled', {
+          mode: 'silly',
+          enabled: sillySystem.isActive.value,
+        });
         typingState.clearCurrentText();
         return;
       }
@@ -141,7 +154,13 @@ export function createTypingApp() {
       // one of them fails AA on the indigo ground, so the line still clears —
       // it just doesn't light the palette up.
       if (isColorTrigger(trimmedText)) {
-        if (!nightSystem.isActive.value) colorSystem.toggle();
+        if (!nightSystem.isActive.value) {
+          colorSystem.toggle();
+          captureAnalytics('typing_mode_toggled', {
+            mode: 'color',
+            enabled: colorSystem.isActive.value,
+          });
+        }
         typingState.clearCurrentText();
         return;
       }
@@ -151,6 +170,10 @@ export function createTypingApp() {
       // in rather than being left on over a palette it can't be read against.
       if (isNightTrigger(trimmedText)) {
         nightSystem.toggle();
+        captureAnalytics('typing_mode_toggled', {
+          mode: 'night',
+          enabled: nightSystem.isActive.value,
+        });
         if (nightSystem.isActive.value) {
           colorSystem.stop();
           // Hands `--color-background` back to the stylesheet so the night
@@ -170,6 +193,10 @@ export function createTypingApp() {
       // "% 50" made when it stopped floating fifty balloons.
       if (isPartyTrigger(trimmedText)) {
         partySystem.toggle();
+        captureAnalytics('typing_mode_toggled', {
+          mode: 'party',
+          enabled: partySystem.isActive.value,
+        });
         typingState.clearCurrentText();
         return;
       }
@@ -188,6 +215,11 @@ export function createTypingApp() {
       // plays that modifier's own effect — bills raining, or a battery charged.
       const equation = parseEquation(trimmedText);
       if (equation) {
+        captureAnalytics('math_equation_completed', {
+          operation: equation.op,
+          modifier: equation.modifier || 'none',
+          result: equation.result,
+        });
         mathSystem.play(equation);
         playModifierEffect(equation);
         typingState.clearCurrentText();
@@ -204,6 +236,7 @@ export function createTypingApp() {
       // the amount instead of running the usual emoji/balloon effects.
       const percent = parsePercent(trimmedText);
       if (percent) {
+        captureAnalytics('battery_charge_requested', { percent: percent.percent });
         percentSystem.play(percent);
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
@@ -220,6 +253,7 @@ export function createTypingApp() {
       // they already had, so "50% lion" is still a pride of lions.
       const eaten = parseEatenFood(trimmedText);
       if (eaten) {
+        captureAnalytics('food_eating_animation_triggered', { percent: eaten.percent });
         eatenSystem.play(eaten);
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
@@ -337,6 +371,24 @@ export function createTypingApp() {
     speechSystem.initSpeech();
   };
 
+  const toggleSetting = (setting, toggle, enabled) => {
+    toggle();
+    captureAnalytics('typing_setting_changed', { setting, enabled: enabled.value });
+  };
+
+  const toggleSound = () =>
+    toggleSetting('sound', soundSystem.toggleAudio, soundSystem.isAudioEnabled);
+  const toggleSpeech = () =>
+    toggleSetting('speech', speechSystem.toggleSpeech, speechSystem.isSpeechEnabled);
+  const toggleAutoSpeak = () =>
+    toggleSetting('auto_speak', typingSettings.toggleAutoSpeak, typingSettings.isAutoSpeakEnabled);
+  const toggleCapsLock = () =>
+    toggleSetting('caps_lock', typingSettings.toggleCapsLock, typingSettings.isCapsLockEnabled);
+  const toggleEmojiMode = () =>
+    toggleSetting('emoji_mode', typingSettings.toggleEmojiMode, typingSettings.isEmojiModeEnabled);
+  const toggleWordPrompt = () =>
+    toggleSetting('word_prompt', typingSettings.toggleWordPrompt, typingSettings.isWordPromptEnabled);
+
   // Create the unified context object
   const typingApp = {
     // State from sub-composables
@@ -389,12 +441,12 @@ export function createTypingApp() {
     onInputFocus,
     onInputBlur,
     onCharacterTyped: eventHandlers.onCharacterTyped,
-    toggleSound: soundSystem.toggleAudio,
-    toggleSpeech: speechSystem.toggleSpeech,
-    toggleAutoSpeak: typingSettings.toggleAutoSpeak,
-    toggleCapsLock: typingSettings.toggleCapsLock,
-    toggleEmojiMode: typingSettings.toggleEmojiMode,
-    toggleWordPrompt: typingSettings.toggleWordPrompt,
+    toggleSound,
+    toggleSpeech,
+    toggleAutoSpeak,
+    toggleCapsLock,
+    toggleEmojiMode,
+    toggleWordPrompt,
     nextPromptWord: wordPromptSystem.nextPromptWord,
     previousPromptWord: wordPromptSystem.previousPromptWord,
     speakHistoryLine,
