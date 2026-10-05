@@ -61,12 +61,17 @@ export function spawnForWord(word, spawnEmojis, { count, finale } = {}) {
   spawnEmojis(effect.type, count ?? effect.count, options);
 }
 
-// Evaluate a finished line and spawn whatever it earns.
+// Evaluate a finished line and spawn whatever it earns. `onEgg` hears the
+// name of each easter egg that played ('money_rain', 'counted_word',
+// 'balloons'); a word's ordinary animation isn't one.
 export function useEasterEggs({ spawnBalloons }) {
-  const evaluateEasterEggs = (text, spawnEmojis, onTrigger) => {
+  const evaluateEasterEggs = (text, spawnEmojis, onTrigger, onEgg) => {
     if (!text || typeof text !== 'string') return false;
     const lower = text.toLowerCase();
     let triggered = false;
+    const reportEgg = egg => {
+      if (typeof onEgg === 'function') onEgg(egg);
+    };
 
     // Specials first: they read punctuation a word never could.
     for (const special of SPECIAL_EFFECTS) {
@@ -80,6 +85,7 @@ export function useEasterEggs({ spawnBalloons }) {
       const { type, count, options } = resolveSpawn(special, text);
       spawnEmojis(type, count, options);
       triggered = true;
+      reportEgg(special.id.replace(/-/g, '_'));
     }
 
     // A number written against a word counts that word: "5 lions" is five
@@ -95,6 +101,7 @@ export function useEasterEggs({ spawnBalloons }) {
         const effect = resolveWordEffect(text);
         spawnEmojis(effect.type, effect.count, effect.options);
         triggered = true;
+        reportEgg('counted_word');
         if (typeof onTrigger === 'function') onTrigger(match.word);
       }
     }
@@ -109,6 +116,7 @@ export function useEasterEggs({ spawnBalloons }) {
           if (number >= 1) {
             spawnBalloons(Math.min(number, BALLOON_MAX));
             triggered = true;
+            reportEgg('balloons');
             break; // Only spawn balloons for the first number found
           }
         }

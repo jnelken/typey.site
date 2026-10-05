@@ -1,5 +1,4 @@
 import { provide, inject } from 'vue';
-import posthog from 'posthog-js';
 import { useTypingState } from '@/features/typing/composables/useTypingState';
 import { useTypingSettings } from '@/features/typing/composables/useTypingSettings';
 import { useTypingEvents } from '@/features/typing/composables/useTypingEvents';
@@ -31,15 +30,11 @@ import { useZaps } from '@/features/percent/composables/useZaps';
 import { parsePercent } from '@/features/percent/utils/parsePercent';
 import { useEatenFood } from '@/features/eaten/composables/useEatenFood';
 import { parseEatenFood } from '@/features/eaten/utils/parseEatenFood';
+import { capture } from '@/features/analytics/analytics';
+import { createEasterEggTracker, EASTER_EGGS } from '@/features/analytics/easterEggs';
+import { screenColorForText } from '@/features/effects/utils/screenColor';
 
 const TYPING_APP_KEY = Symbol('typing-app');
-const posthogConfigured = Boolean(
-  import.meta.env.VITE_POSTHOG_PROJECT_TOKEN && import.meta.env.VITE_POSTHOG_HOST
-);
-
-const captureAnalytics = (event, properties) => {
-  if (posthogConfigured) posthog.capture(event, properties);
-};
 
 export function createTypingApp() {
   // Initialize sub-composables
@@ -72,6 +67,13 @@ export function createTypingApp() {
   // Past 1000% the battery is dangerous: each keystroke is struck by a bolt off
   // the electrified frame, which eats the letter it hit.
   const zapSystem = useZaps({ onStrike: () => typingState.deleteLastCharacter() });
+  const trackEgg = createEasterEggTracker(capture);
+
+  // Crossing the zap line is its own discovery, whichever way the battery got
+  // charged — a typed "2000%" or an equation answered in percent.
+  const trackBattery = () => {
+    if (percentSystem.isOvercharged.value) trackEgg(EASTER_EGGS.BATTERY_OVERCHARGE);
+  };
 
   // An equation's modifier plays on the answer: "2 + 3$" rains five bills,
   // "2 + 3%" charges the battery to five percent. The dot animation still runs
@@ -115,6 +117,7 @@ export function createTypingApp() {
       // for the same reason — DEV-54 settled both.
       if (!nightSystem.isActive.value) {
         screenColorSystem.setScreenColorFromText(trimmedText);
+        if (screenColorForText(trimmedText)) trackEgg(EASTER_EGGS.SCREEN_COLOR);
       }
 
       // The prompt only moves on once the word has actually been spelled
@@ -123,13 +126,14 @@ export function createTypingApp() {
         typingSettings.isWordPromptEnabled.value &&
         wordPromptSystem.matchesPromptWord(trimmedText)
       ) {
-        captureAnalytics('word_prompt_completed');
+        trackEgg(EASTER_EGGS.WORD_PROMPT);
         wordPromptSystem.nextPromptWord();
       }
 
       // Easter eggs guide: show on special command
       if (trimmedText.toLowerCase() === 'qwerty') {
         guideSystem.toggle(true);
+        trackEgg(EASTER_EGGS.WORD_GUIDE);
         typingState.clearCurrentText();
         return;
       }
@@ -138,10 +142,7 @@ export function createTypingApp() {
       // its own so it animates, and typing it again stops them.
       if (isSillyTrigger(trimmedText)) {
         sillySystem.toggle();
-        captureAnalytics('typing_mode_toggled', {
-          mode: 'silly',
-          enabled: sillySystem.isActive.value,
-        });
+        trackEgg(EASTER_EGGS.SILLY, { enabled: sillySystem.isActive.value });
         typingState.clearCurrentText();
         return;
       }
@@ -156,10 +157,7 @@ export function createTypingApp() {
       if (isColorTrigger(trimmedText)) {
         if (!nightSystem.isActive.value) {
           colorSystem.toggle();
-          captureAnalytics('typing_mode_toggled', {
-            mode: 'color',
-            enabled: colorSystem.isActive.value,
-          });
+          trackEgg(EASTER_EGGS.COLOR, { enabled: colorSystem.isActive.value });
         }
         typingState.clearCurrentText();
         return;
@@ -170,10 +168,7 @@ export function createTypingApp() {
       // in rather than being left on over a palette it can't be read against.
       if (isNightTrigger(trimmedText)) {
         nightSystem.toggle();
-        captureAnalytics('typing_mode_toggled', {
-          mode: 'night',
-          enabled: nightSystem.isActive.value,
-        });
+        trackEgg(EASTER_EGGS.NIGHT, { enabled: nightSystem.isActive.value });
         if (nightSystem.isActive.value) {
           colorSystem.stop();
           // Hands `--color-background` back to the stylesheet so the night
@@ -193,10 +188,7 @@ export function createTypingApp() {
       // "% 50" made when it stopped floating fifty balloons.
       if (isPartyTrigger(trimmedText)) {
         partySystem.toggle();
-        captureAnalytics('typing_mode_toggled', {
-          mode: 'party',
-          enabled: partySystem.isActive.value,
-        });
+        trackEgg(EASTER_EGGS.PARTY, { enabled: partySystem.isActive.value });
         typingState.clearCurrentText();
         return;
       }
@@ -215,13 +207,15 @@ export function createTypingApp() {
       // plays that modifier's own effect — bills raining, or a battery charged.
       const equation = parseEquation(trimmedText);
       if (equation) {
-        captureAnalytics('math_equation_completed', {
+        // The operands and answer are what the child typed, so they stay here.
+        trackEgg(EASTER_EGGS.MATH, {
           operation: equation.op,
           modifier: equation.modifier || 'none',
-          result: equation.result,
         });
         mathSystem.play(equation);
         playModifierEffect(equation);
+        if (equation.modifier === '$') trackEgg(EASTER_EGGS.MONEY_RAIN);
+        if (equation.modifier === '%') trackBattery();
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
           const word = equation.op === '+' ? 'plus' : 'minus';
@@ -236,8 +230,9 @@ export function createTypingApp() {
       // the amount instead of running the usual emoji/balloon effects.
       const percent = parsePercent(trimmedText);
       if (percent) {
-        captureAnalytics('battery_charge_requested', { percent: percent.percent });
         percentSystem.play(percent);
+        trackEgg(EASTER_EGGS.BATTERY);
+        trackBattery();
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
           speechSystem.speakLine(`${percent.percent} percent`);
@@ -253,7 +248,7 @@ export function createTypingApp() {
       // they already had, so "50% lion" is still a pride of lions.
       const eaten = parseEatenFood(trimmedText);
       if (eaten) {
-        captureAnalytics('food_eating_animation_triggered', { percent: eaten.percent });
+        trackEgg(EASTER_EGGS.EATEN_FOOD);
         eatenSystem.play(eaten);
         typingState.clearCurrentText();
         if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
@@ -266,7 +261,8 @@ export function createTypingApp() {
       easterEggsSystem.evaluateEasterEggs(
         trimmedText,
         emojisSystem.spawnEmojis,
-        word => guideSystem.revealForWord(word)
+        word => guideSystem.revealForWord(word),
+        trackEgg
       );
 
       typingState.clearCurrentText();
@@ -373,7 +369,19 @@ export function createTypingApp() {
 
   const toggleSetting = (setting, toggle, enabled) => {
     toggle();
-    captureAnalytics('typing_setting_changed', { setting, enabled: enabled.value });
+    capture('setting_changed', { setting, enabled: enabled.value });
+  };
+
+  const trackControl = control => capture('control_used', { control });
+
+  const toggleGuide = state => {
+    guideSystem.toggle(state);
+    if (state === true) trackControl('word_guide');
+  };
+
+  const openSecretWords = () => {
+    guideSystem.openSecrets();
+    trackControl('secret_words');
   };
 
   const toggleSound = () =>
@@ -431,8 +439,9 @@ export function createTypingApp() {
     guideSecretsOnly: guideSystem.guideSecretsOnly,
     discoveredHints: guideSystem.discovered,
     isHintDiscovered: guideSystem.isDiscovered,
-    toggleGuide: guideSystem.toggle,
-    openSecretWords: guideSystem.openSecrets,
+    toggleGuide,
+    openSecretWords,
+    trackControl,
     previewWord,
     setPromptWord,
 

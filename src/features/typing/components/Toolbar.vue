@@ -4,7 +4,7 @@
       <span class="toolbar-icon">✨</span>
       <span class="toolbar-label">Words</span>
     </button>
-    <button class="toolbar-btn" @click="settingsOpen = true">
+    <button class="toolbar-btn" @click="openSettings">
       <span class="toolbar-icon">⚙️</span>
       <span class="toolbar-label">Settings</span>
     </button>
@@ -20,6 +20,11 @@ import { useTypingApp } from '@/composables/useTypingApp';
 
 const typingApp = useTypingApp();
 const settingsOpen = ref(false);
+
+const openSettings = () => {
+  settingsOpen.value = true;
+  typingApp.trackControl('settings');
+};
 </script>
 
 <style scoped>
