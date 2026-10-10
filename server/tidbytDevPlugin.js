@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
 import { access } from 'node:fs/promises';
+import { encodeWebp } from './pixelCanvas.js';
+import { RECIPES, renderRecipe } from './minecraftRecipes.js';
 
 const API_PATH = '/api/tidbyt';
 const DISPLAY_MS = 10_000;
@@ -7,6 +9,9 @@ const REFRESH_MS = 2_000;
 const MAX_BODY_BYTES = 4_096;
 const MAX_TEXT_LENGTH = 120;
 const MAX_QUEUE_LENGTH = 25;
+const RECIPE_MS = 10_000;
+const ERROR_BACKOFF_MS = 30_000;
+export const MODES = ['minecraft'];
 const DEFAULT_REMOTE_ORIGINS = [
   'https://typey.site',
   'https://www.typey.site',
@@ -204,12 +209,30 @@ export function createTidbytDevPlugin({
   apiKey,
   deviceId,
   fontPath,
+  mode,
   allowedOrigins = DEFAULT_REMOTE_ORIGINS,
 } = {}) {
   const queue = [];
   let active = false;
+  let stopped = false;
   let selectedFont;
+  let recipeIndex = 0;
+  const recipeFrames = new Map();
   const allowedRemoteOrigins = new Set(allowedOrigins);
+  const idleMode = MODES.includes(mode) ? mode : null;
+
+  // Pushes the frame every REFRESH_MS so the Tidbyt does not fall back to its
+  // normal rotation early. An interruptible frame yields as soon as a typed
+  // line is waiting.
+  const holdFrame = async (frame, durationMs, { interruptible = false } = {}) => {
+    const refreshes = Math.ceil(durationMs / REFRESH_MS);
+
+    for (let index = 0; index < refreshes; index += 1) {
+      if (stopped || (interruptible && queue.length)) return;
+      await pushFrame({ apiKey, deviceId, frame });
+      await sleep(REFRESH_MS);
+    }
+  };
 
   const displayPrompt = async (text, server) => {
     const font = await selectedFont;
@@ -218,26 +241,36 @@ export function createTidbytDevPlugin({
     }
 
     const frame = await runImageMagick(promptSvg(text), font);
-    const refreshes = Math.ceil(DISPLAY_MS / REFRESH_MS);
-
-    for (let index = 0; index < refreshes; index += 1) {
-      await pushFrame({ apiKey, deviceId, frame });
-      await sleep(REFRESH_MS);
-    }
-
+    await holdFrame(frame, DISPLAY_MS);
     server.config.logger.info(`[tidbyt] Displayed “${text.slice(0, 40)}” for 10 seconds.`);
   };
 
+  const displayNextRecipe = async () => {
+    const index = recipeIndex;
+    recipeIndex = (recipeIndex + 1) % RECIPES.length;
+
+    if (!recipeFrames.has(index)) {
+      recipeFrames.set(index, await encodeWebp(renderRecipe(RECIPES[index])));
+    }
+    await holdFrame(recipeFrames.get(index), RECIPE_MS, { interruptible: true });
+  };
+
+  // One worker owns the device so prompts and the idle mode never push over
+  // each other. Typed lines always go first; the idle mode fills the gaps.
   const drainQueue = async server => {
     if (active) return;
     active = true;
 
-    while (queue.length) {
-      const text = queue.shift();
+    while (!stopped && (queue.length || idleMode)) {
       try {
-        await displayPrompt(text, server);
+        if (queue.length) {
+          await displayPrompt(queue.shift(), server);
+        } else {
+          await displayNextRecipe();
+        }
       } catch (error) {
         server.config.logger.error(`[tidbyt] ${error.message}`);
+        if (idleMode && !queue.length) await sleep(ERROR_BACKOFF_MS);
       }
     }
 
@@ -251,8 +284,17 @@ export function createTidbytDevPlugin({
       selectedFont = firstReadablePath([fontPath, ...FONT_CANDIDATES]);
       const configured = Boolean(apiKey && deviceId);
 
+      if (mode && !idleMode) {
+        server.config.logger.warn(`[tidbyt] Unknown TIDBYT_MODE “${mode}”. Try: ${MODES.join(', ')}.`);
+      }
+
       if (configured) {
         server.config.logger.info('[tidbyt] Local prompt display enabled.');
+        if (idleMode) {
+          server.config.logger.info(`[tidbyt] ${idleMode} mode on: rotating recipes between prompts.`);
+          server.httpServer?.once('close', () => { stopped = true; });
+          void drainQueue(server);
+        }
       } else {
         server.config.logger.warn('[tidbyt] Add TIDBYT_API_KEY and TIDBYT_DEVICE_ID to .env.local to enable prompts.');
       }
@@ -276,7 +318,7 @@ export function createTidbytDevPlugin({
         }
 
         if (request.method === 'GET') {
-          sendJson(response, 200, { configured, active, queued: queue.length });
+          sendJson(response, 200, { configured, active, mode: idleMode, queued: queue.length });
           return;
         }
 

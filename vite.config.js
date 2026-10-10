@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
         apiKey: env.TIDBYT_API_KEY || env.API_KEY,
         deviceId: env.TIDBYT_DEVICE_ID || env.DEVICE_ID,
         fontPath: env.TIDBYT_FONT_PATH,
+        mode: env.TIDBYT_MODE,
       }),
     ],
     resolve: {

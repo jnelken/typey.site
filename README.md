@@ -27,12 +27,20 @@ sent to the browser.
    TIDBYT_API_KEY=your-api-key
    # Optional when a system font cannot be found automatically:
    # TIDBYT_FONT_PATH=/absolute/path/to/a/font.ttf
+   # Optional idle mode (see below):
+   # TIDBYT_MODE=minecraft
    ```
 
 3. Run `npm run dev`, open the local URL, type a line, and press Enter.
 
 Prompts are queued and shown in order. Each frame is refreshed during its
 ten-second turn so the Tidbyt does not fall back to its normal rotation early.
+
+With `TIDBYT_MODE=minecraft`, the Tidbyt shows a Minecraft crafting recipe
+whenever no line is waiting, changing every ten seconds. Each recipe is laid out
+on a 3×3 crafting grid with the item name above it and the result on the right.
+A typed line takes over within two seconds, and the recipes resume after it.
+The recipes and their hand-drawn 7×7 sprites live in `server/minecraftRecipes.js`.
 
 To use the deployed site with the same bridge, keep the local dev server
 running and open `https://typey.site/?tidbyt=local`. The query parameter is an
