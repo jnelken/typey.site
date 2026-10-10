@@ -54,7 +54,7 @@ Located in `src/ui/`, provides reusable components:
 - **Netlify Functions**: Two serverless functions in `netlify/functions/`
   - `submit-entry.js`: Accepts externally submitted typing entries
   - `latest-entry.js`: Retrieves most recent entry
-- **Tidbyt Integration**: The local Vite bridge in `server/tidbytDevPlugin.js` renders completed lines and pushes them to a configured Tidbyt
+- **Tidbyt Integration**: Completed lines go to `/api/tidbyt`, which the Vite dev server proxies to the separate `tidbyt-api` service (127.0.0.1:8173). That service renders and pushes them to the Tidbyt
 
 ### Code Patterns
 

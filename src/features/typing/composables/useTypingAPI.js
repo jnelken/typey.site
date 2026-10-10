@@ -1,7 +1,7 @@
 /**
  * API integration for external services
  */
-const LOCAL_TIDBYT_ENDPOINT = 'http://localhost:5173/api/tidbyt';
+const LOCAL_TIDBYT_ENDPOINT = 'http://localhost:8173/api/tidbyt';
 const NETLIFY_ENTRY_ENDPOINT = '/.netlify/functions/submit-entry';
 
 export function typingEndpoint({

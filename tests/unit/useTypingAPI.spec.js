@@ -14,7 +14,7 @@ describe('useTypingAPI', () => {
 
   it('uses the local bridge when production explicitly opts in', () => {
     expect(typingEndpoint({ hostname: 'typey.site', search: '?tidbyt=local' }))
-      .toBe('http://localhost:5173/api/tidbyt');
+      .toBe('http://localhost:8173/api/tidbyt');
   });
 
   it('does not enable localhost for unrelated query values', () => {

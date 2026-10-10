@@ -16,34 +16,17 @@ A fun, interactive typing application designed for kids with sound effects, text
 ### Local Tidbyt display
 
 When Typey is running locally, every completed line can also take over a
-Tidbyt for ten seconds. The API key stays in the Vite dev server and is never
-sent to the browser.
+Tidbyt for ten seconds. Rendering and pushing live in a separate local service,
+[tidbyt-api](https://github.com/jnelken/tidbyt-api), which holds the API key; the browser never sees it.
 
-1. Install ImageMagick so the local bridge can render 64×32 WebP frames.
-2. Create `.env.local` in the project root:
+1. Start tidbyt-api (`npm start` in that repo; its README covers setup and the
+   optional Minecraft recipe mode). It listens on `127.0.0.1:8173`.
+2. Run `npm run dev` here, open the local URL, type a line, and press Enter. The
+   dev server forwards `/api/tidbyt` to the service. If the service is not
+   running, lines are still typed and the request quietly returns 503.
 
-   ```dotenv
-   TIDBYT_DEVICE_ID=your-device-id
-   TIDBYT_API_KEY=your-api-key
-   # Optional when a system font cannot be found automatically:
-   # TIDBYT_FONT_PATH=/absolute/path/to/a/font.ttf
-   # Optional idle mode (see below):
-   # TIDBYT_MODE=minecraft
-   ```
-
-3. Run `npm run dev`, open the local URL, type a line, and press Enter.
-
-Prompts are queued and shown in order. Each frame is refreshed during its
-ten-second turn so the Tidbyt does not fall back to its normal rotation early.
-
-With `TIDBYT_MODE=minecraft`, the Tidbyt shows a Minecraft crafting recipe
-whenever no line is waiting, changing every ten seconds. Each recipe is laid out
-on a 3×3 crafting grid with the item name above it and the result on the right.
-A typed line takes over within two seconds, and the recipes resume after it.
-The recipes and their hand-drawn 7×7 sprites live in `server/minecraftRecipes.js`.
-
-To use the deployed site with the same bridge, keep the local dev server
-running and open `https://typey.site/?tidbyt=local`. The query parameter is an
+To use the deployed site with the same bridge, keep tidbyt-api running and
+open `https://typey.site/?tidbyt=local`. The query parameter is an
 explicit opt-in: without it, the production site never contacts localhost.
 Chrome and other Chromium browsers support this HTTPS-to-loopback flow. Safari
 may block the plain-HTTP loopback request as mixed content.

@@ -1,34 +1,32 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { createTidbytDevPlugin } from './server/tidbytDevPlugin.js';
 
-export default defineConfig(({ mode }) => {
-  // Empty prefix loads server-only variables too. Vite still exposes only
-  // VITE_* variables to browser code, so the Tidbyt token stays on the dev
-  // server and never enters the client bundle.
-  const env = loadEnv(mode, process.cwd(), '');
+// The Tidbyt bridge is its own service (the tidbyt-api repo). The dev server
+// forwards typed lines to it so the browser stays same-origin.
+const TIDBYT_BRIDGE_URL = 'http://127.0.0.1:8173';
 
+export default defineConfig(() => {
   return {
-    plugins: [
-      vue(),
-      createTidbytDevPlugin({
-        apiKey: env.TIDBYT_API_KEY || env.API_KEY,
-        deviceId: env.TIDBYT_DEVICE_ID || env.DEVICE_ID,
-        fontPath: env.TIDBYT_FONT_PATH,
-        mode: env.TIDBYT_MODE,
-      }),
-    ],
+    plugins: [vue()],
     resolve: {
       alias: {
         '@': '/src',
       },
     },
     server: {
-      cors: {
-        origin: /^https:\/\/(?:www\.)?typey\.site$/,
-        // Let the Tidbyt middleware finish the preflight with the explicit
-        // private-network grant instead of ending it inside Vite's CORS layer.
-        preflightContinue: true,
+      proxy: {
+        '/api/tidbyt': {
+          target: TIDBYT_BRIDGE_URL,
+          configure(proxy) {
+            // Typing works without a Tidbyt, so a stopped bridge is a quiet
+            // 503 rather than a connection error for every line.
+            proxy.on('error', (_error, _request, response) => {
+              if (response.headersSent || !response.writeHead) return;
+              response.writeHead(503, { 'Content-Type': 'application/json' });
+              response.end(JSON.stringify({ error: 'tidbyt-api is not running' }));
+            });
+          },
+        },
       },
     },
     build: {

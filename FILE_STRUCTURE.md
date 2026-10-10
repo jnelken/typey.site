@@ -83,10 +83,6 @@ typey.site/
 │   └── style.css
 ├── docs/plans/                            # Design docs for in-flight work
 ├── netlify/functions/                     # submit-entry.js, latest-entry.js
-├── server/                                # Local Vite integrations
-│   ├── tidbytDevPlugin.js                 # Renders and pushes prompts to Tidbyt
-│   ├── minecraftRecipes.js                # Recipe data, item sprites, recipe layout
-│   └── pixelCanvas.js                     # 64x32 pixel buffer, bitmap font, WebP encode
 ├── tests/
 │   ├── unit/
 │   ├── integration/

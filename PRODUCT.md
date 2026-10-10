@@ -36,7 +36,7 @@ Typey Site turns the act of typing into the interaction: letters are spoken, com
 - The experience includes playful modes and typed interactions for emoji, color, night, parties, arithmetic, percentages, and food.
 - The product is privacy-first and has no user accounts or learning-progress tracking. Its only analytics are anonymous, per-page-load PostHog events about which easter eggs, settings, and controls are used, visible time on the page, and load performance; they never include what a child typed or any identifier that persists between visits.
 - Browser speech support varies by platform and can require user interaction, especially on mobile browsers and Safari.
-- The local Tidbyt bridge must keep its device ID and API key on the development server rather than exposing them to the browser.
+- The local Tidbyt bridge (the separate tidbyt-api service) must keep its device ID and API key to itself rather than exposing them to the browser.
 - The current production submission endpoint receives completed text and derives a request IP even though it has no persistent database. This is an implementation gap against the privacy-first product commitment and must not become durable storage or tracking without an explicit product decision.
 
 ## Brand Commitments

@@ -6,7 +6,7 @@
 - Tests: `tests/unit/`, `tests/integration/`, with `tests/setup.js` for jsdom and Web API mocks.
 - Static/Build: `public/`, output in `dist/`.
 - Serverless: `netlify/functions/` (e.g., `latest-entry.js`, `submit-entry.js`).
-- Local integrations: `server/` (e.g., the Vite-only Tidbyt bridge). See `FILE_STRUCTURE.md` for a tree view.
+- Tidbyt: the bridge lives in the separate `tidbyt-api` repo; `vite.config.js` proxies `/api/tidbyt` to it. See `FILE_STRUCTURE.md` for a tree view.
 
 ## Build, Test, and Development Commands
 
