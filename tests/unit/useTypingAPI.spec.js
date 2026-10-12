@@ -1,5 +1,6 @@
-import { describe, it, expect } from '@jest/globals';
-import { typingEndpoint } from '@/features/typing/composables/useTypingAPI';
+import { describe, it, expect, afterEach, jest } from '@jest/globals';
+import { typingEndpoint, useTypingAPI } from '@/features/typing/composables/useTypingAPI';
+import { WORD_EMOJI } from '@/features/typing/utils/wordEmoji';
 
 describe('useTypingAPI', () => {
   it('uses the same-origin bridge on the local site', () => {
@@ -25,5 +26,28 @@ describe('useTypingAPI', () => {
   it('does not enable localhost for unrelated query values', () => {
     expect(typingEndpoint({ hostname: 'typey.site', protocol: 'https:', search: '?tidbyt=cloud' }))
       .toBe('/.netlify/functions/submit-entry');
+  });
+});
+
+describe('submitEntry', () => {
+  const originalFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  // The JSON body the line was sent with.
+  const sentBody = async text => {
+    const fetchMock = jest.fn(async () => ({ ok: true, status: 202 }));
+    globalThis.fetch = fetchMock;
+    await useTypingAPI().submitEntry(text);
+    return JSON.parse(fetchMock.mock.calls[0][1].body);
+  };
+
+  it('sends the line with the picture for each of its words', async () => {
+    expect(await sentBody('moon zzzz')).toEqual({ text: 'moon zzzz', emojis: { moon: WORD_EMOJI.moon } });
+  });
+
+  it('sends only the text when no word has a picture', async () => {
+    expect(await sentBody('zzzz')).toEqual({ text: 'zzzz' });
   });
 });

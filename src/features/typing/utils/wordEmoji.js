@@ -777,3 +777,32 @@ export function findWordEmoji(text) {
   }
   return null;
 }
+
+// A word's picture, with a plural falling back to its singular as in findWordEmoji.
+const pictureForWord = word => emojiForWord(word)
+  ?? (word.endsWith('s') ? emojiForWord(word.slice(0, -1)) : null);
+
+/**
+ * Every word in a line that has a picture, as `{ word: emoji }`. Words are
+ * lowercased and stripped of punctuation, the way the Tidbyt looks them up. A
+ * two-word entry gives both of its words the phrase's emoji, because the Tidbyt
+ * shows words one at a time.
+ */
+export function emojisForLine(text) {
+  const pictures = {};
+  if (typeof text !== 'string') return pictures;
+
+  const words = text.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+  for (let i = 0; i < words.length; i++) {
+    const pair = `${words[i]} ${words[i + 1]}`;
+    if (PHRASES.includes(pair)) {
+      pictures[words[i]] = WORD_EMOJI[pair];
+      pictures[words[i + 1]] = WORD_EMOJI[pair];
+      i += 1;
+      continue;
+    }
+    const emoji = pictureForWord(words[i]);
+    if (emoji) pictures[words[i]] = emoji;
+  }
+  return pictures;
+}

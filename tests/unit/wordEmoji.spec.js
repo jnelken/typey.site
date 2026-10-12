@@ -6,6 +6,7 @@ import {
   emojiForWord,
   familyForWord,
   findWordEmoji,
+  emojisForLine,
 } from '@/features/typing/utils/wordEmoji';
 import { SUGGESTION_WORDS } from '@/features/typing/utils/wordSuggest';
 
@@ -129,5 +130,27 @@ describe('spelling suggestions and the library agree', () => {
 
   it('leaves two-word phrases out of single-word completions', () => {
     expect(SUGGESTION_WORDS.some(word => word.includes(' '))).toBe(false);
+  });
+});
+
+describe('emojisForLine', () => {
+  it('maps each word that has a picture to its emoji, ignoring case and punctuation', () => {
+    expect(emojisForLine('Moon!  zzzz')).toEqual({ moon: WORD_EMOJI.moon });
+  });
+
+  it('counts a plural as its singular picture', () => {
+    expect(emojisForLine('cookies')).toEqual({ cookies: WORD_EMOJI.cookie });
+  });
+
+  it('gives both words of a two-word entry the phrase emoji', () => {
+    expect(emojisForLine('ice cream')).toEqual({
+      ice: WORD_EMOJI['ice cream'],
+      cream: WORD_EMOJI['ice cream'],
+    });
+  });
+
+  it('is empty when no word has a picture, or the input is not text', () => {
+    expect(emojisForLine('zzzz qqqq')).toEqual({});
+    expect(emojisForLine(null)).toEqual({});
   });
 });

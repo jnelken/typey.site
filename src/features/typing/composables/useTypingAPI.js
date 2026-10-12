@@ -1,6 +1,8 @@
 /**
  * API integration for external services
  */
+import { emojisForLine } from '@/features/typing/utils/wordEmoji';
+
 const LOCAL_TIDBYT_ENDPOINT = 'http://localhost:8173/api/tidbyt';
 const NETLIFY_ENTRY_ENDPOINT = '/.netlify/functions/submit-entry';
 
@@ -21,12 +23,16 @@ export function typingEndpoint({
 export function useTypingAPI() {
   const submitEntry = async (text) => {
     const endpoint = typingEndpoint();
+    // Each word's picture rides along so the Tidbyt can show it beside the word.
+    // The Netlify function reads only `text`, so the extra field is harmless there.
+    const emojis = emojisForLine(text);
+    const payload = Object.keys(emojis).length ? { text, emojis } : { text };
     const options = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(payload),
     };
 
     // This emerging fetch option lets supporting browsers identify an
