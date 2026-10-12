@@ -8,17 +8,22 @@ describe('useTypingAPI', () => {
   });
 
   it('uses the existing endpoint for ordinary production visitors', () => {
-    expect(typingEndpoint({ hostname: 'typey.site', search: '' }))
+    expect(typingEndpoint({ hostname: 'typey.site', protocol: 'https:', search: '' }))
       .toBe('/.netlify/functions/submit-entry');
   });
 
   it('uses the local bridge when production explicitly opts in', () => {
-    expect(typingEndpoint({ hostname: 'typey.site', search: '?tidbyt=local' }))
+    expect(typingEndpoint({ hostname: 'typey.site', protocol: 'https:', search: '?tidbyt=local' }))
       .toBe('http://localhost:8173/api/tidbyt');
   });
 
+  it('uses the same-origin bridge when the dev server is opened over plain HTTP on the wifi', () => {
+    expect(typingEndpoint({ hostname: '192.168.1.201', protocol: 'http:', search: '' }))
+      .toBe('/api/tidbyt');
+  });
+
   it('does not enable localhost for unrelated query values', () => {
-    expect(typingEndpoint({ hostname: 'typey.site', search: '?tidbyt=cloud' }))
+    expect(typingEndpoint({ hostname: 'typey.site', protocol: 'https:', search: '?tidbyt=cloud' }))
       .toBe('/.netlify/functions/submit-entry');
   });
 });

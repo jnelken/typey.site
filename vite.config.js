@@ -14,10 +14,19 @@ export default defineConfig(() => {
       },
     },
     server: {
+      // Listen on the wifi so devices on the same network (the kid's iPad)
+      // can load the app. The bridge still only sees loopback requests.
+      host: true,
       proxy: {
         '/api/tidbyt': {
           target: TIDBYT_BRIDGE_URL,
           configure(proxy) {
+            // The bridge only accepts loopback and typey.site origins. Drop the
+            // browser's Origin so a LAN page's typed line is treated like the
+            // dev server's own request.
+            proxy.on('proxyReq', proxyReq => {
+              proxyReq.removeHeader('origin');
+            });
             // Typing works without a Tidbyt, so a stopped bridge is a quiet
             // 503 rather than a connection error for every line.
             proxy.on('error', (_error, _request, response) => {

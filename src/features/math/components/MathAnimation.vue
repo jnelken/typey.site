@@ -9,9 +9,23 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { useTypingApp } from '@/composables/useTypingApp';
-import { layoutDots, gridDimensions, colorForGroup } from '@/features/math/utils/dotLayout';
+import {
+  COLUMN_PITCH_RATIO,
+  MAX_DOTS,
+  colorForGroup,
+  dotAt,
+  fitDotGrid,
+  gridDimensions,
+  layoutDots,
+} from '@/features/math/utils/dotLayout';
 
 const COLOR_TEXT = '#2b2d42';
+const FONT_FAMILY = '"Comic Sans MS", "Baloo 2", system-ui, sans-serif';
+// The equation line may use this share of the screen width.
+const TEXT_WIDTH_RATIO = 0.9;
+// Past this many dots a single dot is too small to animate on its own, so the
+// dots are drawn once into offscreen layers and the layers are what move.
+const LAYERED_DOT_COUNT = 2_000;
 // One loop = play the operation, then hold the answer, then replay.
 const PLAY_MS = 2200;
 const HOLD_MS = 2000;
@@ -21,30 +35,73 @@ const typingApp = useTypingApp();
 const canvasEl = ref(null);
 let rafId = null;
 let startTime = 0;
+// The dot arrangement depends only on the equation and the viewport, so it is
+// built once for each and reused on every frame.
+let scene = null;
 
 const clamp01 = t => Math.max(0, Math.min(1, t));
 const smoothstep = t => { const x = clamp01(t); return x * x * (3 - 2 * x); };
 const lerp = (a, b, t) => a + (b - a) * t;
 
-// Pixel geometry for the dot grid, sized to fit the largest count on screen
-// (a+b for addition, a for subtraction) with constant dot size/spacing so the
-// answer never looks "smaller" than the inputs.
-const geometry = (eq, w, h) => {
-  const maxN = eq.op === '+' ? eq.result : eq.a;
-  const { cols, rows } = gridDimensions(maxN);
-  const availH = h * 0.42;
-  const availW = w * 0.8;
-  const s = Math.max(40, Math.min(110,
-    Math.min(availH / Math.max(rows, 1), availW / (Math.max(cols, 1) * 1.6))));
-  const colPitch = s * 1.6;
-  const radius = s * 0.34;
+// Pixel geometry for the dot grid, sized so the whole arrangement fits the
+// screen for the largest count (a+b for addition, a for subtraction).
+const geometry = (maxN, w, h) => {
+  const { bands, cellSize: s } = fitDotGrid(maxN, w * 0.8, h * 0.42);
+  const { cols, rows } = gridDimensions(maxN, bands);
+  const colPitch = s * COLUMN_PITCH_RATIO;
   const totalW = (cols - 1) * colPitch;
   const totalH = (rows - 1) * s;
-  const cy = h * 0.6;
   const originX = w / 2 - totalW / 2;
-  const originY = cy - totalH / 2;
-  const posFor = dot => ({ x: originX + dot.col * colPitch, y: originY + dot.row * s });
-  return { s, radius, posFor };
+  const originY = h * 0.6 - totalH / 2;
+  return {
+    bands,
+    radius: s * 0.34,
+    posFor: dot => ({ x: originX + dot.col * colPitch, y: originY + dot.row * s }),
+  };
+};
+
+// Dense counts: draw dots [from, to) once into an offscreen canvas.
+const buildLayer = ({ maxN, geo, w, h, dpr, from, to }) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Never smaller than a device pixel, so even sub-pixel dots still show colour.
+  const size = Math.max(2 * geo.radius, 1 / dpr);
+  for (let i = from; i < to; i++) {
+    const dot = dotAt(i, maxN, geo.bands);
+    const { x, y } = geo.posFor(dot);
+    ctx.fillStyle = colorForGroup(dot.groupIndex);
+    ctx.fillRect(x - size / 2, y - size / 2, size, size);
+  }
+  return canvas;
+};
+
+// Above MAX_DOTS there are no dots, only the equation. For addition the split
+// is between the two groups; for subtraction it is between the kept dots and
+// the ones taken away.
+const buildScene = (eq, w, h, dpr) => {
+  const maxN = eq.op === '+' ? eq.result : eq.a;
+  const split = eq.op === '+' ? eq.a : eq.result;
+  if (maxN > MAX_DOTS) return { maxN, split, geo: null, dots: null, layers: null };
+
+  const geo = geometry(maxN, w, h);
+  if (maxN <= LAYERED_DOT_COUNT) {
+    return { maxN, split, geo, dots: layoutDots(maxN, geo.bands), layers: null };
+  }
+  const args = { maxN, geo, w, h, dpr };
+  const layers = [
+    buildLayer({ ...args, from: 0, to: split }),
+    buildLayer({ ...args, from: split, to: maxN }),
+  ];
+  return { maxN, split, geo, dots: null, layers };
+};
+
+const sceneFor = (eq, w, h, dpr) => {
+  const key = `${eq.id}|${w}|${h}|${dpr}`;
+  if (scene?.key !== key) scene = { key, ...buildScene(eq, w, h, dpr) };
+  return scene;
 };
 
 const drawDot = (ctx, x, y, radius, color, alpha) => {
@@ -59,6 +116,12 @@ const drawDot = (ctx, x, y, radius, color, alpha) => {
   ctx.stroke();
 };
 
+const drawLayer = (ctx, layer, dx, dy, alpha, w, h) => {
+  if (alpha <= 0) return;
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(layer, dx, dy, w, h);
+};
+
 // The answer wears its modifier the way it is written: "$5", "5%". Only the
 // answer does — the operands are counted as dots, and the modifier is a fact
 // about what the total is worth.
@@ -69,16 +132,22 @@ const withModifier = (value, modifier) => {
 };
 
 const drawEquation = (ctx, eq, w, h, showResult, ga, base) => {
-  ctx.globalAlpha = ga;
-  ctx.fillStyle = COLOR_TEXT;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const fontSize = Math.max(40, Math.min(110, base / 9));
-  ctx.font = `bold ${fontSize}px "Comic Sans MS", "Baloo 2", system-ui, sans-serif`;
   const sign = eq.op === '+' ? '+' : '−';
   const text = showResult
     ? `${eq.a} ${sign} ${eq.b} = ${withModifier(eq.result, eq.modifier)}`
     : `${eq.a} ${sign} ${eq.b}`;
+
+  ctx.globalAlpha = ga;
+  ctx.fillStyle = COLOR_TEXT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const setFont = size => { ctx.font = `bold ${size}px ${FONT_FAMILY}`; };
+  const fontSize = Math.max(40, Math.min(110, base / 9));
+  setFont(fontSize);
+  // A long answer (up to a million) shrinks until the line fits the screen.
+  const maxWidth = w * TEXT_WIDTH_RATIO;
+  const width = ctx.measureText(text).width;
+  setFont(width > maxWidth ? fontSize * maxWidth / width : fontSize);
   ctx.fillText(text, w / 2, h * 0.28);
 };
 
@@ -105,14 +174,19 @@ const draw = () => {
   const ga = smoothstep(Math.min(1, t / (PLAY_MS * 0.15))); // soft re-entry each loop
   const base = Math.min(w, h);
 
-  const { radius, posFor } = geometry(eq, w, h);
+  const current = sceneFor(eq, w, h, dpr);
   // A gentle "pop" as the answer settles.
   const pop = p > 0.82 ? 1 + 0.1 * Math.sin(((p - 0.82) / 0.18) * Math.PI) : 1;
 
-  if (eq.op === '+') {
-    drawAddition(ctx, eq, p, ga, radius * pop, posFor);
-  } else {
-    drawSubtraction(ctx, eq, p, ga, radius * pop, posFor);
+  if (current.layers) {
+    drawLayered(ctx, eq, current, w, h, p, ga);
+  } else if (current.dots) {
+    const radius = current.geo.radius * pop;
+    if (eq.op === '+') {
+      drawAddition(ctx, eq, p, ga, radius, current);
+    } else {
+      drawSubtraction(ctx, eq, p, ga, radius, current);
+    }
   }
   drawEquation(ctx, eq, w, h, p > 0.7, ga, base);
 
@@ -121,10 +195,9 @@ const draw = () => {
 
 // Addition: group A appears, then group B slides in from the right to extend
 // it into the combined, color-grouped layout.
-const drawAddition = (ctx, eq, p, ga, radius, posFor) => {
-  const dots = layoutDots(eq.result);
+const drawAddition = (ctx, eq, p, ga, radius, { dots, geo }) => {
   dots.forEach((dot, i) => {
-    const final = posFor(dot);
+    const final = geo.posFor(dot);
     const color = colorForGroup(dot.groupIndex);
     if (i < eq.a) {
       const alpha = smoothstep(Math.min(1, p / 0.3));
@@ -141,10 +214,9 @@ const drawAddition = (ctx, eq, p, ga, radius, posFor) => {
 
 // Subtraction: all of A appears, then the trailing b dots slide down and fade
 // away ("take away"), leaving the answer already in place.
-const drawSubtraction = (ctx, eq, p, ga, radius, posFor) => {
-  const dots = layoutDots(eq.a);
+const drawSubtraction = (ctx, eq, p, ga, radius, { dots, geo }) => {
   dots.forEach((dot, i) => {
-    const final = posFor(dot);
+    const final = geo.posFor(dot);
     const color = colorForGroup(dot.groupIndex);
     const appear = smoothstep(Math.min(1, p / 0.3));
     if (i < eq.result) {
@@ -156,6 +228,22 @@ const drawSubtraction = (ctx, eq, p, ga, radius, posFor) => {
       drawDot(ctx, final.x, y, radius, color, appear * (1 - local) * ga);
     }
   });
+};
+
+// Dense counts: the same two movements as above, applied to the two layers.
+// Per-dot timing is invisible at this size, so each frame only draws two images.
+const drawLayered = (ctx, eq, { layers, geo }, w, h, p, ga) => {
+  const [first, second] = layers;
+  const appear = smoothstep(Math.min(1, p / 0.3));
+  if (eq.op === '+') {
+    const local = smoothstep(clamp01((p - 0.3) / 0.45));
+    drawLayer(ctx, first, 0, 0, appear * ga, w, h);
+    drawLayer(ctx, second, (1 - local) * geo.radius * 8, 0, local * ga, w, h);
+  } else {
+    const local = smoothstep(clamp01((p - 0.35) / 0.45));
+    drawLayer(ctx, first, 0, 0, appear * ga, w, h);
+    drawLayer(ctx, second, 0, local * geo.radius * 9, appear * (1 - local) * ga, w, h);
+  }
 };
 
 const stop = () => {

@@ -6,10 +6,13 @@ const NETLIFY_ENTRY_ENDPOINT = '/.netlify/functions/submit-entry';
 
 export function typingEndpoint({
   hostname = window.location.hostname,
+  protocol = window.location.protocol,
   search = window.location.search,
 } = {}) {
   const isLocalSite = ['localhost', '127.0.0.1'].includes(hostname);
-  if (isLocalSite) return '/api/tidbyt';
+  // Production is always HTTPS, so a plain-HTTP page is the Vite dev server
+  // (including when it is opened from another device on the wifi).
+  if (isLocalSite || protocol === 'http:') return '/api/tidbyt';
 
   const useLocalTidbyt = new URLSearchParams(search).get('tidbyt') === 'local';
   return useLocalTidbyt ? LOCAL_TIDBYT_ENDPOINT : NETLIFY_ENTRY_ENDPOINT;

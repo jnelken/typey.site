@@ -179,6 +179,11 @@ export function createTypingApp() {
           screenColorSystem.resetScreenColor();
         }
         typingState.clearCurrentText();
+        // This branch returns before the auto-speak at the bottom, so say the
+        // line here too, going to bed and waking up alike.
+        if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
+          speechSystem.speakLine(lineToSpeak);
+        }
         return;
       }
 

@@ -958,6 +958,16 @@ describe('useTypingApp', () => {
       document.documentElement.style.removeProperty('--color-background');
     });
 
+    it('says the goodnight line aloud, going to bed and waking up alike', async () => {
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+      expect(window.speechSynthesis.speak).toHaveBeenCalledTimes(1);
+
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+      expect(window.speechSynthesis.speak).toHaveBeenCalledTimes(2);
+    });
+
     it('is off until the word is typed', () => {
       expect(typingApp.isNightModeActive.value).toBe(false);
       expect(typingApp.nightStars.value).toEqual([]);
