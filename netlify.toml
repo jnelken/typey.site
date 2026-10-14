@@ -4,6 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Public client-side PostHog values are bundled into the site on purpose.
+  # Without this, Netlify's secrets scan fails the build when they are marked secret.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_POSTHOG_PROJECT_TOKEN,VITE_POSTHOG_HOST"
 
 [[redirects]]
   from = "/api/*"
