@@ -82,7 +82,7 @@ typey.site/
 │   ├── main.js
 │   └── style.css
 ├── docs/plans/                            # Design docs for in-flight work
-├── netlify/functions/                     # submit-entry.js, latest-entry.js
+├── netlify/functions/                     # submit-entry.cjs, latest-entry.cjs
 ├── tests/
 │   ├── unit/
 │   ├── integration/

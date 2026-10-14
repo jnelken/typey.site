@@ -5,7 +5,7 @@
 - Source: `src/` (Vue 3 app). Key areas: `src/components/`, `src/composables/` (e.g., `useTypingApp.js`, `useSpeech.js`), `src/ui/`, `src/constants/`.
 - Tests: `tests/unit/`, `tests/integration/`, with `tests/setup.js` for jsdom and Web API mocks.
 - Static/Build: `public/`, output in `dist/`.
-- Serverless: `netlify/functions/` (e.g., `latest-entry.js`, `submit-entry.js`).
+- Serverless: `netlify/functions/` (e.g., `latest-entry.cjs`, `submit-entry.cjs`).
 - Tidbyt: the bridge lives in the separate `tidbyt-api` repo; `vite.config.js` proxies `/api/tidbyt` to it. See `FILE_STRUCTURE.md` for a tree view.
 
 ## Build, Test, and Development Commands
@@ -23,7 +23,7 @@
 - Vue: Composition API with `<script setup>`. Components in PascalCase (e.g., `TypingArea.vue`).
 - Composables: camelCase starting with `use` (e.g., `useSound.js`).
 - Constants: lower camel or descriptive (e.g., `constants/layout.js`).
-- Functions (Netlify): kebab-case filenames (e.g., `submit-entry.js`).
+- Functions (Netlify): kebab-case filenames (e.g., `submit-entry.cjs`).
 - Imports: use alias `@` for `src` (e.g., `@/composables/useTypingApp`).
 
 ## Testing Guidelines
