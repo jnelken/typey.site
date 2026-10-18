@@ -490,10 +490,28 @@ theme that re-points the ground from a class on `<html>`, as this one does,
 would have silently failed to apply on any page that had ever been washed a
 colour. `resetScreenColor` could not fix it: it writes the daylight hex inline
 too. `useScreenColor` gained a `clearScreenColor` that *removes* the property
-and hands the ground back to the stylesheet. `html.goodnight` also sits above
-the battery blocks in `src/style.css` on purpose: both hang off a class on
-`<html>` at the same specificity, so source order decides a collision, and
-running the battery flat during the night is a power cut — a power cut wins.
+and hands the ground back to the stylesheet.
+
+### 🌙 Night and light triggers
+
+Shipped 2026-10-18 ([DEV-209](https://linear.app/jnelken/issue/DEV-209)). Extends
+Goodnight with whole-line night and daylight commands, and retires the separate
+0% battery blackout in favour of the same night entry path. See
+`src/features/night/` and the battery empty hook in `usePercentAnimation`.
+
+**What landed.** **Enter-only:** `black`, `dark`, `moon`, `night` open night and
+stay there if typed again. **Exit-only:** `good morning`, `light`, `sun`,
+`morning`, `sunrise`, `day`, `daytime`, `noon` wake the page and are idempotent
+when already daylit. **Toggle unchanged:** `goodnight` / `good night` still
+flip. **Escape still exits.** **Commands resolve before screen washes**, so
+whole-line `black` opens night instead of washing slate. **Empty battery opens
+night** — typed `0%`, drain-to-zero, and an equation that answers `0%` all call
+the same `enterNight` path (Color Mode off, screen wash cleared). Draining
+while already at 0% does not re-fire that path, so a daylight exit or Escape
+cannot be undone by the next keystroke. **Blackout CSS, timers, and canvas
+special-cases are gone**; charging, overflow lock, and zap behaviour are
+unchanged. Silly Mode excludes the new mode words; Secret Words and the README
+list them.
 
 ### 📊 Privacy-First Analytics
 
