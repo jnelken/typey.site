@@ -199,12 +199,12 @@ stops being an indicator and becomes a hazard: the screen's own frame runs with
 electricity — a rail around the edge with arcs travelling round it — and each
 keystroke spends 100 charge. About one in five attempts hits: a bolt leaves the
 frame, eats the letter just typed, and plays the zap. Misses spend the same
-charge with no bolt and no zap sound. A 3000% charge is roughly thirty attempts
-(not thirty guaranteed deletions), and the typing goes back to normal (and the
-frame goes dark) the moment a zap drops the charge under the line. Escape still
-clears everything. The typed range grows to four digits to make the charge worth
-spending, and `900 + 900%` is the other way in. See
-`src/features/percent/utils/electricFrame.js` and `useZaps.js`.
+charge with no bolt and no zap sound. A 3000% charge is about twenty overcharged
+attempts (the charge above 1000, at 100 each — not twenty guaranteed deletions),
+and the typing goes back to normal (and the frame goes dark) the moment a zap
+drops the charge under the line. Escape still clears everything. The typed range
+grows to four digits to make the charge worth spending, and `900 + 900%` is the
+other way in. See `src/features/percent/utils/electricFrame.js` and `useZaps.js`.
 
 **Decisions this made that the concept left open.** **The letter lands before it
 is eaten**: on a hit the bolt is fired on the keystroke but the line is cut
