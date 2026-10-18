@@ -17,12 +17,13 @@ describe('useZaps', () => {
     expect(bolts.value).toEqual([]);
   });
 
-  it('strike() puts a bolt on screen straight away', () => {
+  it('strike() puts a bolt on screen straight away on a hit', () => {
     const { bolts, strike } = useZaps();
-    const bolt = strike();
+    const result = strike();
+    expect(result).toEqual({ hit: true, bolt: expect.objectContaining({ id: expect.any(Number) }) });
     expect(bolts.value).toHaveLength(1);
-    expect(bolts.value[0].id).toBe(bolt.id);
-    expect(typeof bolt.firedAt).toBe('number');
+    expect(bolts.value[0].id).toBe(result.bolt.id);
+    expect(typeof result.bolt.firedAt).toBe('number');
   });
 
   it('eats the letter a beat after the bolt is fired, not immediately', () => {
@@ -90,6 +91,18 @@ describe('useZaps', () => {
     expect(onStrike).toHaveBeenCalledTimes(1);
   });
 
+  it('repeated clear() does not delete the same letter twice', () => {
+    const onStrike = jest.fn();
+    const { strike, clear } = useZaps({ onStrike });
+    strike();
+    clear();
+    clear();
+    clear();
+    expect(onStrike).toHaveBeenCalledTimes(1);
+    jest.advanceTimersByTime(BOLT_MS * 2);
+    expect(onStrike).toHaveBeenCalledTimes(1);
+  });
+
   it('works without an onStrike callback', () => {
     const { strike } = useZaps();
     strike();
@@ -101,26 +114,64 @@ describe('useZaps', () => {
       expect(HIT_CHANCE).toBe(1 / 5);
     });
 
-    it('misses the letter when the roll is at or above the hit chance', () => {
+    it('misses with no bolt and no deletion when the roll is at the hit chance', () => {
       Math.random.mockReturnValue(HIT_CHANCE);
       const onStrike = jest.fn();
       const { bolts, strike } = useZaps({ onStrike });
-      strike();
+      const result = strike();
 
-      // The bolt still flies — only the bite is skipped.
-      expect(bolts.value).toHaveLength(1);
+      expect(result).toEqual({ hit: false, bolt: null });
+      expect(bolts.value).toEqual([]);
       jest.advanceTimersByTime(BOLT_MS);
       expect(onStrike).not.toHaveBeenCalled();
       expect(bolts.value).toEqual([]);
     });
 
-    it('clear() does not eat a letter from a bolt that missed', () => {
+    it('misses with no bolt when the roll is above the hit chance', () => {
+      Math.random.mockReturnValue(0.99);
+      const onStrike = jest.fn();
+      const { bolts, strike } = useZaps({ onStrike });
+      expect(strike()).toEqual({ hit: false, bolt: null });
+      expect(bolts.value).toEqual([]);
+      jest.advanceTimersByTime(BOLT_MS);
+      expect(onStrike).not.toHaveBeenCalled();
+    });
+
+    it('hits when the roll is just under the hit chance', () => {
+      Math.random.mockReturnValue(HIT_CHANCE - Number.EPSILON);
+      const onStrike = jest.fn();
+      const { bolts, strike } = useZaps({ onStrike });
+      expect(strike().hit).toBe(true);
+      expect(bolts.value).toHaveLength(1);
+      jest.advanceTimersByTime(STRIKE_MS);
+      expect(onStrike).toHaveBeenCalledTimes(1);
+    });
+
+    it('clear() does not eat a letter from a miss (nothing was pending)', () => {
       Math.random.mockReturnValue(HIT_CHANCE);
       const onStrike = jest.fn();
       const { strike, clear } = useZaps({ onStrike });
       strike();
       clear();
       expect(onStrike).not.toHaveBeenCalled();
+    });
+
+    it('handles concurrent hit and miss attempts independently', () => {
+      const onStrike = jest.fn();
+      const { bolts, strike } = useZaps({ onStrike });
+
+      Math.random.mockReturnValue(0);
+      expect(strike().hit).toBe(true);
+      Math.random.mockReturnValue(HIT_CHANCE);
+      expect(strike().hit).toBe(false);
+      Math.random.mockReturnValue(0);
+      expect(strike().hit).toBe(true);
+
+      expect(bolts.value).toHaveLength(2);
+      jest.advanceTimersByTime(STRIKE_MS);
+      expect(onStrike).toHaveBeenCalledTimes(2);
+      jest.advanceTimersByTime(BOLT_MS);
+      expect(bolts.value).toEqual([]);
     });
   });
 });
