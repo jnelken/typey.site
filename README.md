@@ -104,7 +104,7 @@ handling happens on PostHog's side and the browser SDK cannot switch it off.
 - **Color Mode** - type "color" (or "colour", or "rainbow") to paint every character a different rainbow color; type it again to go back to plain text
 - **Goodnight / night mode** - type "goodnight" (or "good night") to put the page to bed: a deep indigo sky with a moon and slowly twinkling stars. "black", "dark", "moon", and "night" also open night; "good morning", "light", "sun", "morning", "sunrise", "day", "daytime", and "noon" wake it. Colour Mode and the screen-colour washes stay off while it lasts; type "goodnight" again (or press Escape) to wake it up
 - **Percent Battery** - type `50%` (or any percent from 0-9999) to charge a battery to that much; it then parks in the corner like a phone's charge indicator and loses a point with every key you press. Hitting 0% — typed, drained, or from an equation — opens night mode instead of a separate blackout. Over 100% the charge bursts out of the battery and the screen fills with lightning
-- **Overcharged** - past 1000% the screen's frame runs with electricity and bolts start eating the letters you type, 1000% a letter, until the charge is spent back under the line
+- **Overcharged** - past 1000% the screen's frame runs with electricity; each keystroke spends 100 charge, and about one in five shows a bolt that eats the letter you just typed, until the charge is spent back under the line
 - **Equation modifiers** - put a `$` or `%` on either side of a sum (`2 + 3$`, `20 + 30%`) and the answer arrives in those units: five bills raining, or a battery charged to 50%. Mix them and the last one typed wins
 - **Auto-scroll** to keep content in view
 

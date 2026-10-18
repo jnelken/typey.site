@@ -193,36 +193,41 @@ however far it currently extends, sliding back as the charge drains.
 
 ### ⚡ Overcharged, the Screen Bites Back
 
-Shipped 2026-09-13. Past 1000% the battery stops being an indicator and becomes
-a hazard: the screen's own frame runs with electricity — a rail around the edge
-with arcs travelling round it — and every letter typed is struck by a bolt off
-that frame, which eats the letter and 1000% of charge with it. So a 3000% charge
-is three letters the child will not get to keep, and the typing goes back to
-normal (and the frame goes dark) the moment a zap drops the charge under the
-line. Escape still clears everything. The typed range grows to four digits to
-make the charge worth spending, and `900 + 900%` is the other way in. See
+Shipped 2026-09-13; hit-only bolts 2026-10-18
+([DEV-208](https://linear.app/jnelken/issue/DEV-208)). Past 1000% the battery
+stops being an indicator and becomes a hazard: the screen's own frame runs with
+electricity — a rail around the edge with arcs travelling round it — and each
+keystroke spends 100 charge. About one in five attempts hits: a bolt leaves the
+frame, eats the letter just typed, and plays the zap. Misses spend the same
+charge with no bolt and no zap sound. A 3000% charge is roughly thirty attempts
+(not thirty guaranteed deletions), and the typing goes back to normal (and the
+frame goes dark) the moment a zap drops the charge under the line. Escape still
+clears everything. The typed range grows to four digits to make the charge worth
+spending, and `900 + 900%` is the other way in. See
 `src/features/percent/utils/electricFrame.js` and `useZaps.js`.
 
 **Decisions this made that the concept left open.** **The letter lands before it
-is eaten**: the bolt is fired on the keystroke but the line is cut ~260ms later,
-because a letter that never appears is a dead key, not a joke — the child has to
-watch it get hit. **1000% a zap, which is also the threshold**: charge is spent
-in whole bolts rather than a percentage, so the indicator reads as "three shots
-left" and a child can predict the next one. **The bolt aims at the last glyph on
-the line**, measured once on the frame it is fired and remembered after that,
-since by the time it lands the letter is gone; typing faster than the bolt is
-harmless, each bolt just eats whatever is last when it arrives. **The frame is
-travel, not flashing**: arcs move round the perimeter and the rail swells at
-about 0.6Hz, nowhere near a flash rate (WCAG 2.3.1), and under
-`prefers-reduced-motion` the rail stays lit while the travelling stops — the
-state has to remain visible even when nothing may move. **Bolts wear a dark
-casing**: yellow on a near-white page is the wall the battery's fill already hit,
-so every jagged line is drawn `COLOR_TEXT` → yellow → white core. **Every
-printable key is fair game, space included**: a keystroke always costs the
-battery something, and charging 1000% for a letter but a single point for a
-space would be both inconsistent and gameable. **Escape still eats the letter a
-bolt already paid for**: the charge is spent at the keystroke, so cancelling the
-bite would be the one place the accounting visibly failed.
+is eaten**: on a hit the bolt is fired on the keystroke but the line is cut
+~260ms later, because a letter that never appears is a dead key, not a joke —
+the child has to watch it get hit. **Hit-only bolts (DEV-208)**: the one-in-five
+roll happens before anything is drawn, so a miss never animates a bolt or plays
+zap audio — only a hit is visible. **100% a keystroke while overcharged, with
+1000% as the threshold**: every overcharged attempt spends 100 whether it hits
+or misses, so the indicator drains predictably and ordinary point-drain resumes
+at or below 1000. **The bolt aims at the last glyph on the line**, measured once
+on the frame it is fired and remembered after that, since by the time it lands
+the letter is gone; typing faster than the bolt is harmless, each bolt just eats
+whatever is last when it arrives. **The frame is travel, not flashing**: arcs
+move round the perimeter and the rail swells at about 0.6Hz, nowhere near a
+flash rate (WCAG 2.3.1), and under `prefers-reduced-motion` the rail stays lit
+while the travelling stops — the state has to remain visible even when nothing
+may move. **Bolts wear a dark casing**: yellow on a near-white page is the wall
+the battery's fill already hit, so every jagged line is drawn `COLOR_TEXT` →
+yellow → white core. **Every printable key is fair game, space included**: a
+keystroke always costs the battery something, and charging only on letters would
+be both inconsistent and gameable. **Escape still eats the letter a bolt already
+paid for**: the charge is spent at the keystroke, so cancelling a hit's bite
+would be the one place the accounting visibly failed.
 
 **A known trade.** A wide equation and a docked battery share the top band, so
 something like `900 + 900%` draws its `= 1800` under the indicator's own pill.
@@ -546,7 +551,8 @@ per visit.
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
 `repo/typey.site` label.
 
-No tickets are open.
+Shipped this run: [DEV-208](https://linear.app/jnelken/issue/DEV-208) (hit-only
+overcharge bolts). Remaining open work lives in Linear.
 
 ## Cross-cutting success criteria
 
