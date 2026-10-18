@@ -1,10 +1,10 @@
 import { ref } from 'vue';
 import { STAR_COUNT, starField } from '@/features/night/utils/nightMode';
 
-// The class the night palette hangs off, the way the blackout hangs off
-// `battery-dead`. Put on the document root rather than a component, because the
-// ground shows through in several places at once — the page, the input strip,
-// the help pill — and they all already read the same custom properties.
+// The class the night palette hangs off. Put on the document root rather than a
+// component, because the ground shows through in several places at once — the
+// page, the input strip, the help pill — and they all already read the same
+// custom properties.
 export const NIGHT_CLASS = 'goodnight';
 
 const syncNightDom = active => {

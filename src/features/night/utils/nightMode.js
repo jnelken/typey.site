@@ -1,6 +1,7 @@
-// Goodnight — typing "goodnight" on its own line puts the page to bed: the
-// ground goes to a deep night blue, a moon rises in the corner, and the sky
-// fills with stars. Typing it again wakes it back up, and so does Escape.
+// Night mode — typing "goodnight" (or a handful of night/light words) puts the
+// page to bed: the ground goes to a deep night blue, a moon rises in the
+// corner, and the sky fills with stars. "goodnight" toggles; other night words
+// only enter and daylight words only exit; Escape also exits.
 //
 // Like Color Mode, Silly Mode and Party Mode this is an easter egg rather than
 // a setting, so it is deliberately not persisted — a refresh brings back a
@@ -18,17 +19,44 @@ import { seededRandom } from '@/features/percent/utils/electricFrame';
 // Matched on its own as a whole line rather than anywhere in the text, the
 // same way every other mode switch is. Both spellings are here because a child
 // saying goodnight will reach for either, and neither is a dictionary word
-// with a picture of its own, so this takes nothing over.
-export const NIGHT_TRIGGERS = Object.freeze(['goodnight', 'good night']);
+// with a picture of its own, so this takes nothing over. Unlike the enter/exit
+// aliases below, these *toggle* — saying goodnight again wakes the page up.
+export const NIGHT_TOGGLE_TRIGGERS = Object.freeze(['goodnight', 'good night']);
+
+// Whole-line commands that only enter night. Kept separate from the toggle so
+// typing "night" twice cannot accidentally wake the page, and so "black" stops
+// being a screen-colour wash when it is the whole line.
+export const NIGHT_ENTER_TRIGGERS = Object.freeze(['black', 'dark', 'moon', 'night']);
+
+// Whole-line commands that only leave night. "good morning" mirrors the
+// goodnight toggle's two-word spelling; the rest are single daylight words.
+export const NIGHT_EXIT_TRIGGERS = Object.freeze([
+  'good morning',
+  'light',
+  'sun',
+  'morning',
+  'sunrise',
+  'day',
+  'daytime',
+  'noon',
+]);
+
+// Back-compat alias: older call sites and Silly Mode meant the toggle pair.
+export const NIGHT_TRIGGERS = NIGHT_TOGGLE_TRIGGERS;
+
+/** Every night/light whole-line command — for Silly Mode exclusion. */
+export const NIGHT_MODE_TRIGGERS = Object.freeze([
+  ...NIGHT_TOGGLE_TRIGGERS,
+  ...NIGHT_ENTER_TRIGGERS,
+  ...NIGHT_EXIT_TRIGGERS,
+]);
 
 /**
  * The night palette.
  *
- * Deliberately NOT the blackout's `#000000` (`html.battery-dead` in
- * `src/style.css`). That black is a power cut — the room losing its lights —
- * and reusing it would make going to bed and running the battery flat look
- * like the same event. A night sky is blue, so this is a deep indigo, dark
- * enough that a white moon and white stars read against it.
+ * A night sky is blue, so this is a deep indigo — dark enough that a white moon
+ * and white stars read against it, and deliberately not pure black (which would
+ * read as a power cut rather than bedtime).
  *
  * Every foreground here is checked against `BACKGROUND` at the same 4.5:1 bar
  * Color Mode holds its palette to (`tests/unit/nightMode.spec.js`), which is
@@ -90,15 +118,32 @@ export const TWINKLE_MAX_MS = 5200;
 const lerp = (from, to, t) => from + (to - from) * t;
 
 /**
- * Whether a finished line is the goodnight trigger.
- *
- * Collapses runs of whitespace so "good  night" is still goodnight — a child
- * typing two words will not be consistent about the gap between them.
+ * Normalize a finished line the way night/light matching does: trim, lower,
+ * collapse runs of whitespace. Returns null for non-strings.
  */
+export function normalizeNightLine(text) {
+  if (typeof text !== 'string') return null;
+  return text.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+const matchesTrigger = (text, triggers) => {
+  const normalized = normalizeNightLine(text);
+  return normalized != null && triggers.includes(normalized);
+};
+
+/** Whether a finished line is the goodnight toggle. */
 export function isNightTrigger(text) {
-  if (typeof text !== 'string') return false;
-  const normalized = text.trim().toLowerCase().replace(/\s+/g, ' ');
-  return NIGHT_TRIGGERS.includes(normalized);
+  return matchesTrigger(text, NIGHT_TOGGLE_TRIGGERS);
+}
+
+/** Whether a finished line only enters night (idempotent). */
+export function isNightEnterTrigger(text) {
+  return matchesTrigger(text, NIGHT_ENTER_TRIGGERS);
+}
+
+/** Whether a finished line only leaves night (idempotent). */
+export function isNightExitTrigger(text) {
+  return matchesTrigger(text, NIGHT_EXIT_TRIGGERS);
 }
 
 /**

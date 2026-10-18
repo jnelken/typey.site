@@ -22,7 +22,11 @@ import { isColorTrigger } from '@/features/easter-eggs/utils/colorMode';
 import { useParty } from '@/features/party/composables/useParty';
 import { isPartyTrigger } from '@/features/party/utils/partyMode';
 import { useNight } from '@/features/night/composables/useNight';
-import { isNightTrigger } from '@/features/night/utils/nightMode';
+import {
+  isNightTrigger,
+  isNightEnterTrigger,
+  isNightExitTrigger,
+} from '@/features/night/utils/nightMode';
 import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
 import { parseEquation } from '@/features/math/utils/parseEquation';
 import { usePercentAnimation } from '@/features/percent/composables/usePercentAnimation';
@@ -61,13 +65,39 @@ export function createTypingApp() {
   const colorSystem = useColorMode();
   const partySystem = useParty();
   const nightSystem = useNight();
+  const trackEgg = createEasterEggTracker(capture);
+
+  // One entry path for every way into night — goodnight, black/moon/night,
+  // typed 0%, drain-to-zero, equation zero — so Color Mode and screen washes
+  // always clear the same way. Idempotent: already-night is a no-op (and does
+  // not re-fire analytics).
+  const enterNight = () => {
+    const already = nightSystem.isActive.value;
+    nightSystem.start();
+    colorSystem.stop();
+    // Hands `--color-background` back to the stylesheet so the night class
+    // governs it. `resetScreenColor` would not do: it writes the daylight hex
+    // inline, and inline beats a class.
+    screenColorSystem.clearScreenColor();
+    if (!already) trackEgg(EASTER_EGGS.NIGHT, { enabled: true });
+  };
+
+  const exitNight = () => {
+    if (!nightSystem.isActive.value) return;
+    nightSystem.stop();
+    screenColorSystem.resetScreenColor();
+    trackEgg(EASTER_EGGS.NIGHT, { enabled: false });
+  };
+
   const mathSystem = useMathAnimation();
-  const percentSystem = usePercentAnimation();
+  // Empty charge opens night rather than a separate blackout. Drain already at
+  // 0% does not call onEmpty again, so a daylight exit or Escape cannot be
+  // undone by the next keystroke while the battery still reads zero.
+  const percentSystem = usePercentAnimation({ onEmpty: enterNight });
   const eatenSystem = useEatenFood();
   // Past 1000% the battery is dangerous: each keystroke is struck by a bolt off
   // the electrified frame, which eats the letter it hit.
   const zapSystem = useZaps({ onStrike: () => typingState.deleteLastCharacter() });
-  const trackEgg = createEasterEggTracker(capture);
 
   // Crossing the zap line is its own discovery, whichever way the battery got
   // charged — a typed "2000%" or an equation answered in percent.
@@ -105,6 +135,35 @@ export function createTypingApp() {
       // including commands and special effects that return early below. This
       // stays fire-and-forget so a slow device never delays Typey's effects.
       void typingAPI.submitEntry(lineToSpeak);
+
+      const speakAndClear = () => {
+        typingState.clearCurrentText();
+        // Mode branches return before the auto-speak at the bottom, so say the
+        // line here too — entering and leaving night alike.
+        if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
+          speechSystem.speakLine(lineToSpeak);
+        }
+      };
+
+      // Night / light commands resolve before screen washes or ordinary word
+      // effects. Whole-line "black" must open night, not wash the page slate;
+      // "moon" / "sun" / "light" must not fall through to their emoji swarms.
+      if (isNightTrigger(trimmedText)) {
+        if (nightSystem.isActive.value) exitNight();
+        else enterNight();
+        speakAndClear();
+        return;
+      }
+      if (isNightEnterTrigger(trimmedText)) {
+        enterNight();
+        speakAndClear();
+        return;
+      }
+      if (isNightExitTrigger(trimmedText)) {
+        exitNight();
+        speakAndClear();
+        return;
+      }
 
       // The screen takes its colour from the line just sent, and keeps it until
       // the next one. Decided up here so it holds for every kind of line — the
@@ -160,30 +219,6 @@ export function createTypingApp() {
           trackEgg(EASTER_EGGS.COLOR, { enabled: colorSystem.isActive.value });
         }
         typingState.clearCurrentText();
-        return;
-      }
-
-      // Goodnight: the page goes to bed — indigo ground, a moon, and a sky full
-      // of stars. Typing it again wakes it up. Color Mode goes off on the way
-      // in rather than being left on over a palette it can't be read against.
-      if (isNightTrigger(trimmedText)) {
-        nightSystem.toggle();
-        trackEgg(EASTER_EGGS.NIGHT, { enabled: nightSystem.isActive.value });
-        if (nightSystem.isActive.value) {
-          colorSystem.stop();
-          // Hands `--color-background` back to the stylesheet so the night
-          // class governs it. `resetScreenColor` would not do: it writes the
-          // daylight hex inline, and inline beats a class.
-          screenColorSystem.clearScreenColor();
-        } else {
-          screenColorSystem.resetScreenColor();
-        }
-        typingState.clearCurrentText();
-        // This branch returns before the auto-speak at the bottom, so say the
-        // line here too, going to bed and waking up alike.
-        if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
-          speechSystem.speakLine(lineToSpeak);
-        }
         return;
       }
 
@@ -307,10 +342,7 @@ export function createTypingApp() {
     onEscapePressed: () => {
       sillySystem.stop();
       partySystem.stop();
-      if (nightSystem.isActive.value) {
-        nightSystem.stop();
-        screenColorSystem.resetScreenColor();
-      }
+      exitNight();
       balloonsSystem.popAllBalloons();
       percentSystem.clear();
       zapSystem.clear();
@@ -419,7 +451,6 @@ export function createTypingApp() {
     screenColor: screenColorSystem.screenColor,
     mathEquation: mathSystem.current,
     batteryCharge: percentSystem.current,
-    batteryPowerState: percentSystem.powerState,
     eatenFood: eatenSystem.current,
     isBatteryOvercharged: percentSystem.isOvercharged,
     zapBolts: zapSystem.bolts,

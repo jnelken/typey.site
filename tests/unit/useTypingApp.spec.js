@@ -659,22 +659,51 @@ describe('useTypingApp', () => {
       expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
     });
 
-    it('blacks out when the charge hits zero, then shows a dead battery', async () => {
-      jest.useFakeTimers();
+    it('opens night mode when the charge hits zero, without a blackout class', async () => {
       typingApp.currentText.value = '1%';
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
       await typeCharacter('a');
 
       expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
-      expect(typingApp.batteryPowerState.value).toBe('flickering');
-
-      jest.advanceTimersByTime(1000);
-      expect(typingApp.batteryPowerState.value).toBe('dead');
+      expect(typingApp.isNightModeActive.value).toBe(true);
+      expect(document.documentElement.classList.contains('battery-blackout')).toBe(false);
+      expect(document.documentElement.classList.contains('battery-dead')).toBe(false);
 
       await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
       expect(typingApp.batteryCharge.value).toBeNull();
-      expect(typingApp.batteryPowerState.value).toBeNull();
-      jest.useRealTimers();
+      expect(typingApp.isNightModeActive.value).toBe(false);
+    });
+
+    it('opens night mode for a typed 0%', async () => {
+      typingApp.currentText.value = '0%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
+      expect(typingApp.isNightModeActive.value).toBe(true);
+    });
+
+    it('opens night mode for an equation that answers 0%', async () => {
+      typingApp.currentText.value = '1 - 1%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
+      expect(typingApp.isNightModeActive.value).toBe(true);
+    });
+
+    it('does not reopen night after a daylight exit while charge stays at 0%', async () => {
+      typingApp.currentText.value = '1%';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      await typeCharacter('a');
+      expect(typingApp.isNightModeActive.value).toBe(true);
+
+      typingApp.currentText.value = 'light';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(typingApp.isNightModeActive.value).toBe(false);
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 0 });
+
+      await typeCharacter('a');
+      await typeCharacter('b');
+      expect(typingApp.isNightModeActive.value).toBe(false);
     });
 
     it('clears the battery on Escape', async () => {
@@ -1093,6 +1122,57 @@ describe('useTypingApp', () => {
       await pressEnter();
 
       expect(typingApp.completedLines.value).toContain('goodnight');
+    });
+
+    it.each(['black', 'dark', 'moon', 'night'])(
+      'enters night for "%s" without toggling off on a second enter',
+      async word => {
+        typingApp.currentText.value = word;
+        await pressEnter();
+        expect(typingApp.isNightModeActive.value).toBe(true);
+
+        typingApp.currentText.value = word;
+        await pressEnter();
+        expect(typingApp.isNightModeActive.value).toBe(true);
+      },
+    );
+
+    it('lets whole-line "black" open night instead of washing the screen', async () => {
+      typingApp.currentText.value = 'black';
+      await pressEnter();
+
+      expect(typingApp.isNightModeActive.value).toBe(true);
+      expect(rootBackground()).toBe('');
+      expect(document.documentElement.classList.contains(NIGHT_CLASS)).toBe(true);
+    });
+
+    it.each(['good morning', 'light', 'sun', 'morning', 'sunrise', 'day', 'daytime', 'noon'])(
+      'exits night for "%s" and is idempotent when already daylit',
+      async word => {
+        typingApp.currentText.value = 'goodnight';
+        await pressEnter();
+        expect(typingApp.isNightModeActive.value).toBe(true);
+
+        typingApp.currentText.value = word;
+        await pressEnter();
+        expect(typingApp.isNightModeActive.value).toBe(false);
+
+        typingApp.currentText.value = word;
+        await pressEnter();
+        expect(typingApp.isNightModeActive.value).toBe(false);
+      },
+    );
+
+    it('keeps goodnight as a toggle, not an enter-only command', async () => {
+      typingApp.currentText.value = 'night';
+      await pressEnter();
+      typingApp.currentText.value = 'night';
+      await pressEnter();
+      expect(typingApp.isNightModeActive.value).toBe(true);
+
+      typingApp.currentText.value = 'goodnight';
+      await pressEnter();
+      expect(typingApp.isNightModeActive.value).toBe(false);
     });
   });
 

@@ -6,6 +6,8 @@ import {
   randomSillyWord,
 } from '@/features/easter-eggs/utils/sillyMode';
 import { COLOR_TRIGGERS } from '@/features/easter-eggs/utils/colorMode';
+import { PARTY_TRIGGERS } from '@/features/party/utils/partyMode';
+import { NIGHT_MODE_TRIGGERS } from '@/features/night/utils/nightMode';
 import { EMOJI_WORDS } from '@/features/typing/utils/wordEmoji';
 
 describe('isSillyTrigger', () => {
@@ -38,16 +40,24 @@ describe('SILLY_WORDS', () => {
   });
 
   it('leaves out the mode triggers, which send nothing and would derail a run', () => {
-    for (const trigger of [SILLY_TRIGGER, ...COLOR_TRIGGERS]) {
+    for (const trigger of [
+      SILLY_TRIGGER,
+      ...COLOR_TRIGGERS,
+      ...PARTY_TRIGGERS,
+      ...NIGHT_MODE_TRIGGERS,
+    ]) {
       expect(SILLY_WORDS).not.toContain(trigger);
     }
   });
 
-  it('is a real exclusion: "silly" and "rainbow" are dictionary words', () => {
+  it('is a real exclusion: "silly", "rainbow", and night/light words are dictionary words', () => {
     // If these ever leave the dictionary the filter above stops proving
     // anything, so the exclusion is only meaningful while this holds.
     expect(EMOJI_WORDS).toContain('silly');
     expect(EMOJI_WORDS).toContain('rainbow');
+    expect(EMOJI_WORDS).toContain('moon');
+    expect(EMOJI_WORDS).toContain('sun');
+    expect(EMOJI_WORDS).toContain('light');
   });
 });
 

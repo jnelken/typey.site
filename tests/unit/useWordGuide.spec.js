@@ -46,7 +46,9 @@ describe('useWordGuide', () => {
     const guide = useWordGuide();
     const words = guide.guideSecrets.value.map(s => s.word);
 
-    expect(words).toEqual(expect.arrayContaining(['$5', 'silly', 'color', 'qwerty']));
+    expect(words).toEqual(
+      expect.arrayContaining(['$5', 'silly', 'color', 'qwerty', 'goodnight', 'good morning']),
+    );
     expect(guide.guideSecrets.value.every(s => s.description)).toBe(true);
   });
 
@@ -55,7 +57,18 @@ describe('useWordGuide', () => {
     const words = guide.guideSecrets.value.map(s => s.word);
 
     expect(words).toEqual(
-      expect.arrayContaining(['color', 'rainbow', 'red', '$5', '2 + 3', 'silly', 'qwerty']),
+      expect.arrayContaining([
+        'color',
+        'rainbow',
+        'red',
+        '$5',
+        '2 + 3',
+        'silly',
+        'qwerty',
+        'goodnight',
+        'black',
+        'light',
+      ]),
     );
   });
 
