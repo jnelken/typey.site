@@ -95,8 +95,8 @@ export function createTypingApp() {
   // undone by the next keystroke while the battery still reads zero.
   const percentSystem = usePercentAnimation({ onEmpty: enterNight });
   const eatenSystem = useEatenFood();
-  // Past 1000% the battery is dangerous: each keystroke is struck by a bolt off
-  // the electrified frame, which eats the letter it hit.
+  // Past 1000% the battery is dangerous: each keystroke may fire a bolt that
+  // eats the letter it hit. Misses spend charge with no bolt and no zap sound.
   const zapSystem = useZaps({ onStrike: () => typingState.deleteLastCharacter() });
 
   // Crossing the zap line is its own discovery, whichever way the battery got
@@ -329,12 +329,13 @@ export function createTypingApp() {
       mathSystem.clear();
       eatenSystem.clear();
       partySystem.burstAtLetter();
-      // An overcharge spends itself a bolt at a time instead of a point at a
-      // time. Bolts miss often — only about one in five eats the letter just
-      // typed. It stops on its own once the charge falls back under the line.
+      // An overcharge spends itself 100% a keystroke instead of a point at a
+      // time. Only about one in five attempts hits — a hit shows a bolt and
+      // eats the letter; a miss spends charge with neither. It stops on its
+      // own once the charge falls back under the line.
       if (percentSystem.zap()) {
-        zapSystem.strike();
-        soundSystem.playZapSound();
+        const { hit } = zapSystem.strike();
+        if (hit) soundSystem.playZapSound();
       } else {
         percentSystem.drain();
       }

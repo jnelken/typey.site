@@ -751,6 +751,12 @@ describe('useTypingApp', () => {
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
     };
 
+    // Zap audio sets oscillator.type to 'sawtooth'; key clicks leave it unset.
+    const countZapOscillators = () =>
+      AudioContext.mock.results
+        .flatMap(result => result.value?.createOscillator?.mock?.results ?? [])
+        .filter(result => result.value?.type === 'sawtooth').length;
+
     beforeEach(() => {
       jest.useFakeTimers();
       // Force hits so letter-eating cases stay deterministic; miss cases override.
@@ -781,18 +787,28 @@ describe('useTypingApp', () => {
       expect(typingApp.currentText.value).toBe('');
     });
 
-    it('usually misses: a non-hit bolt spends charge but leaves the letter', async () => {
+    it('usually misses: spends charge with no bolt, no deletion, no zap audio', async () => {
       Math.random.mockReturnValue(1 / 5);
       await charge(3000);
+      const zapOscillatorsBefore = countZapOscillators();
       await typeCharacter('a');
 
       expect(typingApp.currentText.value).toBe('A');
       expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2900 });
-      expect(typingApp.zapBolts.value).toHaveLength(1);
+      expect(typingApp.zapBolts.value).toEqual([]);
+      expect(countZapOscillators()).toBe(zapOscillatorsBefore);
 
       jest.advanceTimersByTime(BOLT_MS);
       expect(typingApp.currentText.value).toBe('A');
       expect(typingApp.zapBolts.value).toEqual([]);
+    });
+
+    it('plays zap audio only when a bolt hits', async () => {
+      await charge(3000);
+      const before = countZapOscillators();
+      await typeCharacter('a');
+      expect(countZapOscillators()).toBe(before + 1);
+      expect(typingApp.zapBolts.value).toHaveLength(1);
     });
 
     it('keeps the same battery rather than replaying its arrival', async () => {
@@ -834,6 +850,46 @@ describe('useTypingApp', () => {
 
       jest.advanceTimersByTime(BOLT_MS * 2);
       expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('Escape after a miss leaves the letter and never shows a bolt', async () => {
+      Math.random.mockReturnValue(1 / 5);
+      await charge(3000);
+      await typeCharacter('a');
+      expect(typingApp.zapBolts.value).toEqual([]);
+
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+
+      expect(typingApp.batteryCharge.value).toBeNull();
+      expect(typingApp.zapBolts.value).toEqual([]);
+      expect(typingApp.currentText.value).toBe('A');
+    });
+
+    it('spends 100 charge on every overcharged attempt including misses', async () => {
+      Math.random
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(1 / 5)
+        .mockReturnValueOnce(0);
+      await charge(3000);
+
+      await typeCharacter('a');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2900 });
+      expect(typingApp.zapBolts.value).toHaveLength(1);
+
+      await typeCharacter('b');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2800 });
+      // Miss adds no bolt; the earlier hit's bolt is still in the air.
+      expect(typingApp.zapBolts.value).toHaveLength(1);
+      expect(typingApp.currentText.value).toBe('AB');
+
+      await typeCharacter('c');
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 2700 });
+      expect(typingApp.zapBolts.value).toHaveLength(2);
+      expect(typingApp.currentText.value).toBe('ABC');
+
+      // Two hits eat whatever is last when each lands (existing bolt contract).
+      jest.advanceTimersByTime(STRIKE_MS);
+      expect(typingApp.currentText.value).toBe('A');
     });
   });
 
