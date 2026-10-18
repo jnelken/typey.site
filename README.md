@@ -74,7 +74,7 @@ handling happens on PostHog's side and the browser SDK cannot switch it off.
 - **Enter** - finish the line and set off its animation
 - **↑** - bring the last line back into the input to fix a typo
 - **⌘→ / ⌘←** - skip to the next practice word, or go back to the one before
-- **Escape** - pop every balloon and stop Silly Mode
+- **Escape** - pop every balloon, stop Silly Mode and Party Mode, wake night mode, and clear the battery
 
 ### Historical Lines
 
@@ -102,8 +102,8 @@ handling happens on PostHog's side and the browser SDK cannot switch it off.
 - **Emoji Mode** - every letter, digit and symbol draws as a matching emoji (A → 🍎, B → 🐻); speech still reads the real words
 - **Silly Mode** - type "silly" to have five random words send themselves, three seconds apart, each with its own animation; Escape (or "silly" again) stops them
 - **Color Mode** - type "color" (or "colour", or "rainbow") to paint every character a different rainbow color; type it again to go back to plain text
-- **Goodnight** - type "goodnight" to put the page to bed: a deep indigo sky with a moon and slowly twinkling stars. Colour Mode and the screen-colour washes stay off while it lasts, because neither is readable on a dark ground; type it again (or press Escape) to wake it up
-- **Percent Battery** - type `50%` (or any percent from 0-9999) to charge a battery to that much; it then parks in the corner like a phone's charge indicator and loses a point with every key you press. Over 100% the charge bursts out of the battery and the screen fills with lightning
+- **Goodnight / night mode** - type "goodnight" (or "good night") to put the page to bed: a deep indigo sky with a moon and slowly twinkling stars. "black", "dark", "moon", and "night" also open night; "good morning", "light", "sun", "morning", "sunrise", "day", "daytime", and "noon" wake it. Colour Mode and the screen-colour washes stay off while it lasts; type "goodnight" again (or press Escape) to wake it up
+- **Percent Battery** - type `50%` (or any percent from 0-9999) to charge a battery to that much; it then parks in the corner like a phone's charge indicator and loses a point with every key you press. Hitting 0% — typed, drained, or from an equation — opens night mode instead of a separate blackout. Over 100% the charge bursts out of the battery and the screen fills with lightning
 - **Overcharged** - past 1000% the screen's frame runs with electricity and bolts start eating the letters you type, 1000% a letter, until the charge is spent back under the line
 - **Equation modifiers** - put a `$` or `%` on either side of a sum (`2 + 3$`, `20 + 30%`) and the answer arrives in those units: five bills raining, or a battery charged to 50%. Mix them and the last one typed wins
 - **Auto-scroll** to keep content in view

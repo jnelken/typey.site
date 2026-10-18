@@ -1,11 +1,16 @@
 import { describe, it, expect } from '@jest/globals';
 import {
-  NIGHT_TRIGGERS,
+  NIGHT_TOGGLE_TRIGGERS,
+  NIGHT_ENTER_TRIGGERS,
+  NIGHT_EXIT_TRIGGERS,
   NIGHT_COLORS,
   NIGHT_FOREGROUND_KEYS,
   MIN_CONTRAST_RATIO,
   contrastRatio,
   isNightTrigger,
+  isNightEnterTrigger,
+  isNightExitTrigger,
+  normalizeNightLine,
   starField,
   STAR_COUNT,
   STAR_MIN_SIZE_PX,
@@ -18,8 +23,19 @@ import {
 } from '@/features/night/utils/nightMode';
 import { COLOR_PALETTE, PAGE_BACKGROUND } from '@/features/easter-eggs/utils/colorMode';
 
+describe('normalizeNightLine', () => {
+  it('trims, lowercases, and collapses runs of spaces', () => {
+    expect(normalizeNightLine('  Good   Morning  ')).toBe('good morning');
+  });
+
+  it('returns null for non-strings', () => {
+    expect(normalizeNightLine(null)).toBeNull();
+    expect(normalizeNightLine(42)).toBeNull();
+  });
+});
+
 describe('isNightTrigger', () => {
-  it.each(NIGHT_TRIGGERS)('matches "%s" on its own line', trigger => {
+  it.each(NIGHT_TOGGLE_TRIGGERS)('matches "%s" on its own line', trigger => {
     expect(isNightTrigger(trigger)).toBe(true);
   });
 
@@ -42,6 +58,38 @@ describe('isNightTrigger', () => {
     expect(isNightTrigger(undefined)).toBe(false);
     expect(isNightTrigger(42)).toBe(false);
   });
+
+  it('does not treat enter-only or exit-only words as the toggle', () => {
+    expect(isNightTrigger('night')).toBe(false);
+    expect(isNightTrigger('light')).toBe(false);
+    expect(isNightTrigger('good morning')).toBe(false);
+  });
+});
+
+describe('isNightEnterTrigger', () => {
+  it.each(NIGHT_ENTER_TRIGGERS)('matches "%s" on its own line', trigger => {
+    expect(isNightEnterTrigger(trigger)).toBe(true);
+  });
+
+  it('ignores the word inside a longer line', () => {
+    expect(isNightEnterTrigger('black cat')).toBe(false);
+    expect(isNightEnterTrigger('the moon')).toBe(false);
+  });
+});
+
+describe('isNightExitTrigger', () => {
+  it.each(NIGHT_EXIT_TRIGGERS)('matches "%s" on its own line', trigger => {
+    expect(isNightExitTrigger(trigger)).toBe(true);
+  });
+
+  it('collapses spaces in "good morning"', () => {
+    expect(isNightExitTrigger('GOOD   MORNING')).toBe(true);
+  });
+
+  it('ignores the word inside a longer line', () => {
+    expect(isNightExitTrigger('good morning sunshine')).toBe(false);
+    expect(isNightExitTrigger('sun flower')).toBe(false);
+  });
 });
 
 describe('the night palette', () => {
@@ -53,9 +101,9 @@ describe('the night palette', () => {
     },
   );
 
-  it('is a night blue rather than the blackout black, which means a different thing', () => {
-    // `html.battery-dead` in src/style.css is #000000 — a power cut. Sharing a
-    // ground would make going to bed and running the battery flat look alike.
+  it('is a night blue rather than pure black', () => {
+    // Pure black reads as a power cut; bedtime is a sky. Empty battery now
+    // opens this same indigo night, so the ground stays one thing.
     expect(NIGHT_COLORS.background).not.toBe('#000000');
   });
 

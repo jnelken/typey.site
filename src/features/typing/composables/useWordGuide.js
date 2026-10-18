@@ -16,7 +16,10 @@ export const SECRET_WORDS = Object.freeze([
   { word: 'color', emoji: '🌈', description: 'Paints every letter a colour' },
   { word: 'rainbow', emoji: '🌈', description: 'Another way to say color' },
   { word: 'party', emoji: '🎉', description: 'Confetti on every letter you type' },
-  { word: 'goodnight', emoji: '🌙', description: 'Turns the sky dark, with a moon and stars' },
+  { word: 'goodnight', emoji: '🌙', description: 'Turns the sky dark; type again to wake up' },
+  { word: 'good morning', emoji: '☀️', description: 'Wakes the page from night mode' },
+  { word: 'black', emoji: '🌙', description: 'Opens night mode (also moon, dark, night)' },
+  { word: 'light', emoji: '☀️', description: 'Leaves night mode (also sun, day, morning…)' },
   { word: 'red', emoji: '🟥', description: 'Any colour name washes the screen' },
   { word: 'qwerty', emoji: '✨', description: 'Opens this list' },
 ]);

@@ -3,9 +3,6 @@ import {
   usePercentAnimation,
   ZAP_COST,
   ZAP_THRESHOLD,
-  BLACKOUT_MS,
-  POWER_OFF,
-  POWER_DEAD,
 } from '@/features/percent/composables/usePercentAnimation';
 import { MAX_CHARGE } from '@/features/percent/utils/parsePercent';
 
@@ -161,67 +158,48 @@ describe('usePercentAnimation', () => {
     });
   });
 
-  describe('blackout at zero', () => {
-    beforeEach(() => jest.useFakeTimers());
-    afterEach(() => {
-      document.documentElement.className = '';
-      jest.useRealTimers();
-    });
-
-    it('flickers when drain crosses to zero, then goes dead after a second', () => {
-      const { current, play, drain, powerState } = usePercentAnimation();
+  describe('empty charge notifies once', () => {
+    it('calls onEmpty when drain crosses to zero', () => {
+      const onEmpty = jest.fn();
+      const { current, play, drain } = usePercentAnimation({ onEmpty });
       play({ percent: 1 });
       drain();
 
       expect(current.value).toMatchObject({ percent: 0 });
-      expect(powerState.value).toBe(POWER_OFF);
-      expect(document.documentElement.classList.contains('battery-flickering')).toBe(true);
-
-      jest.advanceTimersByTime(BLACKOUT_MS);
-      expect(powerState.value).toBe(POWER_DEAD);
-      expect(document.documentElement.classList.contains('battery-dead')).toBe(true);
-      expect(document.documentElement.classList.contains('battery-blackout')).toBe(true);
+      expect(onEmpty).toHaveBeenCalledTimes(1);
+      expect(document.documentElement.classList.contains('battery-blackout')).toBe(false);
+      expect(document.documentElement.classList.contains('battery-dead')).toBe(false);
     });
 
-    it('does not restart blackout while already dark', () => {
-      const { play, drain, powerState } = usePercentAnimation();
+    it('does not call onEmpty again while already empty', () => {
+      const onEmpty = jest.fn();
+      const { play, drain } = usePercentAnimation({ onEmpty });
       play({ percent: 1 });
       drain();
-      jest.advanceTimersByTime(BLACKOUT_MS);
-      expect(powerState.value).toBe(POWER_DEAD);
-
       drain();
-      expect(powerState.value).toBe(POWER_DEAD);
+      drain();
+
+      expect(onEmpty).toHaveBeenCalledTimes(1);
     });
 
-    it('clear() ends the blackout and restores the page', () => {
-      const { play, drain, clear, powerState, current } = usePercentAnimation();
+    it('calls onEmpty for an explicit 0% play', () => {
+      const onEmpty = jest.fn();
+      const { play, current } = usePercentAnimation({ onEmpty });
+      play({ percent: 0 });
+
+      expect(current.value).toMatchObject({ percent: 0 });
+      expect(onEmpty).toHaveBeenCalledTimes(1);
+    });
+
+    it('clear() drops the empty battery without further onEmpty calls', () => {
+      const onEmpty = jest.fn();
+      const { play, drain, clear, current } = usePercentAnimation({ onEmpty });
       play({ percent: 1 });
       drain();
-      jest.advanceTimersByTime(BLACKOUT_MS);
       clear();
 
       expect(current.value).toBeNull();
-      expect(powerState.value).toBeNull();
-      expect(document.documentElement.classList.contains('battery-blackout')).toBe(false);
-    });
-
-    it('play() ends the blackout for a fresh charge', () => {
-      const { play, drain, powerState, current } = usePercentAnimation();
-      play({ percent: 1 });
-      drain();
-      jest.advanceTimersByTime(BLACKOUT_MS);
-      play({ percent: 50 });
-
-      expect(current.value).toMatchObject({ percent: 50 });
-      expect(powerState.value).toBeNull();
-      expect(document.documentElement.classList.contains('battery-blackout')).toBe(false);
-    });
-
-    it('typing 0% does not black the room out by itself', () => {
-      const { play, powerState } = usePercentAnimation();
-      play({ percent: 0 });
-      expect(powerState.value).toBeNull();
+      expect(onEmpty).toHaveBeenCalledTimes(1);
     });
   });
 });
