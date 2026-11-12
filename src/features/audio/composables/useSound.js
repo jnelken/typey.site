@@ -92,6 +92,58 @@ export function useSound() {
     createZapSound()
   }
 
+  // Bells scheduled ahead of time on the audio clock (see useBell). Tracked so
+  // a retrigger, Escape or teardown can silence the ones still pending.
+  let bellVoices = []
+
+  const stopBell = () => {
+    const voices = bellVoices
+    bellVoices = []
+    for (const { oscillator, gainNode } of voices) {
+      try { oscillator.stop() } catch { /* never started or already stopped */ }
+      try { oscillator.disconnect() } catch { /* already disconnected */ }
+      try { gainNode.disconnect() } catch { /* already disconnected */ }
+    }
+  }
+
+  // Schedule every strike up front: { time (s from now), hz, decay (s), type }.
+  // A fundamental plus an inharmonic overtone reads as metal rather than a beep.
+  // Returns false (and schedules nothing) when muted or when audio is unavailable,
+  // so the caller can still run its animation in silence.
+  const playBell = (events) => {
+    stopBell()
+    initAudio()
+    const ctx = audioContext.value
+    if (!ctx || !isAudioEnabled.value || !Array.isArray(events) || events.length === 0) return false
+
+    try {
+      if (ctx.state === 'suspended') ctx.resume?.()?.catch?.(() => {})
+      const origin = ctx.currentTime + 0.05
+      for (const event of events) {
+        const at = origin + event.time
+        const peak = event.type === 'toll' ? 0.28 : 0.14
+        for (const [ratio, level] of [[1, 1], [2.4, 0.3]]) {
+          const oscillator = ctx.createOscillator()
+          const gainNode = ctx.createGain()
+          oscillator.type = 'sine'
+          oscillator.frequency.setValueAtTime(event.hz * ratio, at)
+          gainNode.gain.setValueAtTime(0.0001, at)
+          gainNode.gain.linearRampToValueAtTime(peak * level, at + 0.01)
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, at + event.decay)
+          oscillator.connect(gainNode)
+          gainNode.connect(ctx.destination)
+          oscillator.start(at)
+          oscillator.stop(at + event.decay + 0.05)
+          bellVoices.push({ oscillator, gainNode })
+        }
+      }
+      return true
+    } catch {
+      stopBell()
+      return false
+    }
+  }
+
   const toggleAudio = () => {
     isAudioEnabled.value = !isAudioEnabled.value
   }
@@ -101,6 +153,8 @@ export function useSound() {
     playKeySound,
     playEnterSound,
     playZapSound,
+    playBell,
+    stopBell,
     toggleAudio,
     initAudio
   }

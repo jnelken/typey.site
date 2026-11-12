@@ -41,6 +41,7 @@
     <Emojis :effects="typingApp.emojiEffects.value" />
     <MathAnimation />
     <BatteryAnimation />
+    <ClockTowerBell />
     <EatenFood :food="typingApp.eatenFood.value" />
     <PartyConfetti :bursts="typingApp.partyBursts.value" />
     <WordGuide />
@@ -62,6 +63,7 @@ import Balloons from './features/effects/components/Balloons.vue';
 import Emojis from './features/effects/components/Emojis.vue';
 import MathAnimation from './features/math/components/MathAnimation.vue';
 import BatteryAnimation from './features/percent/components/BatteryAnimation.vue';
+import ClockTowerBell from './features/bell/components/ClockTowerBell.vue';
 import EatenFood from './features/eaten/components/EatenFood.vue';
 import PartyConfetti from './features/party/components/PartyConfetti.vue';
 import WordGuide from './features/typing/components/WordGuide.vue';
