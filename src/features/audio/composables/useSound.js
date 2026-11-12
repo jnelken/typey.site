@@ -5,7 +5,10 @@ export function useSound() {
   const audioContext = ref(null)
   const isAudioEnabled = ref(loadSetting('sound', true))
 
-  watch(isAudioEnabled, value => saveSetting('sound', value))
+  watch(isAudioEnabled, value => {
+    saveSetting('sound', value)
+    if (!value) stopBell()
+  }, { flush: 'sync' })
 
   const initAudio = () => {
     if (!audioContext.value && typeof AudioContext !== 'undefined') {

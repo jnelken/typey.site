@@ -188,6 +188,16 @@ describe('useSound bell scheduling', () => {
     second.forEach(v => expect(v.stop).toHaveBeenCalledTimes(2));
   });
 
+  it('stops pending bell voices immediately when audio is muted', () => {
+    const sound = useSound();
+    sound.playBell(buildSchedule({ minute: 15 }));
+    const scheduledVoices = [...voices];
+
+    sound.toggleAudio();
+
+    scheduledVoices.forEach(voice => expect(voice.stop).toHaveBeenCalledTimes(2));
+  });
+
   it('is silent when sound is muted', () => {
     const sound = useSound();
     sound.toggleAudio();

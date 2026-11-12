@@ -70,7 +70,7 @@ not kept waiting, and they live in one place (`westminster.js` `TIMING`):
 The whole trimmed line must be `<time> bell`, case-insensitive:
 
 - `1:15pm bell`, `1:15 pm bell`, `1:15 bell` (colon only; `1.15pm bell` is not accepted)
-- `1 o clock bell`, `1 o'clock bell`, `1 oclock bell`, `1pm bell`, `1 bell`
+- `1 o clock bell`, `1 o'clock bell`, `1 oclock bell`, `1pm bell`
 - 24-hour hours accepted (`13:00 bell` = 1 o'clock); `0`/`24` and `12am/pm` = 12
 - minutes must be 00, 15, 30 or 45 — anything else returns null (falls through
   to normal behaviour); hour out of range, `0pm`, `13pm`, bare `bell` -> null

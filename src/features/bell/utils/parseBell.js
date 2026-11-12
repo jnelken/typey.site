@@ -5,7 +5,7 @@
 
 const QUARTERS = new Set([0, 15, 30, 45]);
 
-// 1:15pm | 1:15 pm | 1pm | 1 o clock | 1 o'clock | 1 oclock | 1 | 13:00
+// 1:15pm | 1:15 pm | 1pm | 1 o clock | 1 o'clock | 1 oclock | 13:00
 const PATTERN =
   /^(\d{1,2})(?::(\d{2}))?\s*(?:(am|pm)|(?:o['’]?\s?clock))?\s+bell$/i;
 
@@ -17,6 +17,9 @@ export function parseBell(input) {
 
   const [, rawHour, rawMinute, meridiem] = match;
   const isOClock = /o['’]?\s?clock/i.test(input);
+  // A bare number followed by "bell" used to trigger the counted-word egg.
+  // Require a recognizable clock form so this feature doesn't capture it.
+  if (rawMinute === undefined && !meridiem && !isOClock) return null;
   const hour = parseInt(rawHour, 10);
   const minute = rawMinute === undefined ? 0 : parseInt(rawMinute, 10);
 

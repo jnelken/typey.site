@@ -17,7 +17,6 @@ describe('parseBell', () => {
     ['13:00 bell', 1, 0],
     ['0:15 bell', 12, 15],
     ['24:00 bell', 12, 0],
-    ['1 bell', 1, 0],
   ])('%s', (text, hour, minute) => {
     expect(parseBell(text)).toMatchObject({ hour, minute });
   });
@@ -25,7 +24,7 @@ describe('parseBell', () => {
   it.each([
     'bell', '1:20 bell', '1:15', '1pm', '13pm bell', '0pm bell', '25 bell',
     '24:15 bell', '1:15 o clock bell', 'ring the bell', '1:15pm belly',
-    '1:5 bell', '1.15 bell', '', '   ', null, undefined, 5,
+    '1:5 bell', '1.15 bell', '3 bell', '1 bell', '', '   ', null, undefined, 5,
   ])('rejects %p', text => {
     expect(parseBell(text)).toBeNull();
   });
