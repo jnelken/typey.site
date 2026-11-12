@@ -112,6 +112,24 @@ describe('useBell', () => {
     expect(bell.angle.value).not.toBe(0);
   });
 
+  describe('when animation frames are paused', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    it('ends the visible bell on schedule even without another frame', () => {
+      const { bell, stopSchedule, hasFrame } = harness();
+      const duration = scheduleDuration(buildSchedule({ minute: 15, hour: 1 })) * 1000;
+
+      bell.play(QUARTER);
+      expect(hasFrame()).toBe(true);
+      jest.advanceTimersByTime(duration);
+
+      expect(bell.current.value).toBeNull();
+      expect(hasFrame()).toBe(false);
+      expect(stopSchedule).toHaveBeenCalled();
+    });
+  });
+
   describe('reduced motion', () => {
     beforeEach(() => jest.useFakeTimers());
     afterEach(() => jest.useRealTimers());

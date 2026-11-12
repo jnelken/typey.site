@@ -32,7 +32,7 @@ export function useBell({
   const angle = ref(0);
 
   let frame = null;
-  let stillTimer = null;
+  let endTimer = null;
   let startedAt = 0;
   let events = [];
   let duration = 0;
@@ -40,8 +40,8 @@ export function useBell({
   const stopLoop = () => {
     if (frame !== null) cancelFrame(frame);
     frame = null;
-    if (stillTimer !== null) clearTimeout(stillTimer);
-    stillTimer = null;
+    if (endTimer !== null) clearTimeout(endTimer);
+    endTimer = null;
   };
 
   const clear = () => {
@@ -77,9 +77,10 @@ export function useBell({
     current.value = { label: bell.label, hour: bell.hour, minute: bell.minute, reducedMotion: still };
     playSchedule(events);
 
-    // A still bell has no frames to run; a timer ends it with the sound.
-    if (still) stillTimer = setTimeout(clear, duration * 1000);
-    else frame = requestFrame(tick);
+    // Also end on a timer: background tabs pause animation frames, while the
+    // audio schedule continues on the audio clock.
+    endTimer = setTimeout(clear, duration * 1000);
+    if (!still) frame = requestFrame(tick);
     return true;
   };
 
