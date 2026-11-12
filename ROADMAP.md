@@ -546,13 +546,23 @@ and plain words are not. **A/B testing stays possible**: feature flags are left
 on, but each page load is its own anonymous visitor, so any experiment would be
 per visit.
 
+### 🕰 Clock Tower Bell
+
+Shipped 2026-11-12 ([DEV-211](https://linear.app/jnelken/issue/DEV-211)). Typing a
+quarter-hour time followed by `bell` plays the matching Westminster Quarters;
+on the hour, the Great Bell tolls the hour count. A bell swings in time with
+the sequence, and muting, Escape, retriggering or leaving the page stops the
+scheduled sound. The note map and sources are in
+`docs/plans/clock-tower-bell.md`.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
 `repo/typey.site` label.
 
 Shipped this run: [DEV-208](https://linear.app/jnelken/issue/DEV-208) (hit-only
-overcharge bolts). Remaining open work lives in Linear.
+overcharge bolts) and [DEV-211](https://linear.app/jnelken/issue/DEV-211) (clock
+tower bell). Remaining open work lives in Linear.
 
 ## Cross-cutting success criteria
 
