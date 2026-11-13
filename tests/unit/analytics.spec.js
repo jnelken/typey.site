@@ -60,6 +60,20 @@ describe('createAnalytics', () => {
     );
   });
 
+  it('forwards the allowlisted clock bell quarter through the analytics entry point', async () => {
+    const posthog = fakePostHog();
+    const analytics = createAnalytics({ loadClient: async () => posthog });
+    await analytics.init(config);
+
+    analytics.capture('easter_egg_triggered', { egg: 'clock_bell', quarter: 30 });
+
+    expect(posthog.capture).toHaveBeenCalledWith(
+      'easter_egg_triggered',
+      { egg: 'clock_bell', quarter: 30 },
+      undefined,
+    );
+  });
+
   it('holds captures made while posthog-js loads and sends them in order', async () => {
     const posthog = fakePostHog();
     let finishLoading;
