@@ -34,6 +34,8 @@ import { useZaps } from '@/features/percent/composables/useZaps';
 import { parsePercent } from '@/features/percent/utils/parsePercent';
 import { useEatenFood } from '@/features/eaten/composables/useEatenFood';
 import { parseEatenFood } from '@/features/eaten/utils/parseEatenFood';
+import { useBell } from '@/features/bell/composables/useBell';
+import { parseBell } from '@/features/bell/utils/parseBell';
 import { capture } from '@/features/analytics/analytics';
 import { createEasterEggTracker, EASTER_EGGS } from '@/features/analytics/easterEggs';
 import { screenColorForText } from '@/features/effects/utils/screenColor';
@@ -48,6 +50,10 @@ export function createTypingApp() {
   const wordPromptSystem = useWordPrompt();
 
   const soundSystem = useSound();
+  const bellSystem = useBell({
+    playSchedule: soundSystem.playBell,
+    stopSchedule: soundSystem.stopBell,
+  });
   const speechSystem = useSpeech();
   const balloonsSystem = useBalloons();
   const emojisSystem = useEmojis();
@@ -266,6 +272,20 @@ export function createTypingApp() {
         return;
       }
 
+      // Bell: a quarter-hour time followed by "bell" ("1:15pm bell", "1 o clock
+      // bell") rings the Westminster quarters and, on the hour, the hour. Sound
+      // and swing share one schedule; muted or unavailable audio still swings.
+      const bell = parseBell(trimmedText);
+      if (bell) {
+        bellSystem.play(bell);
+        trackEgg(EASTER_EGGS.CLOCK_BELL, { quarter: bell.minute });
+        typingState.clearCurrentText();
+        if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
+          speechSystem.speakLine(lineToSpeak);
+        }
+        return;
+      }
+
       // Percent: "50%" or "%50" draws a battery charged that much, and speaks
       // the amount instead of running the usual emoji/balloon effects.
       const percent = parsePercent(trimmedText);
@@ -348,6 +368,7 @@ export function createTypingApp() {
       percentSystem.clear();
       zapSystem.clear();
       eatenSystem.clear();
+      bellSystem.clear();
     },
     onShuffleWord: () => {
       if (typingSettings.isWordPromptEnabled.value) {
@@ -453,6 +474,8 @@ export function createTypingApp() {
     mathEquation: mathSystem.current,
     batteryCharge: percentSystem.current,
     eatenFood: eatenSystem.current,
+    bell: bellSystem.current,
+    bellAngle: bellSystem.angle,
     isBatteryOvercharged: percentSystem.isOvercharged,
     zapBolts: zapSystem.bolts,
     promptWord: wordPromptSystem.promptWord,

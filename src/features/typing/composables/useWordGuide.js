@@ -21,6 +21,7 @@ export const SECRET_WORDS = Object.freeze([
   { word: 'black', emoji: '🌙', description: 'Opens night mode (also moon, dark, night)' },
   { word: 'light', emoji: '☀️', description: 'Leaves night mode (also sun, day, morning…)' },
   { word: 'red', emoji: '🟥', description: 'Any colour name washes the screen' },
+  { word: '1:15pm bell', emoji: '🔔', description: 'Rings the clock tower: :15, :30, :45 chime; o\'clock tolls the hour' },
   { word: 'qwerty', emoji: '✨', description: 'Opens this list' },
 ]);
 

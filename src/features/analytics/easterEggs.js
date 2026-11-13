@@ -15,6 +15,7 @@ export const EASTER_EGGS = Object.freeze({
   BALLOONS: 'balloons',
   SCREEN_COLOR: 'screen_color',
   WORD_PROMPT: 'word_prompt',
+  CLOCK_BELL: 'clock_bell',
 });
 
 /**
