@@ -116,13 +116,15 @@ onMounted(() => {
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 1501;
+  /* Keep controls above the fixed input and effects, but below app-wide modals. */
+  z-index: 1450;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) 0;
   background: var(--color-background);
+  transition: background-color 0.5s ease;
   flex-shrink: 0;
 }
 

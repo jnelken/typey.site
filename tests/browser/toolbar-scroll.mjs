@@ -146,6 +146,36 @@ const overlayControlBox = (page, selector, text) =>
     { sel: selector, needle: text },
   );
 
+const isOnOverlay = (page, x, y) =>
+  page.evaluate(
+    ({ px, py }) =>
+      Boolean(document.elementFromPoint(px, py)?.closest('.modal-overlay')),
+    { px: x, py: y },
+  );
+
+/** Verify the overlay wins the top of the viewport and its own close control. */
+const assertOverlayReachable = async (page, label, when) => {
+  const { innerWidth } = await metrics(page);
+  check(
+    `${label} overlay covers the top of the viewport (${when})`,
+    await isOnOverlay(page, innerWidth / 2, 10),
+    'the sticky toolbar or another layer covers the overlay at y=10',
+  );
+
+  const closeBox = await overlayControlBox(page, '.modal-close');
+  check(
+    `${label} overlay close button is measurable (${when})`,
+    closeBox !== null,
+  );
+  if (closeBox) {
+    check(
+      `${label} overlay close button is on top (${when})`,
+      await isOnOverlay(page, closeBox.cx, closeBox.cy),
+      'the close button is covered by another layer',
+    );
+  }
+};
+
 const typingInputFocused = page =>
   page.evaluate(() => {
     const input = document.querySelector('.input-section input');
@@ -297,24 +327,15 @@ const runViewport = async (browser, viewport) => {
       check(
         'the settings overlay sits above the fixed input bar',
         overTheInput.found &&
-          (await page.evaluate(
-            ({ px, py }) =>
-              Boolean(document.elementFromPoint(px, py)?.closest('.modal-overlay')),
-            { px: innerWidth / 2, py: innerHeight - 10 },
-          )),
+          (await isOnOverlay(page, innerWidth / 2, innerHeight - 10)),
         `bottom of the screen hit ${overTheInput.description}`,
       );
 
       const toggleBox = await overlayControlBox(page, 'button', 'Sound');
+      await assertOverlayReachable(page, 'Settings', 'max scroll');
       check('a settings toggle is measurable', toggleBox !== null);
       if (toggleBox) {
-        const onToggle = await page.evaluate(
-          ({ px, py }) =>
-            Boolean(
-              document.elementFromPoint(px, py)?.closest('.modal-overlay'),
-            ),
-          { px: toggleBox.cx, py: toggleBox.cy },
-        );
+        const onToggle = await isOnOverlay(page, toggleBox.cx, toggleBox.cy);
         check(
           'the Sound toggle is clickable where it is drawn',
           onToggle,
@@ -338,6 +359,7 @@ const runViewport = async (browser, viewport) => {
     if (
       await openFromToolbar(page, 'Words', '✨ Words to Type ✨', 'max scroll')
     ) {
+      await assertOverlayReachable(page, 'Words', 'max scroll');
       await closeOverlay(page, 'max scroll');
       await page.waitForTimeout(700);
       check(
@@ -349,8 +371,38 @@ const runViewport = async (browser, viewport) => {
     // Settings → Secret Words still hands over to the word list.
     await scrollTo(page, baseline.maxScroll + 1000);
     if (await openFromToolbar(page, 'Settings', '⚙️ Settings', 'secret words')) {
-      const secretBox = await overlayControlBox(page, 'button', 'Secret Words');
-      if (check('Secret Words is measurable', secretBox !== null)) {
+      let secretBox = await overlayControlBox(page, 'button', 'Secret Words');
+      const panelBox = await page.evaluate(() => {
+        const panel = document.querySelector('.modal-panel');
+        if (!panel) return null;
+        const rect = panel.getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom };
+      });
+
+      if (secretBox && panelBox && secretBox.cy > panelBox.bottom) {
+        const { innerWidth, innerHeight } = await metrics(page);
+        await page.mouse.move(innerWidth / 2, innerHeight / 2);
+        await page.mouse.wheel(0, 800);
+        await settle(page);
+        secretBox = await overlayControlBox(page, 'button', 'Secret Words');
+      }
+
+      const secretWordsVisible = await page.evaluate(() => {
+        const panel = document.querySelector('.modal-panel');
+        const button = Array.from(
+          panel?.querySelectorAll('button') || [],
+        ).find(candidate => candidate.textContent.includes('Secret Words'));
+        if (!panel || !button) return false;
+        const panelRect = panel.getBoundingClientRect();
+        const buttonRect = button.getBoundingClientRect();
+        return buttonRect.top >= panelRect.top && buttonRect.bottom <= panelRect.bottom;
+      });
+
+      check(
+        'Secret Words is measurable and visible within the Settings panel',
+        secretBox !== null && secretWordsVisible,
+      );
+      if (secretBox && secretWordsVisible) {
         await page.mouse.click(secretBox.cx, secretBox.cy);
         await settle(page);
         check(
