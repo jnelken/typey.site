@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "serve": "vite preview --port 5000",
     "test": "jest",
+    "test:browser:toolbar": "node tests/browser/toolbar-scroll.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ui": "jest --watch --verbose"

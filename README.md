@@ -13,6 +13,9 @@ A fun, interactive typing application designed for kids with sound effects, text
 3. **Press Enter** to complete a line and hear it spoken
 4. **View your history** in the scrolling area above
 
+The **Words** and **Settings** controls stay at the top of the page while you
+scroll through your typing history.
+
 ### Local Tidbyt display
 
 When Typey is running locally, every completed line can also take over a

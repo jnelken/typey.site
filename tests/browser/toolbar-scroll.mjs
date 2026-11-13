@@ -249,7 +249,7 @@ const runViewport = async (browser, viewport) => {
   await page.route('**/*', route => {
     const url = new URL(route.request().url());
     if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') {
-      return route.continue();
+      return route.fallback();
     }
     return route.abort();
   });

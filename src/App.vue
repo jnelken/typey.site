@@ -114,11 +114,15 @@ onMounted(() => {
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1501;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) 0;
+  background: var(--color-background);
   flex-shrink: 0;
 }
 
