@@ -1,8 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+
+jest.mock('@/features/analytics/analytics', () => ({
+  capture: jest.fn(),
+  initAnalytics: jest.fn(),
+  isAnalyticsConfigured: jest.fn(() => false),
+}));
+
 import { render } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import App from '@/App.vue';
 import { buildSchedule } from '@/features/bell/utils/westminster';
+import { capture } from '@/features/analytics/analytics';
 
 const original = global.AudioContext;
 
@@ -11,6 +19,7 @@ describe('Clock tower bell — Enter path', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    jest.clearAllMocks();
     oscillators = [];
     global.AudioContext = jest.fn(() => ({
       currentTime: 0, state: 'running', destination: {},
@@ -53,6 +62,9 @@ describe('Clock tower bell — Enter path', () => {
     await type(container, text);
     await press(container, 'Enter');
     expect(container.querySelector('[data-testid="clock-tower-bell"]')).not.toBeNull();
+    // createAnalytics.capture owns property sanitization; protect the bell's
+    // useTypingApp -> createEasterEggTracker delegation into that owner.
+    expect(capture).toHaveBeenCalledWith('easter_egg_triggered', { quarter: minute, egg: 'clock_bell' });
     const bellFrequencies = new Set(
       buildSchedule({ minute, hour: 1 }).flatMap(({ hz }) => [hz, hz * 2.4]),
     );
