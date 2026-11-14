@@ -555,14 +555,25 @@ the sequence, and muting, Escape, retriggering or leaving the page stops the
 scheduled sound. The note map and sources are in
 `docs/plans/clock-tower-bell.md`.
 
+### 📌 Reachable Words and Settings
+
+Shipped 2026-11-14 ([DEV-207](https://linear.app/jnelken/issue/DEV-207)). Words
+and Settings stay at the viewport top while the page scrolls, with their menus
+still above the fixed typing input and effects. The day controls use translucent
+surfaces so effects remain visible, the empty header band passes taps through,
+and Goodnight leaves the moon and stars unobscured. The real-browser regression
+covers scrolling, menu interactions, focus restoration, and the responsive
+viewport matrix; see `docs/plans/keep-toolbar-reachable.md`.
+
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
 `repo/typey.site` label.
 
-Shipped this run: [DEV-208](https://linear.app/jnelken/issue/DEV-208) (hit-only
-overcharge bolts) and [DEV-211](https://linear.app/jnelken/issue/DEV-211) (clock
-tower bell). Remaining open work lives in Linear.
+Shipped this run: [DEV-207](https://linear.app/jnelken/issue/DEV-207) (reachable
+toolbar), [DEV-208](https://linear.app/jnelken/issue/DEV-208) (hit-only overcharge
+bolts), and [DEV-211](https://linear.app/jnelken/issue/DEV-211) (clock tower bell).
+Remaining open work lives in Linear.
 
 ## Cross-cutting success criteria
 
