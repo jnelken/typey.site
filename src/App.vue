@@ -123,9 +123,24 @@ onMounted(() => {
   justify-content: space-between;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) 0;
+  /* The toolbar reserves the top layer for its controls, but its empty space
+     must not hide scenery or swallow a balloon tap behind it. */
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Give the readable chrome its own surface rather than painting a full-width
+   band over animations. Toolbar is a component child, hence :deep(). */
+.topbar h1,
+.topbar :deep(.toolbar) {
   background: var(--color-background);
   transition: background-color 0.5s ease;
-  flex-shrink: 0;
+}
+
+.topbar :deep(.toolbar) {
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-full);
+  pointer-events: auto;
 }
 
 @media (max-width: 480px) {

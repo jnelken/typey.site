@@ -15,9 +15,9 @@
  *    an element into view first, which is exactly the symptom under test. Every
  *    interaction here is `page.mouse.click(x, y)` at a measured coordinate, and
  *    the scroll position is re-asserted afterwards.
- *  - It refuses to run a viewport where the document cannot scroll far enough
- *    to carry the buttons off-screen (`maxScroll > docTop`), so a layout change
- *    that merely removed the page's overflow could not make the check vacuous.
+ *  - It creates a taller in-app page surface, then refuses to run a viewport
+ *    where the document cannot scroll past the whole toolbar. A layout change
+ *    that merely removes page overflow cannot make the check vacuous.
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -70,6 +70,15 @@ const scrollTo = async (page, y) => {
   await settle(page);
   return page.evaluate(() => window.scrollY);
 };
+
+/* The normal typing view deliberately keeps history in its own scroller. Make
+ * the application surface taller only for this browser regression so this test
+ * also exercises the document scroll that used to carry the toolbar away. */
+const installDocumentScrollFixture = page =>
+  page.evaluate(() => {
+    const app = document.querySelector('.typing-app');
+    if (app) app.style.minHeight = '200vh';
+  });
 
 const metrics = page =>
   page.evaluate(() => ({
@@ -182,6 +191,39 @@ const typingInputFocused = page =>
     return Boolean(input) && document.activeElement === input;
   });
 
+const enterGoodnight = async page => {
+  const input = page.locator('.input-section input');
+  await input.fill('goodnight');
+  await input.press('Enter');
+  await settle(page);
+  // The app deliberately cross-fades the palette over 0.5s.
+  await page.waitForTimeout(600);
+
+  const state = await page.evaluate(() => {
+    const title = document.querySelector('.topbar h1');
+    const toolbar = document.querySelector('.topbar .toolbar');
+    return {
+      active: document.documentElement.classList.contains('goodnight'),
+      moon: Boolean(document.querySelector('.night-sky .moon')),
+      titleBackground: title ? getComputedStyle(title).backgroundColor : null,
+      toolbarBackground: toolbar
+        ? getComputedStyle(toolbar).backgroundColor
+        : null,
+    };
+  });
+  const transparent = color =>
+    color === 'rgba(0, 0, 0, 0)' || color === 'transparent';
+  check(
+    'goodnight scenery remains visible behind the sticky toolbar',
+    state.active &&
+      state.moon &&
+      transparent(state.titleBackground) &&
+      transparent(state.toolbarBackground),
+    `active=${state.active}, moon=${state.moon}, ` +
+      `title=${state.titleBackground}, toolbar=${state.toolbarBackground}`,
+  );
+};
+
 /**
  * The header's own geometry at every scroll position that matters, plus a
  * hit test, so a button that is drawn in the viewport but covered still fails.
@@ -288,19 +330,22 @@ const runViewport = async (browser, viewport) => {
     await page.goto(pageUrl, { waitUntil: 'load' });
     await page.waitForSelector('.toolbar-btn');
     await settle(page);
+    await installDocumentScrollFixture(page);
+    await settle(page);
 
     const baseline = await metrics(page);
     const wordsBox = await buttonBox(page, 'Words');
     const docTop = wordsBox ? wordsBox.top + baseline.scrollY : 0;
+    const docBottom = wordsBox ? wordsBox.bottom + baseline.scrollY : 0;
 
     // Guard against a vacuous run: if the document cannot scroll past the
     // header, nothing below proves anything.
     if (
       !check(
         'document scrolls far enough to carry the toolbar off-screen',
-        baseline.maxScroll > docTop,
-        `maxScroll=${baseline.maxScroll.toFixed(1)}px, toolbar top in the ` +
-          `document=${docTop.toFixed(1)}px`,
+        baseline.maxScroll > docBottom,
+        `maxScroll=${baseline.maxScroll.toFixed(1)}px, toolbar in the ` +
+          `document=${docTop.toFixed(1)}–${docBottom.toFixed(1)}px`,
       )
     ) {
       return;
@@ -415,6 +460,7 @@ const runViewport = async (browser, viewport) => {
     }
 
     await assertReachable(page, 'after using both menus');
+    await enterGoodnight(page);
   } finally {
     await page.close();
   }
