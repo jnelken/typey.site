@@ -133,7 +133,9 @@ onMounted(() => {
    band over animations. Toolbar is a component child, hence :deep(). */
 .topbar h1,
 .topbar :deep(.toolbar) {
-  background: var(--color-background);
+  /* Effects can pass behind readable chrome without being cut off by a solid
+     strip; Goodnight overrides this with fully transparent scenery. */
+  background: color-mix(in srgb, var(--color-background) 85%, transparent);
   transition: background-color 0.5s ease;
 }
 

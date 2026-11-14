@@ -131,6 +131,28 @@ const hitAt = (page, x, y) =>
     { px: x, py: y },
   );
 
+const headerPaddingHit = page =>
+  page.evaluate(() => {
+    const header = document.querySelector('.topbar');
+    if (!header) return null;
+    const rect = header.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    // The header's top padding is deliberately outside both title and toolbar.
+    const y = rect.top + 1;
+    const element = document.elementFromPoint(x, y);
+    return {
+      found: Boolean(element),
+      inHeader: Boolean(element?.closest('.topbar')),
+      description: element
+        ? `${element.tagName.toLowerCase()}${
+            element.className && typeof element.className === 'string'
+              ? `.${element.className.trim().split(/\s+/).join('.')}`
+              : ''
+          }`
+        : 'nothing',
+    };
+  });
+
 const openOverlayTitle = page =>
   page.evaluate(() => {
     const overlay = document.querySelector('.modal-overlay');
@@ -150,7 +172,12 @@ const overlayControlBox = (page, selector, text) =>
       );
       if (!target) return null;
       const rect = target.getBoundingClientRect();
-      return { cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2 };
+      return {
+        top: rect.top,
+        bottom: rect.bottom,
+        cx: rect.left + rect.width / 2,
+        cy: rect.top + rect.height / 2,
+      };
     },
     { sel: selector, needle: text },
   );
@@ -352,6 +379,12 @@ const runViewport = async (browser, viewport) => {
     }
 
     await assertReachable(page, 'unscrolled');
+    const emptyHeaderHit = await headerPaddingHit(page);
+    check(
+      'empty toolbar band passes hit testing through',
+      emptyHeaderHit?.found && !emptyHeaderHit.inHeader,
+      `header padding hit ${emptyHeaderHit?.description ?? 'nothing'}`,
+    );
 
     const mid = await scrollTo(page, Math.round(baseline.maxScroll / 2));
     check('page is scrolled at the midpoint', mid > 0, `scrollY=${mid}`);
@@ -424,7 +457,11 @@ const runViewport = async (browser, viewport) => {
         return { top: rect.top, bottom: rect.bottom };
       });
 
-      if (secretBox && panelBox && secretBox.cy > panelBox.bottom) {
+      if (
+        secretBox &&
+        panelBox &&
+        (secretBox.top < panelBox.top || secretBox.bottom > panelBox.bottom)
+      ) {
         const { innerWidth, innerHeight } = await metrics(page);
         await page.mouse.move(innerWidth / 2, innerHeight / 2);
         await page.mouse.wheel(0, 800);
