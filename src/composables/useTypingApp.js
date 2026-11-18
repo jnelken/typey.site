@@ -20,6 +20,7 @@ import { useMathAnimation } from '@/features/math/composables/useMathAnimation';
 import { usePercentAnimation } from '@/features/percent/composables/usePercentAnimation';
 import { useZaps } from '@/features/percent/composables/useZaps';
 import { useEatenFood } from '@/features/eaten/composables/useEatenFood';
+import { useBell } from '@/features/bell/composables/useBell';
 import { capture } from '@/features/analytics/analytics';
 import { createEasterEggTracker, EASTER_EGGS } from '@/features/analytics/easterEggs';
 
@@ -33,6 +34,10 @@ export function createTypingApp() {
   const wordPromptSystem = useWordPrompt();
 
   const soundSystem = useSound();
+  const bellSystem = useBell({
+    playSchedule: soundSystem.playBell,
+    stopSchedule: soundSystem.stopBell,
+  });
   const speechSystem = useSpeech();
   const balloonsSystem = useBalloons();
   const emojisSystem = useEmojis();
@@ -88,7 +93,7 @@ export function createTypingApp() {
     typingState, typingSettings, typingAPI, wordPromptSystem,
     soundSystem, speechSystem, screenColorSystem, easterEggsSystem,
     emojisSystem, guideSystem, sillySystem, colorSystem, partySystem,
-    nightSystem, mathSystem, percentSystem, eatenSystem,
+    nightSystem, mathSystem, percentSystem, eatenSystem, bellSystem,
     enterNight, exitNight, trackEgg,
   });
 
@@ -127,6 +132,7 @@ export function createTypingApp() {
       percentSystem.clear();
       zapSystem.clear();
       eatenSystem.clear();
+      bellSystem.clear();
     },
     onShuffleWord: () => {
       if (typingSettings.isWordPromptEnabled.value) {
@@ -232,6 +238,8 @@ export function createTypingApp() {
     mathEquation: mathSystem.current,
     batteryCharge: percentSystem.current,
     eatenFood: eatenSystem.current,
+    bell: bellSystem.current,
+    bellAngle: bellSystem.angle,
     isBatteryOvercharged: percentSystem.isOvercharged,
     zapBolts: zapSystem.bolts,
     promptWord: wordPromptSystem.promptWord,

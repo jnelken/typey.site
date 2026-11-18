@@ -41,6 +41,7 @@
     <Emojis :effects="typingApp.emojiEffects.value" />
     <MathAnimation />
     <BatteryAnimation />
+    <ClockTowerBell />
     <EatenFood :food="typingApp.eatenFood.value" />
     <PartyConfetti :bursts="typingApp.partyBursts.value" />
     <WordGuide />
@@ -62,6 +63,7 @@ import Balloons from './features/effects/components/Balloons.vue';
 import Emojis from './features/effects/components/Emojis.vue';
 import MathAnimation from './features/math/components/MathAnimation.vue';
 import BatteryAnimation from './features/percent/components/BatteryAnimation.vue';
+import ClockTowerBell from './features/bell/components/ClockTowerBell.vue';
 import EatenFood from './features/eaten/components/EatenFood.vue';
 import PartyConfetti from './features/party/components/PartyConfetti.vue';
 import WordGuide from './features/typing/components/WordGuide.vue';
@@ -112,12 +114,35 @@ onMounted(() => {
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  /* Keep controls above the fixed input and effects, but below app-wide modals. */
+  z-index: 1450;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) 0;
+  /* The toolbar reserves the top layer for its controls, but its empty space
+     must not hide scenery or swallow a balloon tap behind it. */
+  pointer-events: none;
   flex-shrink: 0;
+}
+
+/* Give the readable chrome its own surface rather than painting a full-width
+   band over animations. Toolbar is a component child, hence :deep(). */
+.topbar h1,
+.topbar :deep(.toolbar) {
+  /* Effects can pass behind readable chrome without being cut off by a solid
+     strip; Goodnight overrides this with fully transparent scenery. */
+  background: color-mix(in srgb, var(--color-background) 85%, transparent);
+  transition: background-color 0.5s ease;
+}
+
+.topbar :deep(.toolbar) {
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-full);
+  pointer-events: auto;
 }
 
 @media (max-width: 480px) {

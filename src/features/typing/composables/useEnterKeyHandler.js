@@ -10,6 +10,7 @@ import {
 import { parseEquation } from '@/features/math/utils/parseEquation';
 import { parsePercent } from '@/features/percent/utils/parsePercent';
 import { parseEatenFood } from '@/features/eaten/utils/parseEatenFood';
+import { parseBell } from '@/features/bell/utils/parseBell';
 import { EASTER_EGGS } from '@/features/analytics/easterEggs';
 import { screenColorForText } from '@/features/effects/utils/screenColor';
 
@@ -19,7 +20,7 @@ export function useEnterKeyHandler({
   typingState, typingSettings, typingAPI, wordPromptSystem,
   soundSystem, speechSystem, screenColorSystem, easterEggsSystem,
   emojisSystem, guideSystem, sillySystem, colorSystem, partySystem,
-  nightSystem, mathSystem, percentSystem, eatenSystem,
+  nightSystem, mathSystem, percentSystem, eatenSystem, bellSystem,
   enterNight, exitNight, trackEgg,
 }) {
   // Crossing the zap line is its own discovery, whichever way the battery got
@@ -185,6 +186,20 @@ export function useEnterKeyHandler({
           speechSystem.speakLine(
             `${equation.a} ${word} ${equation.b} equals ${spokenAnswer(equation)}`
           );
+        }
+        return;
+      }
+
+      // Bell: a quarter-hour time followed by "bell" ("1:15pm bell", "1 o clock
+      // bell") rings the Westminster quarters and, on the hour, the hour. Sound
+      // and swing share one schedule; muted or unavailable audio still swings.
+      const bell = parseBell(trimmedText);
+      if (bell) {
+        bellSystem.play(bell);
+        trackEgg(EASTER_EGGS.CLOCK_BELL, { quarter: bell.minute });
+        typingState.clearCurrentText();
+        if (typingSettings.isAutoSpeakEnabled.value && speechSystem.isSpeechEnabled.value) {
+          speechSystem.speakLine(lineToSpeak);
         }
         return;
       }

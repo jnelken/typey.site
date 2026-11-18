@@ -2,6 +2,10 @@ import { describe, it, expect } from '@jest/globals';
 import { sanitizeProperties } from '@/features/analytics/properties';
 
 describe('sanitizeProperties', () => {
+  it.each([0, 15, 30, 45])('keeps the clock bell quarter %i', quarter => {
+    expect(sanitizeProperties({ egg: 'clock_bell', quarter })).toEqual({ egg: 'clock_bell', quarter });
+  });
+
   it('keeps allowlisted identifiers, booleans and numbers', () => {
     expect(
       sanitizeProperties({ egg: 'math', operation: '+', modifier: '%', enabled: true, load_ms: 812 }),

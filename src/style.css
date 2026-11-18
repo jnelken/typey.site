@@ -141,6 +141,14 @@ html.goodnight body {
   background-color: var(--color-background);
 }
 
+/* The toolbar's controls stay legible on the night palette without an opaque
+   strip that would clip the moon and stars behind its sticky position. This is
+   global because the theme class lives on <html>, outside App's scoped CSS. */
+html.goodnight .topbar h1,
+html.goodnight .topbar .toolbar {
+  background: transparent;
+}
+
 /* The help pill is a white lozenge, which on a night sky reads as a hole cut
    in it. Given the night's own surface instead. */
 html.goodnight .help-text {

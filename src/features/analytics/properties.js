@@ -14,6 +14,7 @@ export const ALLOWED_PROPERTIES = Object.freeze([
   'dom_content_loaded_ms',
   'load_ms',
   'error_type',
+  'quarter',
 ]);
 
 // Values are short identifiers chosen by the app, never sentences.

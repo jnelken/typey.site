@@ -25,6 +25,7 @@ function setup(line) {
     mathSystem: { play: jest.fn() },
     percentSystem: { play: jest.fn(), isOvercharged: ref(false) },
     eatenSystem: { play: jest.fn() },
+    bellSystem: { play: jest.fn() },
     enterNight: jest.fn(),
     exitNight: jest.fn(),
     trackEgg: jest.fn(),
@@ -99,6 +100,7 @@ describe('useEnterKeyHandler', () => {
 
   it.each([
     ['2 + 3%', 'mathSystem', '2 plus 3 equals 5 percent'],
+    ['1:15pm bell', 'bellSystem', '1:15pm bell'],
     ['50%', 'percentSystem', '50 percent'],
     ['50% cookie', 'eatenSystem', '50 percent cookie'],
   ])('dispatches %s to its own effect and speech', async (line, system, speech) => {
@@ -109,9 +111,12 @@ describe('useEnterKeyHandler', () => {
     expect(app.easterEggsSystem.evaluateEasterEggs).not.toHaveBeenCalled();
     expect(app.speechSystem.speakLine).toHaveBeenCalledWith(speech);
     if (line === '2 + 3%') expect(app.percentSystem.play).toHaveBeenCalledWith({ percent: 5 });
+    if (line === '1:15pm bell') {
+      expect(app.trackEgg).toHaveBeenCalledWith(EASTER_EGGS.CLOCK_BELL, { quarter: 15 });
+    }
   });
 
-  it.each(['hello there', 'goodnight', '2 + 3', '50%', '50% cookie'])(
+  it.each(['hello there', 'goodnight', '2 + 3', '1:15pm bell', '50%', '50% cookie'])(
     'rechecks both live speech settings for %s', async line => {
       const app = setup(line);
       for (const [autoSpeak, speech] of [[false, true], [true, false], [false, false], [true, true]]) {
