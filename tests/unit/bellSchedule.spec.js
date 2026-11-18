@@ -11,7 +11,7 @@ const c3 = ['E4', 'F#4', 'G#4', 'E4'];
 const c4 = ['G#4', 'E4', 'F#4', 'B3'];
 const c5 = ['B3', 'F#4', 'G#4', 'E4'];
 
-describe('Westminster Quarters (sourced in docs/plans/clock-tower-bell.md)', () => {
+describe('Westminster Quarters (sourced in docs/plans/archive/clock-tower-bell.md)', () => {
   it(':15 is change 1', () => expect(notes(buildSchedule({ minute: 15 }))).toEqual(c1));
   it(':30 is changes 2, 3', () => expect(notes(buildSchedule({ minute: 30 }))).toEqual([...c2, ...c3]));
   it(':45 is changes 4, 5, 1', () => expect(notes(buildSchedule({ minute: 45 }))).toEqual([...c4, ...c5, ...c1]));

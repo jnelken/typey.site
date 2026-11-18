@@ -553,7 +553,7 @@ quarter-hour time followed by `bell` plays the matching Westminster Quarters;
 on the hour, the Great Bell tolls the hour count. A bell swings in time with
 the sequence, and muting, Escape, retriggering or leaving the page stops the
 scheduled sound. The note map and sources are in
-`docs/plans/clock-tower-bell.md`.
+`docs/plans/archive/clock-tower-bell.md`.
 
 ### 📌 Reachable Words and Settings
 
@@ -563,17 +563,26 @@ still above the fixed typing input and effects. The day controls use translucent
 surfaces so effects remain visible, the empty header band passes taps through,
 and Goodnight leaves the moon and stars unobscured. The real-browser regression
 covers scrolling, menu interactions, focus restoration, and the responsive
-viewport matrix; see `docs/plans/keep-toolbar-reachable.md`.
+viewport matrix; see `docs/plans/archive/keep-toolbar-reachable.md`.
+
+### 🧩 Enter-key dispatch extracted
+
+Shipped 2026-11-18 ([DEV-279](https://linear.app/jnelken/issue/DEV-279)). Enter-key
+trigger ordering (night/light, modes, math, bell, percent, eaten food, easter eggs)
+lives in `src/features/typing/composables/useEnterKeyHandler.js`; `useTypingApp.js`
+stays as wiring under 400 lines. Behavior-preserving; night enter/exit and Escape
+cleanup remain owned by the app so every path shares one night policy.
 
 ## 📐 Linear roadmap
 
 Linear is the source of truth for live scope, status, and blockers. All tickets use the
 `repo/typey.site` label.
 
-Shipped this run: [DEV-207](https://linear.app/jnelken/issue/DEV-207) (reachable
-toolbar), [DEV-208](https://linear.app/jnelken/issue/DEV-208) (hit-only overcharge
-bolts), and [DEV-211](https://linear.app/jnelken/issue/DEV-211) (clock tower bell).
-Remaining open work lives in Linear.
+Shipped this run: [DEV-279](https://linear.app/jnelken/issue/DEV-279) (enter-key
+dispatch extract). Earlier: [DEV-207](https://linear.app/jnelken/issue/DEV-207)
+(reachable toolbar), [DEV-208](https://linear.app/jnelken/issue/DEV-208) (hit-only
+overcharge bolts), and [DEV-211](https://linear.app/jnelken/issue/DEV-211) (clock
+tower bell). Remaining open work lives in Linear.
 
 ## Cross-cutting success criteria
 

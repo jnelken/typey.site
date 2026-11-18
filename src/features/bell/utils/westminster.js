@@ -1,4 +1,4 @@
-// The Westminster Quarters, as sourced in docs/plans/clock-tower-bell.md.
+// The Westminster Quarters, as sourced in docs/plans/archive/clock-tower-bell.md.
 // Pure data + a deterministic schedule builder: the audio and the swinging
 // bell both read the same schedule, so they can never drift apart.
 

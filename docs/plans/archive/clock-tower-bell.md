@@ -1,5 +1,7 @@
 # Clock tower bell (DEV-211)
 
+> **Status:** Implemented before 2026-11-18; archived by advance-roadmap. Evidence: `src/features/bell/`, `tests/unit/parseBell.spec.js`, `tests/unit/useBell.spec.js`, `tests/integration/ClockTowerBell.spec.js`; ROADMAP.md “🕰 Clock Tower Bell”.
+
 Typing a quarter-hour time followed by `bell` rings a clock-tower bell: the
 Westminster Quarters for `:15`, `:30`, `:45` and `:00`, then one toll per hour
 on the hour. A swinging bell animates from the same deterministic schedule.

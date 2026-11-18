@@ -1,5 +1,7 @@
 # Keep Words and Settings reachable (DEV-207)
 
+> **Status:** Implemented before 2026-11-18; archived by advance-roadmap. Evidence: sticky toolbar work in `src/App.vue` / `src/style.css`, `tests/browser/toolbar-scroll.mjs`; ROADMAP.md “📌 Reachable Words and Settings”.
+
 The Words and Settings controls are part of the page header, so they scroll out
 of view as a child moves through typing history. Keep the header sticky at the
 top of the viewport, with theme-aware surfaces behind its readable controls.

@@ -120,6 +120,30 @@ describe('useTypingApp', () => {
   });
 
   describe('Enter key handling', () => {
+    it.each([
+      '  hello there  ', 'goodnight', 'black', 'light', 'qwerty', 'silly',
+      'color', 'party', '2 + 3$', '50%', '50% cookie',
+    ])('submits "%s" exactly once without waiting for the Tidbyt', async line => {
+      const fetchMock = global.fetch;
+      fetchMock.mockImplementationOnce(() => new Promise(() => {}));
+      typingApp.currentText.value = line;
+
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).text).toBe(line);
+      expect(typingApp.completedLines.value).toEqual([line]);
+      expect(typingApp.currentText.value).toBe('');
+      await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
+    });
+
+    it('leaves a blank line unsent', async () => {
+      typingApp.currentText.value = ' \t ';
+      await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(typingApp.currentText.value).toBe(' \t ');
+    });
+
     it('should add line to completed lines when Enter is pressed', async () => {
       typingApp.currentText.value = 'test line';
 
