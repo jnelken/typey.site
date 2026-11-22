@@ -737,23 +737,16 @@ describe('useTypingApp', () => {
       expect(typingApp.batteryCharge.value).toBeNull();
     });
 
-    it('locks at a million when typed past max and survives Escape', async () => {
+    it('caps an overflow charge and clears it on Escape', async () => {
       typingApp.currentText.value = '2500000%';
       await typingApp.onKeyDown({ key: 'Enter', preventDefault: jest.fn() });
       expect(typingApp.batteryCharge.value).toMatchObject({
         percent: 1_000_000,
-        locked: true,
         overflow: 2500000,
       });
 
-      await typeCharacter('a');
-      expect(typingApp.batteryCharge.value.percent).toBe(1_000_000);
-
       await typingApp.onKeyDown({ key: 'Escape', preventDefault: jest.fn() });
-      expect(typingApp.batteryCharge.value).toMatchObject({
-        percent: 1_000_000,
-        locked: true,
-      });
+      expect(typingApp.batteryCharge.value).toBeNull();
     });
   });
 
@@ -809,6 +802,28 @@ describe('useTypingApp', () => {
 
       jest.advanceTimersByTime(STRIKE_MS);
       expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('drains an overflow charge and fires a bolt that eats a letter', async () => {
+      await charge(2500000);
+      await typeCharacter('a');
+
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 999900 });
+      expect(typingApp.currentText.value).toBe('A');
+      expect(typingApp.zapBolts.value).toHaveLength(1);
+      jest.advanceTimersByTime(STRIKE_MS);
+      expect(typingApp.currentText.value).toBe('');
+    });
+
+    it('drains an overflow charge on a miss without deleting a letter', async () => {
+      Math.random.mockReturnValue(1 / 5);
+      await charge(2500000);
+      await typeCharacter('a');
+
+      expect(typingApp.batteryCharge.value).toMatchObject({ percent: 999900 });
+      expect(typingApp.zapBolts.value).toEqual([]);
+      jest.advanceTimersByTime(BOLT_MS);
+      expect(typingApp.currentText.value).toBe('A');
     });
 
     it('usually misses: spends charge with no bolt, no deletion, no zap audio', async () => {

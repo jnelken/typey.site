@@ -220,7 +220,7 @@ const drawLabel = (ctx, geo, labelRight, cy, label, fillColor = COLOR_TEXT) => {
 };
 
 // The gag for typing past a million: the ridiculous number tumbles off the
-// bottom while the battery itself stays locked at the million-percent max.
+// bottom while the battery starts at the million-percent max.
 const drawFallingOverflow = (ctx, w, h, overflow, elapsed, reduced) => {
   const label = `${overflow}%`;
   const life = reduced ? 1 : clamp01(elapsed / FALL_MS);
@@ -235,7 +235,7 @@ const drawFallingOverflow = (ctx, w, h, overflow, elapsed, reduced) => {
 
   if (reduced) {
     // Reduced motion: flash the number once in place, then it's gone — the
-    // battery still keeps the capped million until the page refreshes.
+    // battery still starts at the capped million.
     if (elapsed < 400) {
       ctx.globalAlpha = 1 - elapsed / 400;
       ctx.fillText(label, w / 2, h * 0.28);

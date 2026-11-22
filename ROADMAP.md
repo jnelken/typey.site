@@ -514,8 +514,8 @@ night** — typed `0%`, drain-to-zero, and an equation that answers `0%` all cal
 the same `enterNight` path (Color Mode off, screen wash cleared). Draining
 while already at 0% does not re-fire that path, so a daylight exit or Escape
 cannot be undone by the next keystroke. **Blackout CSS, timers, and canvas
-special-cases are gone**; charging, overflow lock, and zap behaviour are
-unchanged. Silly Mode excludes the new mode words; Secret Words and the README
+special-cases are gone**; charging and zap behaviour were unchanged by this
+work. Silly Mode excludes the new mode words; Secret Words and the README
 list them.
 
 ### 📊 Privacy-First Analytics

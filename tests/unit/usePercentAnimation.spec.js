@@ -126,30 +126,29 @@ describe('usePercentAnimation', () => {
   });
 
   describe('overflow past a million', () => {
-    it('clamps the battery at max and locks it with the typed overflow', () => {
+    it('clamps the battery at max while keeping the typed overflow', () => {
       const { current, play } = usePercentAnimation();
       play({ percent: 2500000 });
       expect(current.value).toMatchObject({
         percent: MAX_CHARGE,
-        locked: true,
         overflow: 2500000,
       });
     });
 
-    it('refuses to drain, zap, or clear a locked overflow charge', () => {
+    it('drains, zaps, and clears an overflow charge', () => {
       const { current, play, drain, zap, clear } = usePercentAnimation();
       play({ percent: 1000001 });
-      const snapshot = { ...current.value };
+      const { id } = current.value;
 
-      expect(zap()).toBe(false);
+      expect(zap()).toBe(true);
+      expect(current.value).toEqual({ percent: MAX_CHARGE - ZAP_COST, id, overflow: 1000001 });
       drain();
+      expect(current.value.percent).toBe(MAX_CHARGE - ZAP_COST - 1);
       clear();
-
-      expect(current.value).toEqual(snapshot);
-      expect(current.value.percent).toBe(MAX_CHARGE);
+      expect(current.value).toBeNull();
     });
 
-    it('does not lock an exact million', () => {
+    it('drains an exact million', () => {
       const { current, play, drain } = usePercentAnimation();
       play({ percent: MAX_CHARGE });
       expect(current.value).toEqual({ percent: MAX_CHARGE, id: current.value.id });
