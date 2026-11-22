@@ -212,20 +212,7 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .typing-measure {
-  position: absolute;
-  visibility: hidden;
-  white-space: pre;
-  font: 400 var(--font-size-typing) / 1.2 var(--font-family-mono);
-  pointer-events: none;
-}
-
-.current-line-display :deep(.text-typing),
-.input-container :deep(.input-typing) {
-  font-size: calc(var(--font-size-typing) * var(--typing-scale));
-}
-
-.current-line-display {
+  .current-line-display {
     min-height: 4rem;
   }
 }
