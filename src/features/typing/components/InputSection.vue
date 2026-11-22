@@ -1,5 +1,6 @@
 <template>
-  <div class="input-section" @click="focusInput">
+  <div ref="section" class="input-section" :style="{ '--typing-scale': typingScale }" @click="focusInput">
+    <span ref="measure" class="typing-measure" aria-hidden="true">{{ displayText }}{{ displayGhostSuffix }}</span>
     <div class="current-line-display">
       <AnimatedText
         :text="displayText"
@@ -39,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Input from '@/ui/Input.vue';
 import AnimatedText from '@/ui/AnimatedText.vue';
 import { useTypingApp } from '@/composables/useTypingApp';
@@ -99,6 +100,31 @@ const displayGhostSuffix = computed(() =>
 );
 
 const typingInput = ref(null);
+const section = ref(null);
+const measure = ref(null);
+const typingScale = ref(1);
+let resizeObserver;
+
+const fitTypingText = () => {
+  const input = section.value?.querySelector('.input-container');
+  const width = input?.clientWidth || 0;
+  const textWidth = measure.value?.getBoundingClientRect().width || 0;
+  typingScale.value = width && textWidth ? Math.min(1, Math.max(0, (width - 4) / textWidth)) : 1;
+};
+watch([displayText, displayGhostSuffix], () => nextTick(fitTypingText), { flush: 'post' });
+onMounted(() => {
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(fitTypingText);
+    resizeObserver.observe(section.value);
+  }
+  window.addEventListener('resize', fitTypingText);
+  document.fonts?.ready.then(fitTypingText);
+  fitTypingText();
+});
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
+  window.removeEventListener('resize', fitTypingText);
+});
 
 const focusInput = () => {
   if (typingInput.value) {
@@ -125,6 +151,19 @@ defineExpose({
   cursor: text;
   z-index: 100;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.typing-measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre;
+  font: 400 var(--font-size-typing) / 1.2 var(--font-family-mono);
+  pointer-events: none;
+}
+
+.current-line-display :deep(.text-typing),
+.input-container :deep(.input-typing) {
+  font-size: calc(var(--font-size-typing) * var(--typing-scale));
 }
 
 .current-line-display {
@@ -173,7 +212,20 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .current-line-display {
+  .typing-measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre;
+  font: 400 var(--font-size-typing) / 1.2 var(--font-family-mono);
+  pointer-events: none;
+}
+
+.current-line-display :deep(.text-typing),
+.input-container :deep(.input-typing) {
+  font-size: calc(var(--font-size-typing) * var(--typing-scale));
+}
+
+.current-line-display {
     min-height: 4rem;
   }
 }
